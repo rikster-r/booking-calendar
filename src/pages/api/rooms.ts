@@ -10,7 +10,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   }
 
   if (req.method === 'POST') {
-    const { name } = req.body;
+    const { name } = JSON.parse(req.body);
 
     const { data, error } = await supabase.from('rooms').insert([{ name }]);
 

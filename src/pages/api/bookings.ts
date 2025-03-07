@@ -25,7 +25,7 @@ async function createBooking(req: NextApiRequest, res: NextApiResponse) {
     children_count,
     check_in,
     check_out,
-  } = req.body;
+  } = JSON.parse(req.body);
 
   if (!room_id || !client_name || !client_phone || !check_in || !check_out) {
     return res.status(400).json({ error: 'Missing required fields' });
