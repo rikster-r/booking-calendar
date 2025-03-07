@@ -16,16 +16,16 @@ export default async function handler(
 
 async function createBooking(req: NextApiRequest, res: NextApiResponse) {
   const {
-    room_id,
-    client_name,
-    client_surname,
-    client_phone,
-    client_email,
-    adults_count,
-    children_count,
-    check_in,
-    check_out,
-  } = JSON.parse(req.body);
+    roomId: room_id,
+    clientName: client_name,
+    clientSurname: client_surname,
+    clientPhone: client_phone,
+    clientEmail: client_email,
+    adultsCount: adults_count,
+    childrenCount: children_count,
+    checkIn: check_in,
+    checkOut: check_out,
+  } = req.body;
 
   if (!room_id || !client_name || !client_phone || !check_in || !check_out) {
     return res.status(400).json({ error: 'Missing required fields' });
