@@ -109,6 +109,9 @@ export default function Home({ initialRooms }: Props) {
 
   if (!rooms) return <div>Loading...</div>;
 
+  // For months header rendering
+  const seenMonths = new Set();
+
   return (
     <div
       className={`${geistSans.variable} min-h-screen p-2 pb-20 gap-16 sm:p-8 font-[family-name:var(--font-geist-sans)] flex relative`}
@@ -117,7 +120,8 @@ export default function Home({ initialRooms }: Props) {
         <h1 className="text-2xl sm:text-4xl font-bold pb-4">Календарь брони</h1>
         <div className="p-2 sm:p-4 bg-gray-100 flex gap-2 w-full max-w-screen">
           <div className="flex flex-col gap-2 w-[100px]">
-            <div className="text-lg font-bold h-[70px]">{currentYear}</div>
+            <div className="text-lg font-bold h-[25px]">{currentYear}</div>
+            <div className="h-[70px]"></div>
             {rooms.map((room) => (
               <>
                 <div
@@ -130,6 +134,20 @@ export default function Home({ initialRooms }: Props) {
             ))}
           </div>
           <div className="grid grid-cols-[repeat(30,48px)] overflow-x-scroll gap-y-2 relative">
+            {daysList.map((day, i) => {
+              const month = day.toLocaleDateString(LOCALE, { month: 'long' });
+
+              if (seenMonths.has(month)) {
+                return <div className="w-[48px]" key={i}></div>;
+              }
+
+              seenMonths.add(month);
+              return (
+                <div className="text-lg font-bold capitalize h-[25px]" key={i}>
+                  {month}
+                </div>
+              );
+            })}
             {daysList.map((day, i) => (
               <div
                 className="bg-gray-300 p-2 border-1 border-gray-400 rounded-md flex flex-col items-center justify-center h-[70px] w-[48px]"
@@ -185,7 +203,8 @@ export default function Home({ initialRooms }: Props) {
 
               const width = hours * 2;
 
-              const y = 70 + 8 + roomIndex * (50 + 8);
+              // 25px - months header, 8px - gap, 70px - days header, 8px - gap
+              const y = 25 + 8 + 70 + 8 + roomIndex * (50 + 8);
 
               const borderRadius = `${
                 checkInDate <= yesterday ? '0' : '1rem'
