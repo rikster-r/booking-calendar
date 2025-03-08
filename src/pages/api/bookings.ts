@@ -31,22 +31,6 @@ async function createBooking(req: NextApiRequest, res: NextApiResponse) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
 
-  const { data: existingBookings, error: conflictError } = await supabase
-    .from('bookings')
-    .select('id')
-    .eq('room_id', room_id)
-    .or(`check_in.lte.${check_out}, check_out.gte.${check_in}`);
-
-  if (conflictError) {
-    return res.status(500).json({ error: conflictError.message });
-  }
-
-  if (existingBookings.length > 0) {
-    return res
-      .status(400)
-      .json({ error: 'Room is already booked for this period' });
-  }
-
   // Insert new booking
   const { data, error } = await supabase.from('bookings').insert([
     {

@@ -1,5 +1,5 @@
 import Modal from '@/components/Modal';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { PhoneIcon, EnvelopeIcon } from '@heroicons/react/24/solid';
 
 type Props = {
@@ -7,21 +7,44 @@ type Props = {
   onClose: () => void;
   addBooking: (data: BookingInput) => Promise<void>;
   rooms: Room[];
+  selectedDate: Date | null;
+  selectedRoomId: number | null;
 };
 
-const BookingModal = ({ isOpen, onClose, addBooking, rooms }: Props) => {
-  const initial = {
-    roomId: rooms[0].id,
+const BookingModal = ({
+  isOpen,
+  onClose,
+  addBooking,
+  rooms,
+  selectedDate,
+  selectedRoomId,
+}: Props) => {
+  const formatDateTimeLocal = (date: Date | null) => {
+    if (!date) return '';
+    const offset = date.getTimezoneOffset() * 60000; // Offset in milliseconds
+    const localISO = new Date(date.getTime() - offset).toISOString().slice(0, 16);
+    return localISO;
+  };
+  
+  const [formData, setFormData] = useState(() => ({
+    roomId: selectedRoomId ?? (rooms.length > 0 ? rooms[0].id : 0),
     clientName: '',
     clientSurname: '',
     clientPhone: '',
     clientEmail: '',
     adultsCount: 0,
     childrenCount: 0,
-    checkIn: '',
+    checkIn: formatDateTimeLocal(selectedDate),
     checkOut: '',
-  };
-  const [formData, setFormData] = useState(initial);
+  }));
+  
+  useEffect(() => {
+    setFormData((prev) => ({
+      ...prev,
+      roomId: selectedRoomId ?? (rooms.length > 0 ? rooms[0].id : 0),
+      checkIn: formatDateTimeLocal(selectedDate),
+    }));
+  }, [selectedRoomId, selectedDate, rooms]);
 
   const handleChange: React.ChangeEventHandler<
     HTMLInputElement | HTMLSelectElement
@@ -33,7 +56,6 @@ const BookingModal = ({ isOpen, onClose, addBooking, rooms }: Props) => {
     e.preventDefault();
     onClose();
     await addBooking(formData);
-    setFormData(initial);
   };
 
   return (

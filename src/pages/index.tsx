@@ -54,6 +54,8 @@ export default function Home({ initialRooms }: Props) {
   const [isMenuOpen, setMenuOpen] = useState(false);
   const [isBookingModalOpen, setBookingModalOpen] = useState(false);
   const [isRoomModalOpen, setRoomModalOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedRoomId, setSelectedRoomId] = useState<number | null>(null);
 
   const { data: rooms, mutate: mutateRooms } = useSWR<Room[]>(
     '/api/rooms',
@@ -91,6 +93,12 @@ export default function Home({ initialRooms }: Props) {
     }
   };
 
+  const openBookingModal = (date: Date, roomId: number) => {
+    setSelectedDate(date);
+    setSelectedRoomId(roomId);
+    setBookingModalOpen(true);
+  };
+
   if (!rooms) return <div>Loading...</div>;
 
   return (
@@ -111,7 +119,6 @@ export default function Home({ initialRooms }: Props) {
               </div>
             ))}
           </div>
-          {/* 48px is divisible by 24 hours */}
           <div className="grid grid-cols-[repeat(30,48px)] overflow-x-scroll gap-y-2 relative">
             {daysList.map((day, i) => (
               <div
@@ -126,12 +133,17 @@ export default function Home({ initialRooms }: Props) {
                 </p>
               </div>
             ))}
-            {Array.from({ length: 30 * rooms.length }).map((_, i) => (
-              <div
-                className="border-1 border-gray-400 p-2 rounded-md h-[50px] w-[48px] flex items-center justify-center"
-                key={i}
-              ></div>
-            ))}
+            {rooms.map((room) =>
+              daysList.map((day, dayIndex) => (
+                <button
+                  className="border-1 border-gray-400 p-2 rounded-md h-[50px] w-[48px] flex items-center justify-center"
+                  onClick={() => {
+                    openBookingModal(day, room.id)
+                  }}
+                  key={`${room.id}-${dayIndex}`}
+                ></button>
+              ))
+            )}
             {bookings?.map((booking) => {
               const roomIndex = rooms.findIndex(
                 (room) => room.id === booking.room_id
@@ -147,28 +159,24 @@ export default function Home({ initialRooms }: Props) {
 
               const lastDay = daysList[daysList.length - 1];
 
-              // Calculate offset in hours
               const hoursOffset = Math.max(
                 0,
                 (checkInDate.getTime() - yesterday.getTime()) / 36e5
               );
-              const x = hoursOffset * 2; // Convert to pixels
+              const x = hoursOffset * 2;
 
-              // Calculate duration in hours
               let hours =
                 (checkOutDate.getTime() - checkInDate.getTime()) / 36e5;
               if (checkInDate < yesterday) {
                 hours = (checkOutDate.getTime() - yesterday.getTime()) / 36e5;
               } else if (checkOutDate > lastDay) {
-                hours = (lastDay.getTime() - checkInDate.getTime()) / 36e5 + 24; // Adjust for extra day
+                hours = (lastDay.getTime() - checkInDate.getTime()) / 36e5 + 24;
               }
 
-              const width = hours * 2; // Convert to pixels
+              const width = hours * 2;
 
-              // Calculate y position
               const y = 70 + 8 + roomIndex * (50 + 8);
 
-              // Border radius logic
               const borderRadius = `${
                 checkInDate <= yesterday ? '0' : '1rem'
               } ${checkOutDate >= lastDay ? '0' : '1rem'} ${
@@ -211,7 +219,7 @@ export default function Home({ initialRooms }: Props) {
             </button>
             <button
               className="flex items-center gap-2 rounded-md transition focus-visible:bg-gray-100 px-6 py-4 hover:cursor-pointer hover:bg-gray-100 w-full"
-              onClick={() => setBookingModalOpen(true)}
+              onClick={() => openBookingModal(today, rooms[0].id)}
             >
               <KeyIcon className="w-6 h-6" />
               <p>Забронировать </p>
@@ -223,6 +231,8 @@ export default function Home({ initialRooms }: Props) {
           onClose={() => setBookingModalOpen(false)}
           addBooking={addBooking}
           rooms={rooms}
+          selectedDate={selectedDate}
+          selectedRoomId={selectedRoomId}
         />
         <RoomModal
           isOpen={isRoomModalOpen}
