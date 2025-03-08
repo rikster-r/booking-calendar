@@ -3,6 +3,7 @@ import { GetServerSideProps } from 'next';
 import useSWR from 'swr';
 import BookingModal from '@/components/BookingModal';
 import RoomModal from '@/components/RoomModal';
+import BookingInfoModal from '@/components/BookingInfoModal';
 import { useState } from 'react';
 import {
   EllipsisHorizontalIcon,
@@ -54,6 +55,8 @@ export default function Home({ initialRooms }: Props) {
   const [isMenuOpen, setMenuOpen] = useState(false);
   const [isBookingModalOpen, setBookingModalOpen] = useState(false);
   const [isRoomModalOpen, setRoomModalOpen] = useState(false);
+  const [isRoomInfoModalOpen, setRoomInfoModalOpen] = useState(false);
+  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedRoomId, setSelectedRoomId] = useState<number | null>(null);
 
@@ -99,6 +102,11 @@ export default function Home({ initialRooms }: Props) {
     setBookingModalOpen(true);
   };
 
+  const openBookingInfoModal = (booking: Booking) => {
+    setSelectedBooking(booking);
+    setRoomInfoModalOpen(true);
+  };
+
   if (!rooms) return <div>Loading...</div>;
 
   return (
@@ -111,12 +119,14 @@ export default function Home({ initialRooms }: Props) {
           <div className="flex flex-col gap-2 w-[100px]">
             <div className="text-lg font-bold h-[70px]">{currentYear}</div>
             {rooms.map((room) => (
-              <div
-                className="bg-blue-700 text-white p-2 rounded-md text-center h-[50px] flex items-center justify-center"
-                key={room.id}
-              >
-                {room.name}
-              </div>
+              <>
+                <div
+                  className="bg-blue-700 text-white p-2 rounded-md text-center h-[50px] flex items-center justify-center"
+                  key={room.id}
+                >
+                  {room.name}
+                </div>
+              </>
             ))}
           </div>
           <div className="grid grid-cols-[repeat(30,48px)] overflow-x-scroll gap-y-2 relative">
@@ -138,7 +148,7 @@ export default function Home({ initialRooms }: Props) {
                 <button
                   className="border-1 border-gray-400 p-2 rounded-md h-[50px] w-[48px] flex items-center justify-center"
                   onClick={() => {
-                    openBookingModal(day, room.id)
+                    openBookingModal(day, room.id);
                   }}
                   key={`${room.id}-${dayIndex}`}
                 ></button>
@@ -193,6 +203,7 @@ export default function Home({ initialRooms }: Props) {
                     width: `${width}px`,
                     borderRadius,
                   }}
+                  onClick={() => openBookingInfoModal(booking)}
                 >
                   {booking.client_name}
                 </div>
@@ -238,6 +249,11 @@ export default function Home({ initialRooms }: Props) {
           isOpen={isRoomModalOpen}
           onClose={() => setRoomModalOpen(false)}
           addRoom={addRoom}
+        />
+        <BookingInfoModal
+          isOpen={isRoomInfoModalOpen}
+          onClose={() => setRoomInfoModalOpen(false)}
+          booking={selectedBooking}
         />
       </div>
     </div>
