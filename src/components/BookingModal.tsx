@@ -5,12 +5,12 @@ import { PhoneIcon, EnvelopeIcon } from '@heroicons/react/24/solid';
 type Props = {
   isOpen: boolean;
   onClose: () => void;
-  addBooking: (data: BookingInput) => Promise<void>
+  addBooking: (data: BookingInput) => Promise<void>;
   rooms: Room[];
 };
 
 const BookingModal = ({ isOpen, onClose, addBooking, rooms }: Props) => {
-  const [formData, setFormData] = useState({
+  const initial = {
     roomId: rooms[0].id,
     clientName: '',
     clientSurname: '',
@@ -20,7 +20,8 @@ const BookingModal = ({ isOpen, onClose, addBooking, rooms }: Props) => {
     childrenCount: 0,
     checkIn: '',
     checkOut: '',
-  });
+  };
+  const [formData, setFormData] = useState(initial);
 
   const handleChange: React.ChangeEventHandler<
     HTMLInputElement | HTMLSelectElement
@@ -30,8 +31,9 @@ const BookingModal = ({ isOpen, onClose, addBooking, rooms }: Props) => {
 
   const handleSubmit: React.FormEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
-    await addBooking(formData);
     onClose();
+    await addBooking(formData);
+    setFormData(initial);  
   };
 
   return (

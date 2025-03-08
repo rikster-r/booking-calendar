@@ -9,6 +9,7 @@ import {
   BuildingOfficeIcon,
   KeyIcon,
 } from '@heroicons/react/24/solid';
+import { get30DayRange } from '@/lib/dates';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -17,10 +18,14 @@ const geistSans = Geist({
 
 const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
+const dateRange = get30DayRange();
+
 export const getServerSideProps: GetServerSideProps = async () => {
   let res = await fetch(`${process.env.NEXT_PUBLIC_URL}/api/rooms`);
   const initialRooms: Room[] = await res.json();
-  res = await fetch(`${process.env.NEXT_PUBLIC_URL}/api/bookings`);
+  res = await fetch(
+    `${process.env.NEXT_PUBLIC_URL}/api/bookings/?start=${dateRange.start}&end=${dateRange.end}`
+  );
   const initialBookings: Booking[] = await res.json();
 
   return {
@@ -43,13 +48,7 @@ export default function Home({ initialRooms }: Props) {
     const month = today.getMonth();
     const date = today.getDate();
 
-    const day = new Date(year, month - 1, date + i);
-    return [
-      day.toLocaleDateString(LOCALE, { day: 'numeric' }),
-      day.toLocaleDateString(LOCALE, {
-        weekday: 'short',
-      }),
-    ];
+    return new Date(year, month, date + i);
   });
 
   const [isMenuOpen, setMenuOpen] = useState(false);
@@ -64,7 +63,7 @@ export default function Home({ initialRooms }: Props) {
     }
   );
   const { data: bookings, mutate: mutateBookings } = useSWR<Booking[]>(
-    '/api/bookings',
+    `/api/bookings/?start=${dateRange.start}&end=${dateRange.end}`,
     fetcher
   );
 
@@ -112,22 +111,85 @@ export default function Home({ initialRooms }: Props) {
               </div>
             ))}
           </div>
-          <div className="grid grid-cols-[repeat(30,50px)] gap-2 overflow-x-scroll">
-            {daysList.map(([day, weekday], i) => (
+          {/* 48px is divisible by 24 hours */}
+          <div className="grid grid-cols-[repeat(30,48px)] overflow-x-scroll gap-y-2 relative">
+            {daysList.map((day, i) => (
               <div
-                className="bg-gray-300 p-2 rounded-md flex flex-col items-center justify-center h-[70px] w-[50px]"
+                className="bg-gray-300 p-2 border-1 border-gray-400 rounded-md flex flex-col items-center justify-center h-[70px] w-[48px]"
                 key={i}
               >
-                <p>{day}</p>
-                <p>{weekday}</p>
+                <p>{day.toLocaleDateString(LOCALE, { day: 'numeric' })}</p>
+                <p>
+                  {day.toLocaleDateString(LOCALE, {
+                    weekday: 'short',
+                  })}
+                </p>
               </div>
             ))}
             {Array.from({ length: 30 * rooms.length }).map((_, i) => (
               <div
-                className="bg-gray-300 p-2 rounded-md h-[50px] w-[50px] flex items-center justify-center"
+                className="border-1 border-gray-400 p-2 rounded-md h-[50px] w-[48px] flex items-center justify-center"
                 key={i}
               ></div>
             ))}
+            {bookings?.map((booking) => {
+              const roomIndex = rooms.findIndex(
+                (room) => room.id === booking.room_id
+              );
+              if (roomIndex === -1) return null;
+
+              const checkInDate = new Date(booking.check_in);
+              const checkOutDate = new Date(booking.check_out);
+
+              const yesterday = new Date();
+              yesterday.setDate(yesterday.getDate() - 1);
+              yesterday.setHours(23, 59, 0, 0);
+
+              const lastDay = daysList[daysList.length - 1];
+
+              // Calculate offset in hours
+              const hoursOffset = Math.max(
+                0,
+                (checkInDate.getTime() - yesterday.getTime()) / 36e5
+              );
+              const x = hoursOffset * 2; // Convert to pixels
+
+              // Calculate duration in hours
+              let hours =
+                (checkOutDate.getTime() - checkInDate.getTime()) / 36e5;
+              if (checkInDate < yesterday) {
+                hours = (checkOutDate.getTime() - yesterday.getTime()) / 36e5;
+              } else if (checkOutDate > lastDay) {
+                hours = (lastDay.getTime() - checkInDate.getTime()) / 36e5 + 24; // Adjust for extra day
+              }
+
+              const width = hours * 2; // Convert to pixels
+
+              // Calculate y position
+              const y = 70 + 8 + roomIndex * (50 + 8);
+
+              // Border radius logic
+              const borderRadius = `${
+                checkInDate <= yesterday ? '0' : '1rem'
+              } ${checkOutDate >= lastDay ? '0' : '1rem'} ${
+                checkOutDate >= lastDay ? '0' : '1rem'
+              } ${checkInDate <= yesterday ? '0' : '1rem'}`;
+
+              return (
+                <div
+                  key={booking.id}
+                  className="bg-red-400 p-2 h-[50px] flex items-center justify-center absolute"
+                  style={{
+                    top: `${y}px`,
+                    left: `${x}px`,
+                    width: `${width}px`,
+                    borderRadius,
+                  }}
+                >
+                  {booking.client_name}
+                </div>
+              );
+            })}
           </div>
         </div>
       </main>

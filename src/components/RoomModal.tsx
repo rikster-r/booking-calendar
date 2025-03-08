@@ -8,9 +8,10 @@ type Props = {
 };
 
 const RoomModal = ({ isOpen, onClose, addRoom }: Props) => {
-  const [formData, setFormData] = useState({
+  const initial = {
     name: '',
-  });
+  };
+  const [formData, setFormData] = useState(initial);
 
   const handleChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -18,8 +19,9 @@ const RoomModal = ({ isOpen, onClose, addRoom }: Props) => {
 
   const handleSubmit: React.FormEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
-    await addRoom(formData);
     onClose();
+    await addRoom(formData);
+    setFormData(initial);
   };
 
   return (

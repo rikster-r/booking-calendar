@@ -72,15 +72,23 @@ async function createBooking(req: NextApiRequest, res: NextApiResponse) {
 }
 
 async function getBookings(req: NextApiRequest, res: NextApiResponse) {
-  const { room_id } = req.query;
+  let { start, end } = req.query;
 
-  let query = supabase.from('bookings').select('*');
+  // Validate and set default values
+  const today = new Date().toISOString().split('T')[0];
+  const futureDate = new Date();
+  futureDate.setDate(futureDate.getDate() + 30);
+  const next30Days = futureDate.toISOString().split('T')[0];
 
-  if (room_id) {
-    query = query.eq('room_id', room_id);
-  }
+  if (!start || typeof start !== 'string') start = today;
+  if (!end || typeof end !== 'string') end = next30Days;
 
-  const { data, error } = await query;
+  const { data, error } = await supabase
+    .from('bookings')
+    .select('*')
+    .or(
+      `and(check_in.gte.${start}, check_in.lte.${end}),and(check_out.gte.${start}, check_out.lte.${end})`
+    );
 
   if (error) {
     return res.status(500).json({ error: error.message });
