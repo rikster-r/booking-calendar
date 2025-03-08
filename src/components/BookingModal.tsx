@@ -33,7 +33,7 @@ const BookingModal = ({ isOpen, onClose, addBooking, rooms }: Props) => {
     e.preventDefault();
     onClose();
     await addBooking(formData);
-    setFormData(initial);  
+    setFormData(initial);
   };
 
   return (
@@ -160,10 +160,9 @@ const BookingModal = ({ isOpen, onClose, addBooking, rooms }: Props) => {
           </div>
         </div>
 
-        {/* Submit Button */}
         <button
           type="submit"
-          className="mt-4 w-full bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600 transition"
+          className="mt-4 w-full bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600 hover:cursor-pointer"
         >
           Сохранить бронирование
         </button>
