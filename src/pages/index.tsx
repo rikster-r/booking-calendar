@@ -22,16 +22,17 @@ const fetcher = (url: string) => fetch(url).then((res) => res.json());
 const dateRange = get30DayRange();
 
 export const getServerSideProps: GetServerSideProps = async () => {
-  let res = await fetch(`${process.env.NEXT_PUBLIC_URL}/api/rooms`);
-  const initialRooms: Room[] = await res.json();
-  res = await fetch(
-    `${process.env.NEXT_PUBLIC_URL}/api/bookings/?start=${dateRange.start}&end=${dateRange.end}`
-  );
-  const initialBookings: Booking[] = await res.json();
+  const [roomsRes, bookingsRes] = await Promise.all([
+    fetch(`${process.env.NEXT_PUBLIC_URL}/api/rooms`),
+    fetch(
+      `${process.env.NEXT_PUBLIC_URL}/api/bookings/?start=${dateRange.start}&end=${dateRange.end}`
+    ),
+  ]);
 
-  return {
-    props: { initialRooms, initialBookings },
-  };
+  const [initialRooms, initialBookings]: [Room[], Booking[]] =
+    await Promise.all([roomsRes.json(), bookingsRes.json()]);
+
+  return { props: { initialRooms, initialBookings } };
 };
 
 type Props = {
