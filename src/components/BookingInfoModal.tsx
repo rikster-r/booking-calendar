@@ -14,7 +14,7 @@ const BookingInfoModal = ({ isOpen, onClose, booking }: Props) => {
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
-      <h2 className="text-2xl font-bold mb-4">Booking Information</h2>
+      <h2 className="text-2xl font-bold mb-4">Информация о брони</h2>
       <div className="mb-2">
         <span className="font-semibold">Имя:</span> {booking.client_name}
       </div>
