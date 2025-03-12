@@ -4,6 +4,7 @@ import useSWR from 'swr';
 import BookingModal from '@/components/BookingModal';
 import RoomModal from '@/components/RoomModal';
 import BookingInfoModal from '@/components/BookingInfoModal';
+import RoomInfoModal from '@/components/RoomInfoModal';
 import { useState } from 'react';
 import {
   EllipsisHorizontalIcon,
@@ -56,10 +57,12 @@ export default function Home({ initialRooms }: Props) {
   const [isMenuOpen, setMenuOpen] = useState(false);
   const [isBookingModalOpen, setBookingModalOpen] = useState(false);
   const [isRoomModalOpen, setRoomModalOpen] = useState(false);
+  const [isBookingInfoModalOpen, setBookingInfoModalOpen] = useState(false);
   const [isRoomInfoModalOpen, setRoomInfoModalOpen] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedRoomId, setSelectedRoomId] = useState<number | null>(null);
+  const [selectedRoomInfo, setSelectedRoomInfo] = useState<Room | null>(null);
 
   const { data: rooms, mutate: mutateRooms } = useSWR<Room[]>(
     '/api/rooms',
@@ -108,6 +111,11 @@ export default function Home({ initialRooms }: Props) {
     setRoomInfoModalOpen(true);
   };
 
+  const openRoomInfoModal = (room: Room) => {
+    setSelectedRoomInfo(room);
+    setRoomInfoModalOpen(true);
+  };
+
   if (!rooms) return <div>Loading...</div>;
 
   // For months header rendering
@@ -125,12 +133,13 @@ export default function Home({ initialRooms }: Props) {
             <div className="h-[70px]"></div>
             {rooms.map((room) => (
               <>
-                <div
+                <button
                   className="bg-blue-700 text-white p-2 rounded-md text-center h-[50px] flex items-center justify-center"
+                  onClick={() => openRoomInfoModal(room)}
                   key={room.id}
                 >
                   {room.name}
-                </div>
+                </button>
               </>
             ))}
           </div>
@@ -271,9 +280,18 @@ export default function Home({ initialRooms }: Props) {
           addRoom={addRoom}
         />
         <BookingInfoModal
-          isOpen={isRoomInfoModalOpen}
-          onClose={() => setRoomInfoModalOpen(false)}
+          isOpen={isBookingInfoModalOpen}
+          onClose={() => setBookingInfoModalOpen(false)}
           booking={selectedBooking}
+        />
+        <RoomInfoModal
+          isOpen={isRoomInfoModalOpen}
+          onClose={() => {
+            mutateRooms();
+            mutateBookings();
+            setRoomInfoModalOpen(false);
+          }}
+          room={selectedRoomInfo}
         />
       </div>
     </div>
