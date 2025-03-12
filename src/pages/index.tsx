@@ -117,7 +117,7 @@ export default function Home({ initialRooms }: Props) {
     <div
       className={`${geistSans.variable} min-h-screen p-2 pb-20 gap-16 sm:p-8 font-[family-name:var(--font-geist-sans)] flex relative`}
     >
-      <main className="mx-auto w-full">
+      <main className="mx-auto w-full max-w-max">
         <h1 className="text-2xl sm:text-4xl font-bold pb-4">Календарь брони</h1>
         <div className="p-2 sm:p-4 bg-gray-100 flex gap-2 w-full max-w-screen">
           <div className="flex flex-col gap-2 w-[100px]">
