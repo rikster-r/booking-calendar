@@ -19,10 +19,6 @@ const BookingInfoModal = ({ isOpen, onClose, booking }: Props) => {
         <span className="font-semibold">Имя:</span> {booking.client_name}
       </div>
       <div className="mb-2">
-        <span className="font-semibold">Фамилия/Фирма:</span>{' '}
-        {booking.client_surname}
-      </div>
-      <div className="mb-2">
         <span className="font-semibold">Электронный адрес:</span>{' '}
         {booking.client_email}
       </div>

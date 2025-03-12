@@ -29,7 +29,6 @@ const BookingModal = ({
   const [formData, setFormData] = useState(() => ({
     roomId: selectedRoomId ?? (rooms.length > 0 ? rooms[0].id : 0),
     clientName: '',
-    clientSurname: '',
     clientPhone: '',
     clientEmail: '',
     adultsCount: 0,
@@ -140,16 +139,6 @@ const BookingModal = ({
               type="text"
               name="clientName"
               value={formData.clientName}
-              onChange={handleChange}
-              className="w-full p-2 border rounded-md"
-            />
-          </div>
-          <div className="mt-2">
-            <label className="text-gray-700">Фамилия/Фирма</label>
-            <input
-              type="text"
-              name="clientSurname"
-              value={formData.clientSurname}
               onChange={handleChange}
               className="w-full p-2 border rounded-md"
             />

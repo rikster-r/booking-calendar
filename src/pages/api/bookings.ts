@@ -18,7 +18,6 @@ async function createBooking(req: NextApiRequest, res: NextApiResponse) {
   const {
     roomId: room_id,
     clientName: client_name,
-    clientSurname: client_surname,
     clientPhone: client_phone,
     clientEmail: client_email,
     adultsCount: adults_count,
@@ -36,7 +35,6 @@ async function createBooking(req: NextApiRequest, res: NextApiResponse) {
     {
       room_id,
       client_name,
-      client_surname,
       client_phone,
       client_email,
       adults_count,
