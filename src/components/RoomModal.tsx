@@ -4,23 +4,37 @@ import { useState } from 'react';
 type Props = {
   isOpen: boolean;
   onClose: () => void;
-  addRoom: (data: RoomInput) => Promise<void>;
 };
 
-const RoomModal = ({ isOpen, onClose, addRoom }: Props) => {
+const RoomModal = ({ isOpen, onClose }: Props) => {
   const initial = {
     name: '',
   };
   const [formData, setFormData] = useState(initial);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const addRoom = async (data: RoomInput) => {
+    setIsSubmitting(true);
+    const res = await fetch('/api/rooms', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+
+    if (res.ok) {
+      // TODO
+    }
+    setIsSubmitting(false);
+  };
+
   const handleSubmit: React.FormEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
-    onClose();
     await addRoom(formData);
+    onClose();
     setFormData(initial);
   };
 
@@ -46,6 +60,7 @@ const RoomModal = ({ isOpen, onClose, addRoom }: Props) => {
           <button
             type="submit"
             className="bg-blue-500 text-white px-4 py-2 rounded-md hover:cursor-pointer"
+            disabled={isSubmitting}
           >
             Добавить
           </button>

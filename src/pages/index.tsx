@@ -54,16 +54,6 @@ export default function Home({ initialRooms }: Props) {
     return new Date(year, month, date + i);
   });
 
-  const [isMenuOpen, setMenuOpen] = useState(false);
-  const [isBookingModalOpen, setBookingModalOpen] = useState(false);
-  const [isRoomModalOpen, setRoomModalOpen] = useState(false);
-  const [isBookingInfoModalOpen, setBookingInfoModalOpen] = useState(false);
-  const [isRoomInfoModalOpen, setRoomInfoModalOpen] = useState(false);
-  const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
-  const [selectedRoomId, setSelectedRoomId] = useState<number | null>(null);
-  const [selectedRoomInfo, setSelectedRoomInfo] = useState<Room | null>(null);
-
   const { data: rooms, mutate: mutateRooms } = useSWR<Room[]>(
     '/api/rooms',
     fetcher,
@@ -76,44 +66,25 @@ export default function Home({ initialRooms }: Props) {
     fetcher
   );
 
-  const addRoom = async (data: RoomInput) => {
-    const res = await fetch('/api/rooms', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
+  const [isMenuOpen, setMenuOpen] = useState(false);
+  const [modals, setModals] = useState({
+    addBooking: false,
+    addRoom: false,
+    bookingInfo: false,
+    roomInfo: false,
+  });
 
-    if (res.ok) {
-      mutateRooms();
-    }
-  };
+  const [modalData, setModalData] = useState<
+    Record<string, unknown> | undefined
+  >();
 
-  const addBooking = async (data: BookingInput) => {
-    const res = await fetch('/api/bookings', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-
-    if (res.ok) {
-      mutateBookings();
-    }
-  };
-
-  const openBookingModal = (date: Date, roomId: number) => {
-    setSelectedDate(date);
-    setSelectedRoomId(roomId);
-    setBookingModalOpen(true);
-  };
-
-  const openBookingInfoModal = (booking: Booking) => {
-    setSelectedBooking(booking);
-    setRoomInfoModalOpen(true);
-  };
-
-  const openRoomInfoModal = (room: Room) => {
-    setSelectedRoomInfo(room);
-    setRoomInfoModalOpen(true);
+  // Helper function to toggle modals
+  const toggleModal = (
+    modal: keyof typeof modals,
+    data?: Record<string, unknown> | undefined
+  ) => {
+    setModals((prev) => ({ ...prev, [modal]: !prev[modal] }));
+    setModalData(data);
   };
 
   if (!rooms) return <div>Loading...</div>;
@@ -135,7 +106,7 @@ export default function Home({ initialRooms }: Props) {
               <>
                 <button
                   className="bg-blue-700 text-white p-2 rounded-md text-center h-[50px] flex items-center justify-center"
-                  onClick={() => openRoomInfoModal(room)}
+                  onClick={() => toggleModal('roomInfo', room)}
                   key={room.id}
                 >
                   {room.name}
@@ -175,9 +146,9 @@ export default function Home({ initialRooms }: Props) {
               daysList.map((day, dayIndex) => (
                 <button
                   className="border-1 border-gray-400 p-2 rounded-md h-[50px] w-[48px] flex items-center justify-center"
-                  onClick={() => {
-                    openBookingModal(day, room.id);
-                  }}
+                  onClick={() =>
+                    toggleModal('addBooking', { day: day, roomId: room.id })
+                  }
                   key={`${room.id}-${dayIndex}`}
                 ></button>
               ))
@@ -232,7 +203,7 @@ export default function Home({ initialRooms }: Props) {
                     width: `${width}px`,
                     borderRadius,
                   }}
-                  onClick={() => openBookingInfoModal(booking)}
+                  onClick={() => toggleModal('bookingInfo', booking)}
                 >
                   {booking.client_name}
                 </div>
@@ -248,18 +219,27 @@ export default function Home({ initialRooms }: Props) {
         >
           <EllipsisHorizontalIcon />
         </button>
+        {/*
+        DO NOT CHANGE MENU TO MODAL
+        MODAL HAS SHADED BACKDROP WHICH IS NOT NEEDED IN MENU
+        */}
         {isMenuOpen && (
           <div className="bg-white fixed bottom-20 right-5 z-20 shadow-lg rounded-lg">
             <button
               className="flex items-center gap-2 rounded-md transition focus-visible:bg-gray-100 px-6 py-4 hover:cursor-pointer hover:bg-gray-100 w-full"
-              onClick={() => setRoomModalOpen(true)}
+              onClick={() => toggleModal('addRoom')}
             >
               <BuildingOfficeIcon className="w-6 h-6" />
               <p>Добавить комнату</p>
             </button>
             <button
               className="flex items-center gap-2 rounded-md transition focus-visible:bg-gray-100 px-6 py-4 hover:cursor-pointer hover:bg-gray-100 w-full"
-              onClick={() => openBookingModal(today, rooms[0].id)}
+              onClick={() =>
+                toggleModal('addBooking', {
+                  day: today,
+                  roomId: rooms[0].id,
+                })
+              }
             >
               <KeyIcon className="w-6 h-6" />
               <p>Забронировать </p>
@@ -267,31 +247,35 @@ export default function Home({ initialRooms }: Props) {
           </div>
         )}
         <BookingModal
-          isOpen={isBookingModalOpen}
-          onClose={() => setBookingModalOpen(false)}
-          addBooking={addBooking}
+          isOpen={modals.addBooking}
+          onClose={() => {
+            toggleModal('addBooking');
+            mutateBookings();
+          }}
           rooms={rooms}
-          selectedDate={selectedDate}
-          selectedRoomId={selectedRoomId}
+          selectedDate={modalData?.day as Date}
+          selectedRoomId={modalData?.roomId as number}
         />
         <RoomModal
-          isOpen={isRoomModalOpen}
-          onClose={() => setRoomModalOpen(false)}
-          addRoom={addRoom}
+          isOpen={modals.addRoom}
+          onClose={() => {
+            toggleModal('addRoom');
+            mutateRooms();
+          }}
         />
         <BookingInfoModal
-          isOpen={isBookingInfoModalOpen}
-          onClose={() => setBookingInfoModalOpen(false)}
-          booking={selectedBooking}
+          isOpen={modals.bookingInfo}
+          onClose={() => toggleModal('bookingInfo')}
+          booking={modalData as Booking}
         />
         <RoomInfoModal
-          isOpen={isRoomInfoModalOpen}
+          isOpen={modals.roomInfo}
           onClose={() => {
+            toggleModal('roomInfo');
             mutateRooms();
             mutateBookings();
-            setRoomInfoModalOpen(false);
           }}
-          room={selectedRoomInfo}
+          room={modalData as Room}
         />
       </div>
     </div>

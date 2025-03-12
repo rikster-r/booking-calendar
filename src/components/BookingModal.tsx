@@ -5,7 +5,6 @@ import { PhoneIcon, EnvelopeIcon } from '@heroicons/react/24/solid';
 type Props = {
   isOpen: boolean;
   onClose: () => void;
-  addBooking: (data: BookingInput) => Promise<void>;
   rooms: Room[];
   selectedDate: Date | null;
   selectedRoomId: number | null;
@@ -14,7 +13,6 @@ type Props = {
 const BookingModal = ({
   isOpen,
   onClose,
-  addBooking,
   rooms,
   selectedDate,
   selectedRoomId,
@@ -22,10 +20,12 @@ const BookingModal = ({
   const formatDateTimeLocal = (date: Date | null) => {
     if (!date) return '';
     const offset = date.getTimezoneOffset() * 60000; // Offset in milliseconds
-    const localISO = new Date(date.getTime() - offset).toISOString().slice(0, 16);
+    const localISO = new Date(date.getTime() - offset)
+      .toISOString()
+      .slice(0, 16);
     return localISO;
   };
-  
+
   const [formData, setFormData] = useState(() => ({
     roomId: selectedRoomId ?? (rooms.length > 0 ? rooms[0].id : 0),
     clientName: '',
@@ -36,7 +36,8 @@ const BookingModal = ({
     checkIn: formatDateTimeLocal(selectedDate),
     checkOut: '',
   }));
-  
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   useEffect(() => {
     setFormData((prev) => ({
       ...prev,
@@ -51,10 +52,25 @@ const BookingModal = ({
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const addBooking = async (data: BookingInput) => {
+    setIsSubmitting(true);
+    const res = await fetch('/api/bookings', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+
+    if (res.ok) {
+      // TODO
+    }
+
+    setIsSubmitting(false);
+  };
+
   const handleSubmit: React.FormEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
-    onClose();
     await addBooking(formData);
+    onClose();
   };
 
   return (
@@ -174,6 +190,7 @@ const BookingModal = ({
         <button
           type="submit"
           className="mt-4 w-full bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600 hover:cursor-pointer"
+          disabled={isSubmitting}
         >
           Сохранить бронирование
         </button>
