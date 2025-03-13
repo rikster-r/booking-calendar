@@ -234,12 +234,7 @@ export default function Home({ initialRooms }: Props) {
             </button>
             <button
               className="flex items-center gap-2 rounded-md transition focus-visible:bg-gray-100 px-6 py-4 hover:cursor-pointer hover:bg-gray-100 w-full"
-              onClick={() =>
-                toggleModal('addBooking', {
-                  day: today,
-                  roomId: rooms[0].id,
-                })
-              }
+              onClick={() => toggleModal('addBooking')}
             >
               <KeyIcon className="w-6 h-6" />
               <p>Забронировать </p>
@@ -253,8 +248,8 @@ export default function Home({ initialRooms }: Props) {
             mutateBookings();
           }}
           rooms={rooms}
-          selectedDate={modalData?.day as Date}
-          selectedRoomId={modalData?.roomId as number}
+          selectedDate={(modalData?.day as Date) ?? today}
+          selectedRoomId={(modalData?.roomId as number) ?? rooms[0].id}
         />
         <RoomModal
           isOpen={modals.addRoom}

@@ -9,3 +9,7 @@ export function get30DayRange() {
 
   return { start, end };
 }
+
+export const getNextDay = (date: Date) => {
+  return new Date(new Date(date).setDate(date.getDate() + 1));
+};

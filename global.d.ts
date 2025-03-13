@@ -2,11 +2,11 @@ type Room = {
   id: number;
   name: string;
   created_at: string;
-}
+};
 
 type RoomInput = {
   name: string;
-}
+};
 
 type Booking = {
   id: number;
@@ -19,13 +19,15 @@ type Booking = {
   check_in: string;
   check_out: string;
   created_at: string;
-}
+};
 
 type BookingInput = {
   roomId: number;
   clientName: string;
   clientPhone: string;
   clientEmail: string;
-  checkIn: string;
-  checkOut: string;
-}
+  adultsCount: number;
+  childrenCount: number;
+  checkIn: Date;
+  checkOut: Date;
+};
