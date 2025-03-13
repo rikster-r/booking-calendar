@@ -12,6 +12,17 @@ const BookingInfoModal = ({ isOpen, onClose, booking }: Props) => {
   const check_in = new Date(booking.check_in);
   const check_out = new Date(booking.check_out);
 
+  const deleteBooking = async () => {
+    const res = await fetch(`/api/bookings/${booking.id}`, {
+      method: 'DELETE',
+    });
+
+    if (res.ok) {
+      // onClose here is also supposed to mutate rooms
+      onClose();
+    }
+  };
+
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <h2 className="text-2xl font-bold mb-4">Информация о брони</h2>
@@ -37,7 +48,13 @@ const BookingInfoModal = ({ isOpen, onClose, booking }: Props) => {
         <span className="font-semibold">Гости:</span> {booking.adults_count}{' '}
         взрослых, {booking.children_count} детей
       </div>
-      <div className="mt-4 flex justify-end">
+      <div className="mt-4 flex justify-end flex-col gap-2 sm:flex-row">
+        <button
+          onClick={deleteBooking}
+          className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 hover:cursor-pointer"
+        >
+          Удалить бронь
+        </button>
         <button
           onClick={onClose}
           className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 hover:cursor-pointer"

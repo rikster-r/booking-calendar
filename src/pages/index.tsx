@@ -260,7 +260,10 @@ export default function Home({ initialRooms }: Props) {
         />
         <BookingInfoModal
           isOpen={modals.bookingInfo}
-          onClose={() => toggleModal('bookingInfo')}
+          onClose={() => {
+            toggleModal('bookingInfo');
+            mutateBookings();
+          }}
           booking={modalData as Booking}
         />
         <RoomInfoModal
