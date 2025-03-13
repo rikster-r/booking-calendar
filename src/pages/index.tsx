@@ -41,10 +41,10 @@ type Props = {
   initialBookings: Booking[];
 };
 
-export default function Home({ initialRooms }: Props) {
+export default function Home({ initialRooms, initialBookings }: Props) {
   const LOCALE = 'ru-RU';
   const today = new Date();
-  const currentYear = today.toLocaleDateString('ru-RU', { year: 'numeric' });
+  const currentYear = today.toLocaleDateString(LOCALE, { year: 'numeric' });
 
   const daysList = Array.from({ length: 30 }, (_, i) => {
     const year = today.getFullYear();
@@ -57,13 +57,12 @@ export default function Home({ initialRooms }: Props) {
   const { data: rooms, mutate: mutateRooms } = useSWR<Room[]>(
     '/api/rooms',
     fetcher,
-    {
-      fallbackData: initialRooms,
-    }
+    { fallbackData: initialRooms }
   );
   const { data: bookings, mutate: mutateBookings } = useSWR<Booking[]>(
     `/api/bookings/?start=${dateRange.start}&end=${dateRange.end}`,
-    fetcher
+    fetcher,
+    { fallbackData: initialBookings }
   );
 
   const [isMenuOpen, setMenuOpen] = useState(false);
@@ -95,6 +94,9 @@ export default function Home({ initialRooms }: Props) {
   return (
     <div
       className={`${geistSans.variable} min-h-screen p-2 pb-20 gap-16 sm:p-8 font-[family-name:var(--font-geist-sans)] flex relative`}
+      onClick={() => {
+        setMenuOpen(false);
+      }}
     >
       <main className="mx-auto w-full max-w-max">
         <h1 className="text-2xl sm:text-4xl font-bold pb-4">Календарь брони</h1>
@@ -116,24 +118,27 @@ export default function Home({ initialRooms }: Props) {
             ))}
           </div>
           <div className="grid grid-cols-[repeat(30,48px)] overflow-x-scroll gap-y-2 relative">
-            {daysList.map((day, i) => {
+            {daysList.map((day) => {
               const month = day.toLocaleDateString(LOCALE, { month: 'long' });
 
               if (seenMonths.has(month)) {
-                return <div className="w-[48px]" key={i}></div>;
+                return <div className="w-[48px]" key={day.getTime()}></div>;
               }
 
               seenMonths.add(month);
               return (
-                <div className="text-lg font-bold capitalize h-[25px]" key={i}>
+                <div
+                  className="text-lg font-bold capitalize h-[25px]"
+                  key={day.getTime()}
+                >
                   {month}
                 </div>
               );
             })}
-            {daysList.map((day, i) => (
+            {daysList.map((day) => (
               <div
                 className="bg-gray-300 p-2 border-1 border-gray-400 rounded-md flex flex-col items-center justify-center h-[70px] w-[48px]"
-                key={i}
+                key={day.toISOString()}
               >
                 <p>{day.toLocaleDateString(LOCALE, { day: 'numeric' })}</p>
                 <p>
@@ -216,7 +221,10 @@ export default function Home({ initialRooms }: Props) {
       <div>
         <button
           className="flex z-10 fixed justify-center items-center bottom-5 right-5 bg-amber-300 rounded-full h-12 w-12 p-2 hover:cursor-pointer"
-          onClick={() => setMenuOpen((prev) => !prev)}
+          onClick={(e) => {
+            e.stopPropagation();
+            setMenuOpen((prev) => !prev);
+          }}
         >
           <EllipsisHorizontalIcon />
         </button>

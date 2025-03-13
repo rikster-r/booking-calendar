@@ -20,7 +20,7 @@ const BookingModal = ({
   selectedDate,
   selectedRoomId,
 }: Props) => {
-  const [formData, setFormData] = useState(() => ({
+  const initial: BookingInput = {
     roomId: selectedRoomId,
     clientName: '',
     clientPhone: '',
@@ -29,17 +29,15 @@ const BookingModal = ({
     childrenCount: 0,
     checkIn: selectedDate,
     checkOut: getNextDay(selectedDate),
-  }));
+  };
+  const [formData, setFormData] = useState(initial);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    setFormData((prev) => ({
-      ...prev,
-      roomId: selectedRoomId,
-      checkIn: selectedDate,
-      checkOut: getNextDay(selectedDate),
-    }));
-  }, [selectedRoomId, selectedDate, rooms]);
+    if (!isOpen) {
+      setFormData(initial);
+    }
+  }, [isOpen]);
 
   const handleChange: React.ChangeEventHandler<
     HTMLInputElement | HTMLSelectElement
