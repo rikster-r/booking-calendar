@@ -105,7 +105,8 @@ export default function Home({ initialRooms }: Props) {
             {rooms.map((room) => (
               <>
                 <button
-                  className="bg-blue-700 text-white p-2 rounded-md text-center h-[50px] flex items-center justify-center"
+                  style={{ backgroundColor: room.color }}
+                  className=" text-white p-2 rounded-md text-center h-[50px] flex items-center justify-center"
                   onClick={() => toggleModal('roomInfo', room)}
                   key={room.id}
                 >

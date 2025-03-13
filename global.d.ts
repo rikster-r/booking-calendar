@@ -1,11 +1,13 @@
 type Room = {
   id: number;
   name: string;
+  color: string
   created_at: string;
 };
 
 type RoomInput = {
   name: string;
+  color: string
 };
 
 type Booking = {

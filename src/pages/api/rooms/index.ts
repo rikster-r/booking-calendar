@@ -13,9 +13,15 @@ export default async function handler(
   }
 
   if (req.method === 'POST') {
-    const { name } = req.body;
+    const { name, color } = req.body;
 
-    const { data, error } = await supabase.from('rooms').insert([{ name }]);
+    if (!name || !color) {
+      return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    const { data, error } = await supabase
+      .from('rooms')
+      .insert([{ name, color }]);
 
     if (error) return res.status(500).json({ error: error.message });
     return res.status(201).json(data);
