@@ -24,10 +24,30 @@ async function createBooking(req: NextApiRequest, res: NextApiResponse) {
     childrenCount: children_count,
     checkIn: check_in,
     checkOut: check_out,
-  } = req.body;
+  }: BookingInput = req.body;
 
-  if (!room_id || !client_name || !client_phone || !check_in || !check_out) {
+  if (
+    !room_id ||
+    !client_name ||
+    !client_phone ||
+    !adults_count ||
+    !check_in ||
+    !check_out
+  ) {
     return res.status(400).json({ error: 'Missing required fields' });
+  }
+
+  console.log(client_phone.length);
+  if (!client_phone.startsWith('+7') && !client_phone.startsWith('8')) {
+    return res.status(400).json({ error: 'Invalid phone number' });
+  }
+
+  if (client_phone.startsWith('+7') && client_phone.length !== 12) {
+    return res.status(400).json({ error: 'Invalid phone number' });
+  }
+
+  if (client_phone.startsWith('8') && client_phone.length !== 11) {
+    return res.status(400).json({ error: 'Invalid phone number' });
   }
 
   // Insert new booking
