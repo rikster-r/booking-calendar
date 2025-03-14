@@ -26,7 +26,7 @@ const RoomInfoModal = ({ isOpen, onClose, room }: Props) => {
       <div className="mb-2">
         <span className="font-semibold">Название:</span> {room.name}
       </div>
-      <div className="mt-4 flex justify-end flex-col gap-2 sm:flex-row">
+      <div className="mt-4 flex justify-end flex-row gap-2">
         <button
           onClick={deleteRoom}
           className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 hover:cursor-pointer"

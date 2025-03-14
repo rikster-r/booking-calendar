@@ -23,7 +23,7 @@ body {
 }
 
 .react-datepicker__triangle {
-  @apply fill-white stroke-black;
+  @apply fill-white stroke-white;
 }
 
 .react-datepicker__portal {

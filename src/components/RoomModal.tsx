@@ -1,6 +1,6 @@
 import Modal from '@/components/Modal';
 import { useEffect, useState } from 'react';
-import { PaintBrushIcon } from '@heroicons/react/24/solid';
+import { PaintBrushIcon, XMarkIcon } from '@heroicons/react/24/solid';
 import { hexColors } from '@/lib/colors';
 
 type Props = {
@@ -59,9 +59,18 @@ const RoomModal = ({ isOpen, onClose }: Props) => {
         // basically like a backdrop
         onClick={() => setColorPickerVisible(false)}
       >
-        <h2 className="text-lg font-semibold flex items-center gap-2">
-          🏠 Добавить помещение
-        </h2>
+        <div className="flex justify-between items-center">
+          <h2 className="text-lg font-semibold flex items-center gap-2">
+            🏠 Добавить помещение
+          </h2>
+          <button
+            type="button"
+            className="hover:cursor-pointer"
+            onClick={onClose}
+          >
+            <XMarkIcon className="w-7 h-7" />
+          </button>
+        </div>
 
         <div className="mt-2">
           <label className="text-gray-700 font-medium">Название</label>
@@ -92,7 +101,7 @@ const RoomModal = ({ isOpen, onClose }: Props) => {
             {formData.color}
           </button>
           {isColorPickerVisible && (
-            <div className="grid grid-cols-9 absolute top-20 w-full gap-1 bg-white p-2 rounded-md">
+            <div className="grid grid-cols-9 absolute top-20 w-[95%] gap-1 bg-white p-2 rounded-md">
               {hexColors.map((color) => (
                 <button
                   type="button"

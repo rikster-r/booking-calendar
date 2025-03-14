@@ -31,10 +31,11 @@ const DateTimePicker = ({
           customInput={
             <input
               type="text"
-              className="w-full p-2 border  rounded-md"
+              className="w-full p-2 border rounded-md"
               required
             />
           }
+          popperPlacement="bottom-start"
           renderCustomHeader={({
             date,
             decreaseMonth,
