@@ -29,7 +29,11 @@ const DateTimePicker = ({
           locale={ru}
           dateFormat={'dd.MM.yyyy'}
           customInput={
-            <input type="text" className="w-full p-2 border  rounded-md" />
+            <input
+              type="text"
+              className="w-full p-2 border  rounded-md"
+              required
+            />
           }
           renderCustomHeader={({
             date,
@@ -76,6 +80,7 @@ const DateTimePicker = ({
         value={timeValue}
         className="p-2 border rounded-md w-[40%] sm:w-[30%] text-center"
         onChange={onTimeChange}
+        required
       />
     </div>
   );

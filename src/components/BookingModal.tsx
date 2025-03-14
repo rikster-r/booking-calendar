@@ -1,6 +1,6 @@
 import Modal from '@/components/Modal';
 import { useEffect, useState } from 'react';
-import { PhoneIcon, EnvelopeIcon } from '@heroicons/react/24/solid';
+import { PhoneIcon, EnvelopeIcon, XMarkIcon } from '@heroicons/react/24/solid';
 import { getNextDay } from '@/lib/dates';
 import { format } from 'date-fns';
 import DateTimePicker from '@/components/DateTimePicker';
@@ -25,8 +25,10 @@ const BookingModal = ({
     clientName: '',
     clientPhone: '',
     clientEmail: '',
-    adultsCount: 0,
+    adultsCount: 1,
     childrenCount: 0,
+    doorCode: 0,
+    additionalInfo: '',
     checkIn: selectedDate,
     checkOut: getNextDay(selectedDate),
   };
@@ -39,8 +41,17 @@ const BookingModal = ({
     }
   }, [isOpen]);
 
+  useEffect(() => {
+    setFormData((prev) => ({
+      ...prev,
+      roomId: selectedRoomId,
+      checkIn: selectedDate,
+      checkOut: getNextDay(selectedDate),
+    }));
+  }, [selectedDate, selectedRoomId]);
+
   const handleChange: React.ChangeEventHandler<
-    HTMLInputElement | HTMLSelectElement
+    HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
   > = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -117,12 +128,21 @@ const BookingModal = ({
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <form onSubmit={handleSubmit}>
-        <h2 className="text-lg font-semibold flex items-center gap-2">
-          📌 Бронирование
-        </h2>
+        <div className="flex justify-between items-center">
+          <h2 className="text-lg font-semibold flex items-center gap-2">
+            📌 Бронирование
+          </h2>
+          <button
+            type="button"
+            className="hover:cursor-pointer"
+            onClick={onClose}
+          >
+            <XMarkIcon className="w-7 h-7" />
+          </button>
+        </div>
 
         {/* Room Info */}
-        <div className="mt-2">
+        <div className="mt-3">
           <label className="text-gray-700 font-medium">Помещение</label>
           <select
             name="roomId"
@@ -130,6 +150,7 @@ const BookingModal = ({
             value={formData.roomId}
             className="w-full mt-1 p-2 border rounded-md"
             onChange={handleChange}
+            required
           >
             {rooms.map((room) => (
               <option value={room.id} key={room.id}>
@@ -140,7 +161,7 @@ const BookingModal = ({
         </div>
 
         {/* Check-in */}
-        <div className="mt-2">
+        <div className="mt-3">
           <label className="text-gray-700">Заезд</label>
           <DateTimePicker
             onDateChange={setCheckIn}
@@ -152,7 +173,7 @@ const BookingModal = ({
         </div>
 
         {/* Check-out */}
-        <div className="mt-2">
+        <div className="mt-3">
           <label className="text-gray-700">Выезд</label>
           <DateTimePicker
             onDateChange={setCheckOut}
@@ -173,6 +194,7 @@ const BookingModal = ({
               value={formData.adultsCount}
               onChange={handleChange}
               className="w-full p-2 border rounded-md"
+              required
             />
           </div>
           <div>
@@ -187,6 +209,30 @@ const BookingModal = ({
           </div>
         </div>
 
+        {/* Door Code */}
+        <div className="mt-3">
+          <label className="text-gray-700">Код двери</label>
+          <input
+            type="text"
+            name="doorCode"
+            value={formData.doorCode}
+            onChange={handleChange}
+            className="w-full p-2 border rounded-md"
+            required
+          />
+        </div>
+
+        {/* Additional Info */}
+        <div className="mt-3">
+          <label className="text-gray-700">Дополнительная информация</label>
+          <textarea
+            name="additionalInfo"
+            value={formData.additionalInfo}
+            onChange={handleChange}
+            className="w-full p-2 border rounded-md resize-none h-[100px]"
+          />
+        </div>
+
         {/* Client Info */}
         <div className="mt-4 p-3 bg-gray-100 rounded-md">
           <h3 className="font-medium flex items-center gap-2">👤 Клиент</h3>
@@ -198,6 +244,7 @@ const BookingModal = ({
               value={formData.clientName}
               onChange={handleChange}
               className="w-full p-2 border rounded-md"
+              required
             />
           </div>
           <div className="mt-2">
@@ -209,6 +256,7 @@ const BookingModal = ({
                 value={formData.clientPhone}
                 onChange={handleChange}
                 className="w-full p-2 border rounded-md pl-10"
+                required
               />
               <PhoneIcon className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
             </div>

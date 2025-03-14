@@ -21,6 +21,8 @@ async function createBooking(req: NextApiRequest, res: NextApiResponse) {
     clientPhone: client_phone,
     clientEmail: client_email,
     adultsCount: adults_count,
+    doorCode: door_code,
+    additionalInfo: additional_info,
     childrenCount: children_count,
     checkIn: check_in,
     checkOut: check_out,
@@ -32,12 +34,12 @@ async function createBooking(req: NextApiRequest, res: NextApiResponse) {
     !client_phone ||
     !adults_count ||
     !check_in ||
-    !check_out
+    !check_out ||
+    !door_code
   ) {
     return res.status(400).json({ error: 'Missing required fields' });
   }
 
-  console.log(client_phone.length);
   if (!client_phone.startsWith('+7') && !client_phone.startsWith('8')) {
     return res.status(400).json({ error: 'Invalid phone number' });
   }
@@ -61,6 +63,8 @@ async function createBooking(req: NextApiRequest, res: NextApiResponse) {
       children_count,
       check_in,
       check_out,
+      door_code,
+      additional_info,
     },
   ]);
 

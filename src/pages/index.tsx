@@ -202,7 +202,7 @@ export default function Home({ initialRooms, initialBookings }: Props) {
               return (
                 <div
                   key={booking.id}
-                  className="bg-red-400 p-2 h-[50px] flex items-center justify-center absolute"
+                  className="bg-red-400 p-2 h-[50px] flex items-center justify-center absolute truncate"
                   style={{
                     top: `${y}px`,
                     left: `${x}px`,

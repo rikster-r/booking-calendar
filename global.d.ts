@@ -1,13 +1,13 @@
 type Room = {
   id: number;
   name: string;
-  color: string
+  color: string;
   created_at: string;
 };
 
 type RoomInput = {
   name: string;
-  color: string
+  color: string;
 };
 
 type Booking = {
@@ -18,6 +18,8 @@ type Booking = {
   client_email: string;
   adults_count: number;
   children_count: number;
+  door_code: number;
+  additional_info: string;
   check_in: string;
   check_out: string;
   created_at: string;
@@ -30,6 +32,8 @@ type BookingInput = {
   clientEmail: string;
   adultsCount: number;
   childrenCount: number;
+  doorCode: number;
+  additionalInfo: string;
   checkIn: Date;
   checkOut: Date;
 };

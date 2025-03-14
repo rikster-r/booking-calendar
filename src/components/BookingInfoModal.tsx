@@ -26,24 +26,33 @@ const BookingInfoModal = ({ isOpen, onClose, booking }: Props) => {
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <h2 className="text-2xl font-bold mb-4">Информация о брони</h2>
-      <div className="mb-2">
+      <div className="mb-2 max-w-[600px]">
         <span className="font-semibold">Имя:</span> {booking.client_name}
       </div>
       <div className="mb-2">
         <span className="font-semibold">Электронный адрес:</span>{' '}
-        {booking.client_email}
+        {booking.client_email ? booking.client_email : 'Не указан'}
       </div>
       <div className="mb-2">
         <span className="font-semibold">Телефон:</span> {booking.client_phone}
       </div>
       <div className="mb-2">
-        <span className="font-semibold mr-1">Приезд</span>
+        <span className="font-semibold mr-1">Приезд:</span>
         {check_in.toLocaleDateString()} {check_in.toLocaleTimeString()}
       </div>
       <div className="mb-2">
         <span className="font-semibold mr-1">Выезд:</span>
         {check_out.toLocaleDateString()} {check_out.toLocaleTimeString()}
       </div>
+      <div className="mb-2">
+        <span className="font-semibold">Код двери:</span> {booking.door_code}
+      </div>
+      {booking.additional_info && (
+        <div className="mb-2 flex flex-col max-w-[600px]">
+          <span className="font-semibold">Дополнительная информация:</span>
+          <span>{booking.additional_info}</span>
+        </div>
+      )}
       <div className="mb-2">
         <span className="font-semibold">Гости:</span> {booking.adults_count}{' '}
         взрослых, {booking.children_count} детей
