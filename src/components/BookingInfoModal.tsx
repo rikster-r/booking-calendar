@@ -20,10 +20,17 @@ const BookingInfoModal = ({ isOpen, onClose, booking }: Props) => {
     });
 
     if (res.ok) {
-      // onClose here is also supposed to mutate rooms
       onClose();
     }
   };
+
+  // Process phone number
+  let phone = booking.client_phone.trim();
+  if (phone.startsWith('8')) {
+    phone = '+7' + phone.slice(1);
+  }
+  const whatsappLink = `https://wa.me/${phone.replace(/\D/g, '')}`;
+  const telegramLink = `https://t.me/${phone.replace(/\D/g, '')}`;
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
@@ -36,7 +43,25 @@ const BookingInfoModal = ({ isOpen, onClose, booking }: Props) => {
         {booking.client_email ? booking.client_email : 'Не указан'}
       </div>
       <div className="mb-2">
-        <span className="font-semibold">Телефон:</span> {booking.client_phone}
+        <span className="font-semibold">Телефон:</span> {phone}
+      </div>
+      <div className="mb-2 flex gap-2 flex-col">
+        <a
+          href={whatsappLink}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-green-600 hover:underline text-nowrap"
+        >
+          Связаться в WhatsApp
+        </a>
+        <a
+          href={telegramLink}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-600 hover:underline text-nowrap"
+        >
+          Связаться в Telegram
+        </a>
       </div>
       <div className="mb-2">
         <span className="font-semibold">Код двери:</span> {booking.door_code}
