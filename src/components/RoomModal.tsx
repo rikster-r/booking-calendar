@@ -37,7 +37,6 @@ const RoomModal = ({ isOpen, onClose }: Props) => {
   };
 
   const addRoom = async (data: RoomInput) => {
-    setIsSubmitting(true);
     const res = await fetch('/api/rooms', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -47,12 +46,16 @@ const RoomModal = ({ isOpen, onClose }: Props) => {
     if (res.ok) {
       // TODO
     }
-    setIsSubmitting(false);
   };
 
   const handleSubmit: React.FormEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
+    
+    setIsSubmitting(true);
     await addRoom(formData);
+    setIsSubmitting(false);
+
     onClose();
   };
 
@@ -80,6 +83,7 @@ const RoomModal = ({ isOpen, onClose }: Props) => {
             value={formData.name}
             onChange={handleChange}
             className="w-full mt-1 p-2 border rounded-md"
+            required
           />
         </div>
 

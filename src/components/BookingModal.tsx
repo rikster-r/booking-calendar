@@ -69,7 +69,6 @@ const BookingModal = ({
   };
 
   const addBooking = async (data: BookingInput) => {
-    setIsSubmitting(true);
     const res = await fetch('/api/bookings', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -84,13 +83,16 @@ const BookingModal = ({
     if (res.ok) {
       // TODO
     }
-
-    setIsSubmitting(false);
   };
 
   const handleSubmit: React.FormEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
+    if (isSubmitting) return;
+    
+    setIsSubmitting(true);
     await addBooking(formData);
+    setIsSubmitting(false);
+
     onClose();
   };
 
