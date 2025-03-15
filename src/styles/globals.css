@@ -31,7 +31,8 @@ input[type='number'] {
 }
 
 .react-datepicker-popper {
-  @apply z-40 w-72 text-sm bg-white shadow px-3 py-2 border-2 border-gray-200 rounded;
+  @apply z-60 w-72 text-sm bg-white shadow px-3 py-2 border-2 border-gray-200 rounded;
+  position: fixed !important;
 }
 
 .react-datepicker__triangle {
@@ -39,7 +40,7 @@ input[type='number'] {
 }
 
 .react-datepicker__portal {
-  @apply absolute z-10 w-72 text-sm transform-none bg-white shadow px-3 py-2 top-12 right-0 border-2 border-gray-200 rounded;
+  @apply absolute z-60 w-72 text-sm transform-none bg-white shadow px-3 py-2 top-12 right-0 border-2 border-gray-200 rounded;
 }
 
 .react-datepicker__week {

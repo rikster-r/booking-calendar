@@ -2,6 +2,12 @@ import Modal from '@/components/Modal';
 import { useEffect, useState } from 'react';
 import { PaintBrushIcon, XMarkIcon } from '@heroicons/react/24/solid';
 import { hexColors } from '@/lib/colors';
+import {
+  Popover,
+  PopoverButton,
+  PopoverPanel,
+  CloseButton,
+} from '@headlessui/react';
 
 type Props = {
   isOpen: boolean;
@@ -14,7 +20,6 @@ const RoomModal = ({ isOpen, onClose }: Props) => {
     color: hexColors[5],
   };
   const [formData, setFormData] = useState(initial);
-  const [isColorPickerVisible, setColorPickerVisible] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -29,7 +34,6 @@ const RoomModal = ({ isOpen, onClose }: Props) => {
 
   const changePickedColor = (color: string) => {
     setFormData((prev) => ({ ...prev, color }));
-    setColorPickerVisible(false);
   };
 
   const addRoom = async (data: RoomInput) => {
@@ -54,11 +58,7 @@ const RoomModal = ({ isOpen, onClose }: Props) => {
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
-      <form
-        onSubmit={handleSubmit}
-        // basically like a backdrop
-        onClick={() => setColorPickerVisible(false)}
-      >
+      <form onSubmit={handleSubmit} className="relative">
         <div className="flex justify-between items-center">
           <h2 className="text-lg font-semibold flex items-center gap-2">
             🏠 Добавить помещение
@@ -88,31 +88,28 @@ const RoomModal = ({ isOpen, onClose }: Props) => {
             <PaintBrushIcon className="w-4 h-4 mr-1" />
             <label className="text-gray-700 font-medium">Цвет дисплея</label>
           </div>
-          <button
-            type="button"
-            onClick={(e) => {
-              // to not propagate to backdrop(the modal itself)
-              e.stopPropagation();
-              setColorPickerVisible((prev) => !prev);
-            }}
-            className="w-full mt-1 p-2 border rounded-md hover:cursor-pointer text-white z-30"
-            style={{ backgroundColor: formData.color }}
-          >
-            {formData.color}
-          </button>
-          {isColorPickerVisible && (
-            <div className="grid grid-cols-9 absolute top-20 w-[95%] gap-1 bg-white p-2 rounded-md">
+          <Popover className="relative">
+            <PopoverButton
+              className="w-full mt-1 p-2 border rounded-md text-white hover:cursor-pointer"
+              style={{ backgroundColor: formData.color }}
+            >
+              {formData.color}
+            </PopoverButton>
+            <PopoverPanel
+              className="grid grid-cols-9 fixed w-[300px] gap-1 bg-white p-2 rounded-md inset-x-auto shadow-xl"
+              anchor="top"
+            >
               {hexColors.map((color) => (
-                <button
+                <CloseButton
+                  key={color}
                   type="button"
                   style={{ backgroundColor: color }}
-                  key={color}
                   className="aspect-square rounded-md hover:cursor-pointer focus-visible:ring-2 focus-visible:ring-offset-0 focus-visible:ring-blue-500"
                   onClick={() => changePickedColor(color)}
-                ></button>
+                ></CloseButton>
               ))}
-            </div>
-          )}
+            </PopoverPanel>
+          </Popover>
         </div>
 
         <div className="mt-4 flex justify-end">
