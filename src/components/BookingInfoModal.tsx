@@ -1,4 +1,5 @@
 import Modal from '@/components/Modal';
+import { differenceInCalendarDays } from 'date-fns';
 
 type Props = {
   isOpen: boolean;
@@ -7,7 +8,8 @@ type Props = {
 };
 
 const BookingInfoModal = ({ isOpen, onClose, booking }: Props) => {
-  if (!booking) return null;
+  if (!booking) return <></>;
+  if (!booking.client_name) return <></>;
 
   const check_in = new Date(booking.check_in);
   const check_out = new Date(booking.check_out);
@@ -37,6 +39,9 @@ const BookingInfoModal = ({ isOpen, onClose, booking }: Props) => {
         <span className="font-semibold">Телефон:</span> {booking.client_phone}
       </div>
       <div className="mb-2">
+        <span className="font-semibold">Код двери:</span> {booking.door_code}
+      </div>
+      <div className="mb-2">
         <span className="font-semibold mr-1">Приезд:</span>
         {check_in.toLocaleDateString()} {check_in.toLocaleTimeString()}
       </div>
@@ -45,7 +50,20 @@ const BookingInfoModal = ({ isOpen, onClose, booking }: Props) => {
         {check_out.toLocaleDateString()} {check_out.toLocaleTimeString()}
       </div>
       <div className="mb-2">
-        <span className="font-semibold">Код двери:</span> {booking.door_code}
+        <span className="font-semibold">Всего суток:</span>{' '}
+        {differenceInCalendarDays(check_out, check_in)}
+      </div>
+      <div className="mb-2">
+        <span className="font-semibold">Цена за сутки:</span>{' '}
+        {booking.daily_price.toLocaleString('ru', { minimumFractionDigits: 2 })}{' '}
+        руб.
+      </div>
+      <div className="mb-2">
+        <span className="font-semibold">За пребывание:</span>{' '}
+        {(
+          booking.daily_price * differenceInCalendarDays(check_out, check_in)
+        ).toLocaleString('ru', { minimumFractionDigits: 2 })}{' '}
+        руб., {booking.paid ? 'оплачено' : 'не оплачено'}
       </div>
       {booking.additional_info && (
         <div className="mb-2 flex flex-col max-w-[600px]">

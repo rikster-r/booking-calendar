@@ -31,7 +31,7 @@ const DateTimePicker = ({
           customInput={
             <input
               type="text"
-              className="w-full p-2 border rounded-md"
+              className="flex items-center w-full border rounded-md px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500 h-[40px]"
               required
             />
           }
@@ -79,7 +79,7 @@ const DateTimePicker = ({
       <input
         type="time"
         value={timeValue}
-        className="p-2 border rounded-md w-[40%] sm:w-[30%] text-center"
+        className="flex items-center border rounded-md px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500 h-[40px] w-[40%] sm:w-[30%] text-center"
         onChange={onTimeChange}
         required
       />

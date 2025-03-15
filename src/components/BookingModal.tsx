@@ -2,7 +2,7 @@ import Modal from '@/components/Modal';
 import { useEffect, useState } from 'react';
 import { PhoneIcon, EnvelopeIcon, XMarkIcon } from '@heroicons/react/24/solid';
 import { getNextDay } from '@/lib/dates';
-import { format } from 'date-fns';
+import { format, differenceInCalendarDays, addDays } from 'date-fns';
 import DateTimePicker from '@/components/DateTimePicker';
 
 type Props = {
@@ -29,6 +29,8 @@ const BookingModal = ({
     childrenCount: 0,
     doorCode: 0,
     additionalInfo: '',
+    dailyPrice: 0,
+    paid: false,
     checkIn: selectedDate,
     checkOut: getNextDay(selectedDate),
   };
@@ -53,7 +55,8 @@ const BookingModal = ({
   const handleChange: React.ChangeEventHandler<
     HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
   > = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    console.log(e.target.value, typeof e.target.value);
+    setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
   // stringify date with respect to timezone
@@ -91,6 +94,10 @@ const BookingModal = ({
     onClose();
   };
 
+  const setPaidStatus: React.ChangeEventHandler<HTMLSelectElement> = (e) => {
+    setFormData((prev) => ({ ...prev, paid: e.target.value === 'true' }));
+  };
+
   const setCheckIn = (date: Date) => {
     // TODO add error popups
     if (date > formData.checkOut) return;
@@ -103,9 +110,14 @@ const BookingModal = ({
     setFormData((prev) => ({ ...prev, checkOut: date }));
   };
 
-  const setCheckInTime:
-    | React.ChangeEventHandler<HTMLInputElement>
-    | undefined = (e) => {
+  const changeDaysBooked: React.ChangeEventHandler<HTMLInputElement> = (e) => {
+    const num = parseInt(e.target.value, 10);
+    if (isNaN(num)) return;
+
+    setCheckOut(addDays(formData.checkIn, num));
+  };
+
+  const setCheckInTime: React.ChangeEventHandler<HTMLInputElement> = (e) => {
     const [hours, minutes] = e.target.value.split(':').map(Number);
     setFormData((prev) => {
       const copy = new Date(prev.checkIn);
@@ -114,9 +126,7 @@ const BookingModal = ({
     });
   };
 
-  const setCheckOutTime:
-    | React.ChangeEventHandler<HTMLInputElement>
-    | undefined = (e) => {
+  const setCheckOutTime: React.ChangeEventHandler<HTMLInputElement> = (e) => {
     const [hours, minutes] = e.target.value.split(':').map(Number);
     setFormData((prev) => {
       const copy = new Date(prev.checkOut);
@@ -148,7 +158,7 @@ const BookingModal = ({
             name="roomId"
             id="roomId"
             value={formData.roomId}
-            className="w-full mt-1 p-2 border rounded-md"
+            className="flex items-center w-full border rounded-md px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500 h-[40px]"
             onChange={handleChange}
             required
           >
@@ -193,7 +203,7 @@ const BookingModal = ({
               name="adultsCount"
               value={formData.adultsCount}
               onChange={handleChange}
-              className="w-full p-2 border rounded-md"
+              className="flex items-center w-full border rounded-md px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500 h-[40px]"
               required
             />
           </div>
@@ -204,7 +214,7 @@ const BookingModal = ({
               name="childrenCount"
               value={formData.childrenCount}
               onChange={handleChange}
-              className="w-full p-2 border rounded-md"
+              className="flex items-center w-full border rounded-md px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500 h-[40px]"
             />
           </div>
         </div>
@@ -217,7 +227,7 @@ const BookingModal = ({
             name="doorCode"
             value={formData.doorCode}
             onChange={handleChange}
-            className="w-full p-2 border rounded-md"
+            className="flex items-center w-full border rounded-md px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500 h-[40px]"
             required
           />
         </div>
@@ -229,25 +239,88 @@ const BookingModal = ({
             name="additionalInfo"
             value={formData.additionalInfo}
             onChange={handleChange}
-            className="w-full p-2 border rounded-md resize-none h-[100px]"
+            className="flex items-center w-full border rounded-md px-3 py-2 mt-1 outline-none focus-within:ring-2 focus-within:ring-blue-500 resize-none h-[100px]"
           />
         </div>
 
+        {/* Finance */}
+        <div className="mt-6">
+          <h2 className="font-semibold text-lg flex items-center">
+            <span className="mr-2">$</span> Финансы
+          </h2>
+
+          <div className="mt-3">
+            <label className="text-gray-600">За сутки</label>
+            <div className="flex items-center w-full border rounded-md px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500">
+              <input
+                type="number"
+                name="dailyPrice"
+                className="w-full outline-none bg-transparent"
+                value={formData.dailyPrice}
+                onChange={handleChange}
+              />
+              <span className="ml-2 text-gray-500">RUB</span>
+            </div>
+          </div>
+
+          <div className="mt-3">
+            <label className="text-gray-600">Количество дней пребывания</label>
+            <input
+              type="number"
+              className="w-full border rounded-md px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500"
+              value={differenceInCalendarDays(
+                formData.checkOut,
+                formData.checkIn
+              )}
+              onChange={changeDaysBooked}
+            />
+          </div>
+
+          <div className="mt-3">
+            <label className="text-gray-600">За пребывание</label>
+            <div className="flex items-center w-full border rounded-md px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500">
+              <div className="w-full outline-none bg-transparent">
+                {(
+                  formData.dailyPrice *
+                  differenceInCalendarDays(formData.checkOut, formData.checkIn)
+                ).toLocaleString('ru', { minimumFractionDigits: 2 })}
+              </div>
+              <span className="ml-2 text-gray-500">RUB</span>
+            </div>
+          </div>
+
+          <div className="mt-3">
+            <label className="text-gray-700 font-medium">Статус оплаты</label>
+            <select
+              name="paid"
+              value={formData.paid ? 'true' : 'false'}
+              className="flex items-center w-full border rounded-md px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500 h-[40px]"
+              onChange={setPaidStatus}
+              required
+            >
+              <option value="false" defaultChecked>
+                Не оплачено
+              </option>
+              <option value="true">Оплачено</option>
+            </select>
+          </div>
+        </div>
+
         {/* Client Info */}
-        <div className="mt-4 p-3 bg-gray-100 rounded-md">
+        <div className="mt-6 p-3 bg-gray-100 rounded-md">
           <h3 className="font-medium flex items-center gap-2">👤 Клиент</h3>
-          <div className="mt-2">
+          <div className="mt-3">
             <label className="text-gray-700">Имя</label>
             <input
               type="text"
               name="clientName"
               value={formData.clientName}
               onChange={handleChange}
-              className="w-full p-2 border rounded-md"
+              className="flex items-center w-full border rounded-md px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500 h-[40px]"
               required
             />
           </div>
-          <div className="mt-2">
+          <div className="mt-3">
             <label className="text-gray-700">Телефон</label>
             <div className="relative">
               <input
@@ -255,13 +328,13 @@ const BookingModal = ({
                 name="clientPhone"
                 value={formData.clientPhone}
                 onChange={handleChange}
-                className="w-full p-2 border rounded-md pl-10"
+                className="flex items-center w-full border rounded-md px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500 h-[40px] pl-10"
                 required
               />
               <PhoneIcon className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
             </div>
           </div>
-          <div className="mt-2">
+          <div className="mt-3">
             <label className="text-gray-700">Электронный адрес</label>
             <div className="relative">
               <input
@@ -269,7 +342,7 @@ const BookingModal = ({
                 name="clientEmail"
                 value={formData.clientEmail}
                 onChange={handleChange}
-                className="w-full p-2 border rounded-md pl-10"
+                className="flex items-center w-full border rounded-md px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500 h-[40px] pl-10"
               />
               <EnvelopeIcon className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
             </div>

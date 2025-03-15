@@ -20,6 +20,8 @@ type Booking = {
   children_count: number;
   door_code: number;
   additional_info: string;
+  daily_price: number;
+  paid: boolean;
   check_in: string;
   check_out: string;
   created_at: string;
@@ -34,6 +36,8 @@ type BookingInput = {
   childrenCount: number;
   doorCode: number;
   additionalInfo: string;
+  dailyPrice: number;
+  paid: boolean;
   checkIn: Date;
   checkOut: Date;
 };
