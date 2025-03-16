@@ -8,6 +8,7 @@ import {
   PopoverPanel,
   CloseButton,
 } from '@headlessui/react';
+import { toast } from 'react-toastify';
 
 type Props = {
   isOpen: boolean;
@@ -44,19 +45,21 @@ const RoomModal = ({ isOpen, onClose }: Props) => {
     });
 
     if (res.ok) {
-      // TODO
+      toast.success('Комната добавлена.');
+      onClose();
+    } else {
+      const errorData = await res.json();
+      toast.error(errorData.message || 'Ошибка при добавлении комнаты.');
     }
   };
 
   const handleSubmit: React.FormEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
     if (isSubmitting) return;
-    
+
     setIsSubmitting(true);
     await addRoom(formData);
     setIsSubmitting(false);
-
-    onClose();
   };
 
   return (

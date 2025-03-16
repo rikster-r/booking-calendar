@@ -4,6 +4,7 @@ import { PhoneIcon, EnvelopeIcon, XMarkIcon } from '@heroicons/react/24/solid';
 import { getNextDay } from '@/lib/dates';
 import { format, differenceInCalendarDays, addDays } from 'date-fns';
 import DateTimePicker from '@/components/DateTimePicker';
+import { toast } from 'react-toastify';
 
 type Props = {
   isOpen: boolean;
@@ -55,7 +56,6 @@ const BookingModal = ({
   const handleChange: React.ChangeEventHandler<
     HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
   > = (e) => {
-    console.log(e.target.value, typeof e.target.value);
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
@@ -81,19 +81,21 @@ const BookingModal = ({
     });
 
     if (res.ok) {
-      // TODO
+      toast.success('Комната добавлена.');
+      onClose();
+    } else {
+      const errorData = await res.json();
+      toast.error(errorData.message || 'Ошибка при добавлении комнаты.');
     }
   };
 
   const handleSubmit: React.FormEventHandler<HTMLFormElement> = async (e) => {
     e.preventDefault();
     if (isSubmitting) return;
-    
+
     setIsSubmitting(true);
     await addBooking(formData);
     setIsSubmitting(false);
-
-    onClose();
   };
 
   const setPaidStatus: React.ChangeEventHandler<HTMLSelectElement> = (e) => {
@@ -101,7 +103,6 @@ const BookingModal = ({
   };
 
   const setCheckIn = (date: Date) => {
-    // TODO add error popups
     if (date > formData.checkOut) return;
     if (date < new Date()) return;
     setFormData((prev) => ({ ...prev, checkIn: date }));
