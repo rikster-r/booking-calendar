@@ -16,7 +16,9 @@ export default async function handler(
     const { name, color } = req.body;
 
     if (!name || !color) {
-      return res.status(400).json({ error: 'Missing required fields' });
+      return res
+        .status(400)
+        .json({ error: 'Не все обязательные поля заполнены' });
     }
 
     const { data, error } = await supabase
@@ -27,5 +29,5 @@ export default async function handler(
     return res.status(201).json(data);
   }
 
-  res.status(405).json({ error: 'Method not allowed' });
+  res.status(405).json({ error: 'Данный метод API не существует.' });
 }

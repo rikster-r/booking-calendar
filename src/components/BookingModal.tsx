@@ -1,8 +1,14 @@
 import Modal from '@/components/Modal';
 import { useEffect, useState } from 'react';
 import { PhoneIcon, EnvelopeIcon, XMarkIcon } from '@heroicons/react/24/solid';
-import { getNextDay } from '@/lib/dates';
-import { format, differenceInCalendarDays, addDays } from 'date-fns';
+import { getNextDay, isBeforeByDay } from '@/lib/dates';
+import {
+  format,
+  differenceInCalendarDays,
+  addDays,
+  differenceInDays,
+  isEqual,
+} from 'date-fns';
 import DateTimePicker from '@/components/DateTimePicker';
 import { toast } from 'react-toastify';
 
@@ -72,20 +78,19 @@ const BookingModal = ({
     const res = await fetch('/api/bookings', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data, (key, value) => {
-        if (key === 'checkIn' || key === 'checkOut') {
-          return formatDateTimeLocal(data[key]);
-        }
-        return value;
+      body: JSON.stringify({
+        ...data,
+        checkIn: formatDateTimeLocal(data.checkIn),
+        checkOut: formatDateTimeLocal(data.checkOut),
       }),
     });
 
     if (res.ok) {
-      toast.success('Комната добавлена.');
+      toast.success('Бронь добавлена.');
       onClose();
     } else {
       const errorData = await res.json();
-      toast.error(errorData.message || 'Ошибка при добавлении комнаты.');
+      toast.error(errorData.error || 'Ошибка при добавлении брони.');
     }
   };
 
@@ -102,14 +107,66 @@ const BookingModal = ({
     setFormData((prev) => ({ ...prev, paid: e.target.value === 'true' }));
   };
 
-  const setCheckIn = (date: Date) => {
-    if (date > formData.checkOut) return;
-    if (date < new Date()) return;
+  const isTimeSlotFree = async (checkIn: Date, checkOut: Date) => {
+    try {
+      const res = await fetch('/api/bookings', {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          room_id: formData.roomId,
+          check_in: formatDateTimeLocal(checkIn),
+          check_out: formatDateTimeLocal(checkOut),
+        }),
+      });
+
+      return res.ok;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (e) {
+      return false;
+    }
+  };
+
+  const setCheckIn = async (date: Date) => {
+    if (date > formData.checkOut) {
+      const duration = differenceInDays(formData.checkOut, formData.checkIn);
+      setFormData((prev) => ({
+        ...prev,
+        checkIn: date,
+        checkOut: addDays(date, duration),
+      }));
+      return;
+    }
+    if (isBeforeByDay(date, new Date())) {
+      toast.error('Нельзя добавить бронь для уже прошедших дней.');
+      return;
+    }
+    if (isEqual(date, formData.checkOut)) {
+      toast.error('Нельзя поставить приезд на то же время, что и выезд');
+      return;
+    }
+    const slotFree = await isTimeSlotFree(date, formData.checkOut);
+    if (!slotFree) {
+      toast.error('Временной слот уже занят другой бронью.');
+      return;
+    }
+
     setFormData((prev) => ({ ...prev, checkIn: date }));
   };
 
-  const setCheckOut = (date: Date) => {
-    if (date < formData.checkIn) return;
+  const setCheckOut = async (date: Date) => {
+    if (date < formData.checkIn) {
+      toast.error('Нельзя установить выезд раньше приезда.');
+    }
+    if (isEqual(date, formData.checkIn)) {
+      toast.error('Нельзя поставить выезд на то же время, что и приезд');
+      return;
+    }
+    const slotFree = await isTimeSlotFree(formData.checkIn, date);
+    if (!slotFree) {
+      toast.error('Временной слот уже занят другой бронью.');
+      return;
+    }
+
     setFormData((prev) => ({ ...prev, checkOut: date }));
   };
 
@@ -284,7 +341,7 @@ const BookingModal = ({
             <div className="flex items-center w-full border rounded-md px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500">
               <div className="w-full outline-none bg-transparent">
                 {(
-                  formData.dailyPrice *
+                  Number(formData.dailyPrice) *
                   differenceInCalendarDays(formData.checkOut, formData.checkIn)
                 ).toLocaleString('ru', { minimumFractionDigits: 2 })}
               </div>

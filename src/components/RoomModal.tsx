@@ -49,7 +49,7 @@ const RoomModal = ({ isOpen, onClose }: Props) => {
       onClose();
     } else {
       const errorData = await res.json();
-      toast.error(errorData.message || 'Ошибка при добавлении комнаты.');
+      toast.error(errorData.error || 'Ошибка при добавлении комнаты.');
     }
   };
 

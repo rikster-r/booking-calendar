@@ -10,7 +10,7 @@ export default async function handler(
   } else if (req.method === 'GET') {
     return getBookings(req, res);
   } else {
-    return res.status(405).json({ error: 'Method Not Allowed' });
+    return res.status(405).json({ error: 'Данный метод API не существует.' });
   }
 }
 
@@ -38,22 +38,41 @@ async function createBooking(req: NextApiRequest, res: NextApiResponse) {
     !check_in ||
     !check_out ||
     door_code === null ||
-    !daily_price ||
+    daily_price === null ||
+    daily_price === '' ||
     paid === null
   ) {
-    return res.status(400).json({ error: 'Missing required fields' });
+    return res.status(400).json({ error: 'Не все поля заполнены.' });
   }
 
   if (!client_phone.startsWith('+7') && !client_phone.startsWith('8')) {
-    return res.status(400).json({ error: 'Invalid phone number' });
+    return res.status(400).json({ error: 'Некорректный номер телефона.' });
   }
 
   if (client_phone.startsWith('+7') && client_phone.length !== 12) {
-    return res.status(400).json({ error: 'Invalid phone number' });
+    return res.status(400).json({ error: 'Некорректный номер телефона.' });
   }
 
   if (client_phone.startsWith('8') && client_phone.length !== 11) {
-    return res.status(400).json({ error: 'Invalid phone number' });
+    return res.status(400).json({ error: 'Некорректный номер телефона.' });
+  }
+
+  // Check if the booking slot is already taken
+  const { data: existingBookings, error: existingBookingsError } =
+    await supabase
+      .from('bookings')
+      .select('*')
+      .or(`and(check_in.lte.${check_out}, check_out.gte.${check_in})`)
+      .eq('room_id', room_id);
+
+  if (existingBookingsError) {
+    return res.status(500).json({ error: existingBookingsError.message });
+  }
+
+  if (existingBookings && existingBookings.length > 0) {
+    return res
+      .status(409)
+      .json({ error: 'Временной слот уже занят другой бронью.' });
   }
 
   // Insert new booking
@@ -80,7 +99,7 @@ async function createBooking(req: NextApiRequest, res: NextApiResponse) {
 
   return res
     .status(201)
-    .json({ message: 'Booking created successfully', booking: data });
+    .json({ message: 'Успешно создана бронь.', booking: data });
 }
 
 async function getBookings(req: NextApiRequest, res: NextApiResponse) {

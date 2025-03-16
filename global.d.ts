@@ -32,11 +32,11 @@ type BookingInput = {
   clientName: string;
   clientPhone: string;
   clientEmail: string;
-  adultsCount: number;
-  childrenCount: number;
-  doorCode: number;
+  adultsCount: number | string;
+  childrenCount: number | string;
+  doorCode: number | string;
   additionalInfo: string;
-  dailyPrice: number;
+  dailyPrice: number | string;
   paid: boolean;
   checkIn: Date;
   checkOut: Date;
