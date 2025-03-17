@@ -12,6 +12,7 @@ import {
   KeyIcon,
 } from '@heroicons/react/24/solid';
 import { get30DayRange } from '@/lib/dates';
+import RoomStatusBadge from '@/components/RoomStatusBadge';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -107,11 +108,19 @@ export default function Home({ initialRooms, initialBookings }: Props) {
               <>
                 <button
                   style={{ backgroundColor: room.color }}
-                  className=" text-white p-2 rounded-md text-center h-[50px] flex items-center justify-center"
+                  className=" text-white text-center h-[50px] flex items-center rounded-md"
                   onClick={() => toggleModal('roomInfo', room)}
                   key={room.id}
                 >
-                  {room.name}
+                  <div
+                    className={`w-[30%] h-full flex items-center justify-center bg-white border-3 rounded-l-md`}
+                    style={{ borderColor: room.color }}
+                  >
+                    <RoomStatusBadge status={room.status} />
+                  </div>
+                  <div className="w-[70%] h-full flex items-center justify-center ">
+                    {room.name}
+                  </div>
                 </button>
               </>
             ))}
@@ -279,6 +288,7 @@ export default function Home({ initialRooms, initialBookings }: Props) {
               toggleModal('addRoom');
               mutateRooms();
             }}
+            roomData={modalData as Room}
           />
         )}
         {modals.bookingInfo && (
@@ -302,6 +312,10 @@ export default function Home({ initialRooms, initialBookings }: Props) {
               toggleModal('roomInfo');
               mutateRooms();
               mutateBookings();
+            }}
+            onEditOpen={() => {
+              toggleModal('roomInfo');
+              toggleModal('addRoom', modalData as Room);
             }}
             room={modalData as Room}
           />

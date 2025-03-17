@@ -1,12 +1,14 @@
 type Room = {
   id: number;
   name: string;
+  status: 'not ready' | 'ready' | 'cleaning';
   color: string;
   created_at: string;
 };
 
 type RoomInput = {
   name: string;
+  status: 'not ready' | 'ready' | 'cleaning';
   color: string;
 };
 

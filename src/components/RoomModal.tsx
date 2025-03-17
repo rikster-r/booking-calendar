@@ -13,15 +13,28 @@ import { toast } from 'react-toastify';
 type Props = {
   isOpen: boolean;
   onClose: () => void;
+  roomData?: Room;
 };
 
-const RoomModal = ({ isOpen, onClose }: Props) => {
-  const initial: RoomInput = {
-    name: '',
-    color: hexColors[5],
-  };
+const RoomModal = ({ isOpen, onClose, roomData }: Props) => {
+  const initial: RoomInput = roomData
+    ? {
+        name: roomData.name,
+        status: roomData.status,
+        color: roomData.color,
+      }
+    : {
+        name: '',
+        status: 'ready',
+        color: hexColors[5],
+      };
   const [formData, setFormData] = useState(initial);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const statuses = {
+    ready: 'Готова к заселению',
+    'not ready': 'Не готова к заселению',
+    cleaning: 'Уборка',
+  };
 
   useEffect(() => {
     if (!isOpen) {
@@ -29,7 +42,9 @@ const RoomModal = ({ isOpen, onClose }: Props) => {
     }
   }, [isOpen]);
 
-  const handleChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
+  const handleChange: React.ChangeEventHandler<
+    HTMLInputElement | HTMLSelectElement
+  > = (e) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
@@ -37,19 +52,25 @@ const RoomModal = ({ isOpen, onClose }: Props) => {
     setFormData((prev) => ({ ...prev, color }));
   };
 
-  const addRoom = async (data: RoomInput) => {
-    const res = await fetch('/api/rooms', {
-      method: 'POST',
+  const saveRoom = async (data: RoomInput) => {
+    const method = roomData ? 'PUT' : 'POST';
+    const url = roomData ? `/api/rooms/${roomData.id}` : '/api/rooms';
+
+    const res = await fetch(url, {
+      method,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
 
     if (res.ok) {
-      toast.success('Комната добавлена.');
+      toast.success(roomData ? 'Помещение обновлено' : 'Помещение добавлено');
       onClose();
     } else {
       const errorData = await res.json();
-      toast.error(errorData.error || 'Ошибка при добавлении комнаты.');
+      toast.error(
+        errorData.error ||
+          `Ошибка при ${roomData ? 'обновлении' : 'добавлении'} помещения.`
+      );
     }
   };
 
@@ -58,16 +79,16 @@ const RoomModal = ({ isOpen, onClose }: Props) => {
     if (isSubmitting) return;
 
     setIsSubmitting(true);
-    await addRoom(formData);
+    await saveRoom(formData);
     setIsSubmitting(false);
   };
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
       <form onSubmit={handleSubmit} className="relative">
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center gap-2 sm:gap-12">
           <h2 className="text-lg font-semibold flex items-center gap-2">
-            🏠 Добавить помещение
+            {roomData ? 'Изменить' : 'Добавить'} помещение
           </h2>
           <button
             type="button"
@@ -85,9 +106,26 @@ const RoomModal = ({ isOpen, onClose }: Props) => {
             name="name"
             value={formData.name}
             onChange={handleChange}
-            className="w-full mt-1 p-2 border rounded-md"
+            className="flex items-center w-full border rounded-md px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500 h-[40px]"
             required
           />
+        </div>
+
+        <div className="mt-2">
+          <label className="text-gray-700 font-medium">Статус</label>
+          <select
+            name="status"
+            value={formData.status}
+            className="flex items-center w-full border rounded-md px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500 h-[40px]"
+            onChange={handleChange}
+            required
+          >
+            {Object.keys(statuses).map((status) => (
+              <option value={status} key={status} className="">
+                {statuses[status as keyof typeof statuses]}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className="mt-2 relative">
@@ -97,7 +135,7 @@ const RoomModal = ({ isOpen, onClose }: Props) => {
           </div>
           <Popover className="relative">
             <PopoverButton
-              className="w-full mt-1 p-2 border rounded-md text-white hover:cursor-pointer"
+              className="w-full mt-1 p-2 border rounded-md text-white hover:cursor-pointer flex items-center px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500 h-[40px]"
               style={{ backgroundColor: formData.color }}
             >
               {formData.color}
@@ -125,7 +163,7 @@ const RoomModal = ({ isOpen, onClose }: Props) => {
             className="bg-blue-500 text-white px-4 py-2 rounded-md hover:cursor-pointer"
             disabled={isSubmitting}
           >
-            Добавить
+            {roomData ? 'Сохранить' : 'Добавить'}
           </button>
         </div>
       </form>
