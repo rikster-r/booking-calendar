@@ -5,19 +5,25 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  if (req.method === 'GET') {
-    const { room_id, check_in, check_out } = req.body;
+  if (req.method === 'POST') {
+    const { id, room_id, check_in, check_out } = req.body;
 
     if (!room_id || !check_in || !check_out) {
       return res.status(400).json({ error: 'Некорректные данные' });
     }
 
+    let query = supabase
+      .from('bookings')
+      .select('*')
+      .or(`and(check_in.lte.${check_out}, check_out.gte.${check_in})`)
+      .eq('room_id', room_id);
+
+    if (id) {
+      query = query.neq('id', id);
+    }
+
     const { data: existingBookings, error: existingBookingsError } =
-      await supabase
-        .from('bookings')
-        .select('*')
-        .or(`and(check_in.lte.${check_out}, check_out.gte.${check_in})`)
-        .eq('room_id', room_id);
+      await query;
 
     if (existingBookingsError) {
       return res.status(500).json({ error: existingBookingsError.message });

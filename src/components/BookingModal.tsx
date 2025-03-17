@@ -16,31 +16,50 @@ type Props = {
   isOpen: boolean;
   onClose: () => void;
   rooms: Room[];
-  selectedDate: Date;
-  selectedRoomId: number;
+  bookingData:
+    | Booking
+    | {
+        checkIn: Date;
+        roomId: number;
+      };
 };
 
-const BookingModal = ({
-  isOpen,
-  onClose,
-  rooms,
-  selectedDate,
-  selectedRoomId,
-}: Props) => {
-  const initial: BookingInput = {
-    roomId: selectedRoomId,
-    clientName: '',
-    clientPhone: '',
-    clientEmail: '',
-    adultsCount: 1,
-    childrenCount: 0,
-    doorCode: 0,
-    additionalInfo: '',
-    dailyPrice: 0,
-    paid: false,
-    checkIn: selectedDate,
-    checkOut: getNextDay(selectedDate),
-  };
+// this component is used for both updates and creations of booking
+const BookingModal = ({ isOpen, onClose, rooms, bookingData }: Props) => {
+  // workaround for typescript reasons
+  function hasId(booking: unknown): booking is { id: unknown } {
+    return !!booking && typeof booking === 'object' && 'id' in booking;
+  }
+
+  const initial: BookingInput = hasId(bookingData)
+    ? {
+        roomId: bookingData.room_id,
+        clientName: bookingData.client_name,
+        clientPhone: bookingData.client_phone,
+        clientEmail: bookingData.client_email,
+        adultsCount: bookingData.adults_count,
+        childrenCount: bookingData.children_count,
+        doorCode: bookingData.door_code,
+        additionalInfo: bookingData.additional_info,
+        dailyPrice: bookingData.daily_price,
+        paid: bookingData.paid,
+        checkIn: new Date(bookingData.check_in),
+        checkOut: new Date(bookingData.check_out),
+      }
+    : {
+        roomId: bookingData.roomId,
+        clientName: '',
+        clientPhone: '',
+        clientEmail: '',
+        adultsCount: 1,
+        childrenCount: 0,
+        doorCode: 0,
+        additionalInfo: '',
+        dailyPrice: 0,
+        paid: false,
+        checkIn: bookingData.checkIn,
+        checkOut: getNextDay(bookingData.checkIn),
+      };
   const [formData, setFormData] = useState(initial);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -51,13 +70,40 @@ const BookingModal = ({
   }, [isOpen]);
 
   useEffect(() => {
-    setFormData((prev) => ({
-      ...prev,
-      roomId: selectedRoomId,
-      checkIn: selectedDate,
-      checkOut: getNextDay(selectedDate),
-    }));
-  }, [selectedDate, selectedRoomId]);
+    if (hasId(bookingData)) {
+      setFormData({
+        roomId: bookingData.room_id,
+        clientName: bookingData.client_name,
+        clientPhone: bookingData.client_phone,
+        clientEmail: bookingData.client_email,
+        adultsCount: bookingData.adults_count,
+        childrenCount: bookingData.children_count,
+        doorCode: bookingData.door_code,
+        additionalInfo: bookingData.additional_info,
+        dailyPrice: bookingData.daily_price,
+        paid: bookingData.paid,
+        checkIn: new Date(bookingData.check_in),
+        checkOut: new Date(bookingData.check_out),
+      });
+    } else {
+      setFormData({
+        roomId: bookingData.roomId,
+        clientName: '',
+        clientPhone: '',
+        clientEmail: '',
+        adultsCount: 1,
+        childrenCount: 0,
+        doorCode: 0,
+        additionalInfo: '',
+        dailyPrice: 0,
+        paid: false,
+        checkIn: bookingData.checkIn,
+        checkOut: getNextDay(bookingData.checkIn),
+      });
+    }
+  }, [bookingData]);
+
+  if (!bookingData) return;
 
   const handleChange: React.ChangeEventHandler<
     HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
@@ -74,9 +120,14 @@ const BookingModal = ({
     return localISO;
   };
 
-  const addBooking = async (data: BookingInput) => {
-    const res = await fetch('/api/bookings', {
-      method: 'POST',
+  const saveBooking = async (data: BookingInput) => {
+    const method = hasId(bookingData) ? 'PUT' : 'POST';
+    const url = hasId(bookingData)
+      ? `/api/bookings/${bookingData.id}`
+      : '/api/bookings';
+
+    const res = await fetch(url, {
+      method,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         ...data,
@@ -86,11 +137,18 @@ const BookingModal = ({
     });
 
     if (res.ok) {
-      toast.success('Бронь добавлена.');
+      toast.success(
+        hasId(bookingData) ? 'Бронь обновлена.' : 'Бронь добавлена.'
+      );
       onClose();
     } else {
       const errorData = await res.json();
-      toast.error(errorData.error || 'Ошибка при добавлении брони.');
+      toast.error(
+        errorData.error ||
+          `Ошибка при ${
+            hasId(bookingData) ? 'обновлении' : 'добавлении'
+          } брони.`
+      );
     }
   };
 
@@ -99,7 +157,7 @@ const BookingModal = ({
     if (isSubmitting) return;
 
     setIsSubmitting(true);
-    await addBooking(formData);
+    await saveBooking(formData);
     setIsSubmitting(false);
   };
 
@@ -109,10 +167,11 @@ const BookingModal = ({
 
   const isTimeSlotFree = async (checkIn: Date, checkOut: Date) => {
     try {
-      const res = await fetch('/api/bookings', {
-        method: 'GET',
+      const res = await fetch('/api/bookings/validateTimeslot', {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          id: hasId(bookingData) ? bookingData.id : undefined,
           room_id: formData.roomId,
           check_in: formatDateTimeLocal(checkIn),
           check_out: formatDateTimeLocal(checkOut),

@@ -72,7 +72,6 @@ export default function Home({ initialRooms, initialBookings }: Props) {
     bookingInfo: false,
     roomInfo: false,
   });
-
   const [modalData, setModalData] = useState<
     Record<string, unknown> | undefined
   >();
@@ -153,7 +152,7 @@ export default function Home({ initialRooms, initialBookings }: Props) {
                 <button
                   className="border-1 border-gray-400 p-2 rounded-md h-[50px] w-[48px] flex items-center justify-center"
                   onClick={() =>
-                    toggleModal('addBooking', { day: day, roomId: room.id })
+                    toggleModal('addBooking', { checkIn: day, roomId: room.id })
                   }
                   key={`${room.id}-${dayIndex}`}
                 ></button>
@@ -243,47 +242,70 @@ export default function Home({ initialRooms, initialBookings }: Props) {
             </button>
             <button
               className="flex items-center gap-2 rounded-md transition focus-visible:bg-gray-100 px-6 py-4 hover:cursor-pointer hover:bg-gray-100 w-full"
-              onClick={() => toggleModal('addBooking')}
+              onClick={() =>
+                toggleModal('addBooking', {
+                  checkIn: new Date(),
+                  roomId: rooms[0].id,
+                })
+              }
             >
               <KeyIcon className="w-6 h-6" />
               <p>Забронировать </p>
             </button>
           </div>
         )}
-        <BookingModal
-          isOpen={modals.addBooking}
-          onClose={() => {
-            toggleModal('addBooking');
-            mutateBookings();
-          }}
-          rooms={rooms}
-          selectedDate={(modalData?.day as Date) ?? today}
-          selectedRoomId={(modalData?.roomId as number) ?? rooms[0].id}
-        />
-        <RoomModal
-          isOpen={modals.addRoom}
-          onClose={() => {
-            toggleModal('addRoom');
-            mutateRooms();
-          }}
-        />
-        <BookingInfoModal
-          isOpen={modals.bookingInfo}
-          onClose={() => {
-            toggleModal('bookingInfo');
-            mutateBookings();
-          }}
-          booking={modalData as Booking}
-        />
-        <RoomInfoModal
-          isOpen={modals.roomInfo}
-          onClose={() => {
-            toggleModal('roomInfo');
-            mutateRooms();
-            mutateBookings();
-          }}
-          room={modalData as Room}
-        />
+        {modals.addBooking && (
+          <BookingModal
+            isOpen={modals.addBooking}
+            onClose={() => {
+              toggleModal('addBooking');
+              mutateBookings();
+            }}
+            rooms={rooms}
+            bookingData={
+              modalData as
+                | Booking
+                | {
+                    checkIn: Date;
+                    roomId: number;
+                  }
+            }
+          />
+        )}
+        {modals.addRoom && (
+          <RoomModal
+            isOpen={modals.addRoom}
+            onClose={() => {
+              toggleModal('addRoom');
+              mutateRooms();
+            }}
+          />
+        )}
+        {modals.bookingInfo && (
+          <BookingInfoModal
+            isOpen={modals.bookingInfo}
+            onClose={() => {
+              toggleModal('bookingInfo');
+              mutateBookings();
+            }}
+            onEditOpen={() => {
+              toggleModal('bookingInfo');
+              toggleModal('addBooking', modalData as Booking);
+            }}
+            booking={modalData as Booking}
+          />
+        )}
+        {modals.roomInfo && (
+          <RoomInfoModal
+            isOpen={modals.roomInfo}
+            onClose={() => {
+              toggleModal('roomInfo');
+              mutateRooms();
+              mutateBookings();
+            }}
+            room={modalData as Room}
+          />
+        )}
       </div>
     </div>
   );

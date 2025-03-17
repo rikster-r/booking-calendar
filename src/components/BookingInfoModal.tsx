@@ -4,10 +4,11 @@ import { differenceInCalendarDays } from 'date-fns';
 type Props = {
   isOpen: boolean;
   onClose: () => void;
+  onEditOpen: () => void;
   booking: Booking | null;
 };
 
-const BookingInfoModal = ({ isOpen, onClose, booking }: Props) => {
+const BookingInfoModal = ({ isOpen, onClose, booking, onEditOpen }: Props) => {
   if (!booking) return <></>;
   if (!booking.client_name) return <></>;
 
@@ -100,7 +101,13 @@ const BookingInfoModal = ({ isOpen, onClose, booking }: Props) => {
         <span className="font-semibold">Гости:</span> {booking.adults_count}{' '}
         взрослых, {booking.children_count} детей
       </div>
-      <div className="mt-4 flex justify-end flex-row gap-2">
+      <div className="mt-4 flex justify-end flex-col sm:flex-row gap-2">
+        <button
+          onClick={onEditOpen}
+          className="px-4 py-2 bg-amber-500 text-white rounded hover:bg-amber-600 hover:cursor-pointer"
+        >
+          Редактировать
+        </button>
         <button
           onClick={deleteBooking}
           className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 hover:cursor-pointer"
