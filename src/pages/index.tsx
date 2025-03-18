@@ -159,7 +159,7 @@ export default function Home({ initialRooms, initialBookings }: Props) {
             {rooms.map((room) =>
               daysList.map((day, dayIndex) => (
                 <button
-                  className="border-1 border-gray-400 p-2 rounded-md h-[50px] w-[48px] flex items-center justify-center"
+                  className="border-1 border-gray-400 p-2 rounded-md h-[50px] w-[48px] flex items-center justify-center hover:cursor-pointer"
                   onClick={() =>
                     toggleModal('addBooking', { checkIn: day, roomId: room.id })
                   }

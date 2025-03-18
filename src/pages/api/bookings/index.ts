@@ -75,6 +75,21 @@ async function createBooking(req: NextApiRequest, res: NextApiResponse) {
       .json({ error: 'Временной слот уже занят другой бронью.' });
   }
 
+  // Check if the room is ready
+  const { data: room, error: roomError } = await supabase
+    .from('rooms')
+    .select('status')
+    .eq('id', room_id)
+    .single();
+
+  if (roomError) {
+    return res.status(500).json({ error: roomError.message });
+  }
+
+  if (room.status === 'not ready') {
+    return res.status(400).json({ error: 'Комната не готова для бронирования.' });
+  }
+
   // Insert new booking
   const { data, error } = await supabase.from('bookings').insert([
     {
