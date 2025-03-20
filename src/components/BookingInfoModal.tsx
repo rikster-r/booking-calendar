@@ -1,125 +1,181 @@
 import Modal from '@/components/Modal';
-import { differenceInCalendarDays } from 'date-fns';
+import { differenceInCalendarDays, format } from 'date-fns';
+import {
+  UserIcon,
+  CreditCardIcon,
+  EnvelopeIcon,
+  KeyIcon,
+  CalendarDaysIcon,
+  PhoneIcon,
+  XMarkIcon,
+} from '@heroicons/react/24/solid';
+import Image from 'next/image';
+import Telegram from '@/assets/telegram.svg';
+import Whatsapp from '@/assets/whatsapp.svg';
+import { ru } from 'date-fns/locale';
 
 type Props = {
   isOpen: boolean;
   onClose: () => void;
   onEditOpen: () => void;
-  booking: Booking | null;
+  booking: Booking;
 };
 
 const BookingInfoModal = ({ isOpen, onClose, booking, onEditOpen }: Props) => {
-  if (!booking) return <></>;
-  if (!booking.client_name) return <></>;
+  if (!booking) return null;
+  if (!booking.client_name) return null;
 
-  const check_in = new Date(booking.check_in);
-  const check_out = new Date(booking.check_out);
+  const checkIn = new Date(booking.check_in);
+  const checkOut = new Date(booking.check_out);
+  const nights = differenceInCalendarDays(checkOut, checkIn);
+  const totalPrice = nights * booking.daily_price;
 
   const deleteBooking = async () => {
     const res = await fetch(`/api/bookings/${booking.id}`, {
       method: 'DELETE',
     });
-
-    if (res.ok) {
-      onClose();
-    }
+    if (res.ok) onClose();
   };
 
-  // Process phone number
   let phone = booking.client_phone.trim();
-  if (phone.startsWith('8')) {
-    phone = '+7' + phone.slice(1);
-  }
+  if (phone.startsWith('8')) phone = '+7' + phone.slice(1);
   const whatsappLink = `https://wa.me/${phone.replace(/\D/g, '')}`;
   const telegramLink = `https://t.me/${phone.replace(/\D/g, '')}`;
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose}>
-      <h2 className="text-2xl font-bold mb-4">Информация о брони</h2>
-      <div className="mb-2 max-w-[600px]">
-        <span className="font-semibold">Имя:</span> {booking.client_name}
-      </div>
-      <div className="mb-2">
-        <span className="font-semibold">Электронный адрес:</span>{' '}
-        {booking.client_email ? booking.client_email : 'Не указан'}
-      </div>
-      <div className="mb-2">
-        <span className="font-semibold">Телефон:</span> {phone}
-      </div>
-      <div className="mb-2 flex gap-2 flex-col">
-        <a
-          href={whatsappLink}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-green-600 hover:underline text-nowrap"
-        >
-          Связаться в WhatsApp
-        </a>
-        <a
-          href={telegramLink}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-blue-600 hover:underline text-nowrap"
-        >
-          Связаться в Telegram
-        </a>
-      </div>
-      <div className="mb-2">
-        <span className="font-semibold">Код двери:</span> {booking.door_code}
-      </div>
-      <div className="mb-2">
-        <span className="font-semibold mr-1">Приезд:</span>
-        {check_in.toLocaleDateString()} {check_in.toLocaleTimeString()}
-      </div>
-      <div className="mb-2">
-        <span className="font-semibold mr-1">Выезд:</span>
-        {check_out.toLocaleDateString()} {check_out.toLocaleTimeString()}
-      </div>
-      <div className="mb-2">
-        <span className="font-semibold">Всего суток:</span>{' '}
-        {differenceInCalendarDays(check_out, check_in)}
-      </div>
-      <div className="mb-2">
-        <span className="font-semibold">Цена за сутки:</span>{' '}
-        {booking.daily_price.toLocaleString('ru', { minimumFractionDigits: 2 })}{' '}
-        руб.
-      </div>
-      <div className="mb-2">
-        <span className="font-semibold">За пребывание:</span>{' '}
-        {(
-          booking.daily_price * differenceInCalendarDays(check_out, check_in)
-        ).toLocaleString('ru', { minimumFractionDigits: 2 })}{' '}
-        руб., {booking.paid ? 'оплачено' : 'не оплачено'}
-      </div>
-      {booking.additional_info && (
-        <div className="mb-2 flex flex-col max-w-[600px]">
-          <span className="font-semibold">Дополнительная информация:</span>
-          <span>{booking.additional_info}</span>
+    <Modal isOpen={isOpen} onClose={onClose} className="max-w-md">
+      <div className="bg-white p-6 sm:p-7 text-sm sm:text-base">
+        <div className="flex items-center mb-4 gap-2 ">
+          <div
+            className={`flex sm:flex-row gap-2 ${
+              booking.client_name.length > 10 ? 'flex-col' : 'flex-row'
+            }`}
+          >
+            <h2 className="sm:text-lg font-semibold text-base">
+              {booking.client_name.slice(0, 25)}
+              {booking.client_name.length > 25 && '...'}
+            </h2>
+            <span
+              className={`px-3 py-1 rounded-full text-sm text-nowrap w-max ${
+                booking.paid
+                  ? 'bg-green-100 text-green-700'
+                  : 'bg-red-100 text-red-700'
+              }`}
+            >
+              {booking.paid ? 'Оплачено' : 'Не оплачено'}
+            </span>
+          </div>
+          <button className="hover:cursor-pointer ml-auto" onClick={onClose}>
+            <XMarkIcon className="w-6 sm:w-7 h-6 sm:h-7" />
+          </button>
         </div>
-      )}
-      <div className="mb-2">
-        <span className="font-semibold">Гости:</span> {booking.adults_count}{' '}
-        взрослых, {booking.children_count} детей
-      </div>
-      <div className="mt-4 flex justify-end flex-col sm:flex-row gap-2">
-        <button
-          onClick={onEditOpen}
-          className="px-4 py-2 bg-amber-500 text-white rounded hover:bg-amber-600 hover:cursor-pointer"
-        >
-          Редактировать
-        </button>
-        <button
-          onClick={deleteBooking}
-          className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 hover:cursor-pointer"
-        >
-          Удалить бронь
-        </button>
-        <button
-          onClick={onClose}
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 hover:cursor-pointer"
-        >
-          Закрыть
-        </button>
+
+        <hr className="my-5 text-gray-400" />
+
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 text-gray-700">
+            <PhoneIcon className="w-5 h-5" />
+            <span>{booking.client_phone}</span>
+          </div>
+
+          <div className="flex items-center gap-2 text-gray-700">
+            <Image src={Telegram} alt="" className="w-6 h-6" />
+            <a href={telegramLink} className="text-blue-500 hover:underline">
+              Telegram
+            </a>
+          </div>
+
+          <div className="flex items-center gap-2 text-gray-700">
+            <Image src={Whatsapp} alt="" className="w-6 h-6" />
+            <a href={whatsappLink} className="text-green-500 hover:underline">
+              WhatsApp
+            </a>
+          </div>
+
+          <hr className="my-5 text-gray-400" />
+
+          {booking.client_email && (
+            <div className="flex items-center gap-2 text-gray-700">
+              <EnvelopeIcon className="w-5 h-5" />
+              <span>{booking.client_email}</span>
+            </div>
+          )}
+
+          <div className="flex items-start gap-2 text-gray-700">
+            <CalendarDaysIcon className="w-5 h-5" />
+            <div className="flex flex-col gap-1">
+              <div className="flex flex-col gap-1 sm:flex-row">
+                <span>
+                  {format(checkIn, 'd MMMM yyyy, HH:mm', { locale: ru })}
+                </span>
+                <span className="sm:block hidden"> - </span>
+                <span>
+                  {format(checkOut, 'd MMMM yyyy, HH:mm', { locale: ru })}
+                </span>
+              </div>
+              <span>
+                {nights} сут{nights > 1 ? 'ок' : 'ки'}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 text-gray-700">
+            <UserIcon className="w-5 h-5" />
+            <span>
+              {booking.adults_count} взросл
+              {booking.adults_count > 1 ? 'ых' : 'ый'}
+              {booking.children_count > 0 &&
+                `, ${booking.children_count} ребен${
+                  booking.children_count > 1 ? 'ка' : 'ок'
+                }`}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2 text-gray-700">
+            <KeyIcon className="w-5 h-5" />
+            <span>Код двери: {booking.door_code}</span>
+          </div>
+
+          <div className="flex gap-2 text-gray-700 items-start">
+            <CreditCardIcon className="w-5 h-5" />
+            <div className="flex flex-col gap-1">
+              <span>
+                {booking.daily_price.toLocaleString('ru-RU', {
+                  minimumFractionDigits: 2,
+                })}{' '}
+                руб. - за сутки
+              </span>
+              <span>
+                {totalPrice.toLocaleString('ru-RU', {
+                  minimumFractionDigits: 2,
+                })}{' '}
+                руб. - всего
+              </span>
+            </div>
+          </div>
+
+          {booking.additional_info && (
+            <div className="mb-2 flex flex-col max-w-[500px] text-gray-700">
+              <span className="font-semibold">Дополнительная информация:</span>
+              <span>{booking.additional_info}</span>
+            </div>
+          )}
+        </div>
+
+        <div className="mt-6 flex gap-2 justify-end">
+          <button
+            className="focus:outline-none text-red-500  hover:text-red-700 focus-visible:ring-4 focus-visible:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 hover:cursor-pointer"
+            onClick={deleteBooking}
+          >
+            Удалить
+          </button>
+          <button
+            className="focus:outline-none text-white bg-orange-400 hover:bg-orange-500 focus-visible:ring-4 focus-visible:ring-orange-300 font-medium rounded-lg text-sm px-5 py-2.5 hover:cursor-pointer"
+            onClick={onEditOpen}
+          >
+            Редактировать
+          </button>
+        </div>
       </div>
     </Modal>
   );

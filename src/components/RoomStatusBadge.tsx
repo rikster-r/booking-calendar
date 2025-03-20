@@ -1,21 +1,28 @@
-import { CheckIcon, XMarkIcon } from '@heroicons/react/24/solid';
-import Image from 'next/image';
-import Mop from '@/assets/mop.svg';
-
 type Props = {
   status: 'ready' | 'not ready' | 'cleaning';
 };
 
 const RoomStatusBadge = ({ status }: Props) => {
   const statusMap = {
-    ready: <CheckIcon className="w-5 h-5 text-green-500" />,
-    'not ready': <XMarkIcon className="w-5 h-5 text-red-500" />,
-    cleaning: <Image src={Mop} alt="Cleaning" className="w-5 h-5" />,
+    ready: {
+      text: 'Готово',
+    },
+    'not ready': {
+      text: 'Не готово',
+    },
+    cleaning: {
+      text: 'Уборка',
+    },
   };
 
-  const icon = statusMap[status];
+  const data = statusMap[status];
 
-  return <div className={`flex items-center gap-2 p-1`}>{icon}</div>;
+  return (
+    <div className="flex items-center gap-1 rounded-lg text-xs text-white font-medium text-nowrap">
+      <span className={`w-1 h-1 rounded-full bg-white`}></span>
+      <span>{data.text}</span>
+    </div>
+  );
 };
 
 export default RoomStatusBadge;

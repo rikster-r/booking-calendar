@@ -31,8 +31,9 @@ const DateTimePicker = ({
           customInput={
             <input
               type="text"
-              className="flex items-center w-full border rounded-md px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500 h-[40px]"
+              className="flex items-center w-full border rounded-md px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500 h-[40px] border-gray-500"
               required
+              onBlur={(e) => onDateChange(new Date(e.target.value))}
             />
           }
           popperPlacement="bottom-start"
@@ -48,7 +49,7 @@ const DateTimePicker = ({
                 onClick={decreaseMonth}
                 disabled={prevMonthButtonDisabled}
                 type="button"
-                className={`inline-flex p-1 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-0 focus-visible:ring-blue-500 hover:cursor-pointer rounded ${
+                className={`inline-flex p-1 text-sm font-medium text-gray-700 hover:bg-gray-50 outline-none focus-visible:ring-2 focus-visible:ring-offset-0 focus-visible:ring-blue-500 hover:cursor-pointer rounded ${
                   prevMonthButtonDisabled ? 'cursor-not-allowed opacity-50' : ''
                 }`}
               >
@@ -66,7 +67,7 @@ const DateTimePicker = ({
                 onClick={increaseMonth}
                 disabled={nextMonthButtonDisabled}
                 type="button"
-                className={`inline-flex p-1 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-0 focus-visible:ring-blue-500 hover:cursor-pointer rounded ${
+                className={`inline-flex p-1 text-sm font-medium text-gray-700 hover:bg-gray-50 outline-none focus-visible:ring-2 focus-visible:ring-offset-0 focus-visible:ring-blue-500 hover:cursor-pointer rounded ${
                   nextMonthButtonDisabled ? 'cursor-not-allowed opacity-50' : ''
                 }`}
               >
@@ -79,7 +80,7 @@ const DateTimePicker = ({
       <input
         type="time"
         value={timeValue}
-        className="flex items-center border rounded-md px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500 h-[40px] w-[40%] sm:w-[30%] text-center"
+        className="flex items-center border rounded-md px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500 h-[40px] w-[40%] sm:w-[30%] text-center border-gray-500"
         onChange={onTimeChange}
         required
       />

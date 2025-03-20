@@ -215,6 +215,7 @@ const BookingModal = ({ isOpen, onClose, rooms, bookingData }: Props) => {
   const setCheckOut = async (date: Date) => {
     if (date < formData.checkIn) {
       toast.error('Нельзя установить выезд раньше приезда.');
+      return;
     }
     if (isEqual(date, formData.checkIn)) {
       toast.error('Нельзя поставить выезд на то же время, что и приезд');
@@ -255,10 +256,13 @@ const BookingModal = ({ isOpen, onClose, rooms, bookingData }: Props) => {
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose}>
-      <form onSubmit={handleSubmit}>
+    <Modal isOpen={isOpen} onClose={onClose} className="max-w-lg">
+      <form
+        onSubmit={handleSubmit}
+        className="bg-white p-6 sm:p-7 text-sm sm:text-base"
+      >
         <div className="flex justify-between items-center">
-          <h2 className="text-lg font-semibold flex items-center gap-2">
+          <h2 className="sm:text-lg font-semibold text-base flex items-center gap-2">
             📌 Бронирование
           </h2>
           <button
@@ -266,7 +270,7 @@ const BookingModal = ({ isOpen, onClose, rooms, bookingData }: Props) => {
             className="hover:cursor-pointer"
             onClick={onClose}
           >
-            <XMarkIcon className="w-7 h-7" />
+            <XMarkIcon className="w-6 sm:w-7 h-6 sm:h-7" />
           </button>
         </div>
 
@@ -277,7 +281,7 @@ const BookingModal = ({ isOpen, onClose, rooms, bookingData }: Props) => {
             name="roomId"
             id="roomId"
             value={formData.roomId}
-            className="flex items-center w-full border rounded-md px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500 h-[40px]"
+            className="flex items-center w-full border rounded-md px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500 h-[40px] border-gray-500 mt-1"
             onChange={handleChange}
             required
           >
@@ -314,26 +318,26 @@ const BookingModal = ({ isOpen, onClose, rooms, bookingData }: Props) => {
         </div>
 
         {/* Adults & Children Count */}
-        <div className="mt-3 flex gap-2">
-          <div>
+        <div className="mt-3 flex gap-2 w-full">
+          <div className="w-full">
             <label className="text-gray-700">Взр.</label>
             <input
               type="number"
               name="adultsCount"
               value={formData.adultsCount}
               onChange={handleChange}
-              className="flex items-center w-full border rounded-md px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500 h-[40px]"
+              className="flex items-center w-full border rounded-md px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500 h-[40px] border-gray-500 mt-1"
               required
             />
           </div>
-          <div>
+          <div className="w-full">
             <label className="text-gray-700">Дети</label>
             <input
               type="number"
               name="childrenCount"
               value={formData.childrenCount}
               onChange={handleChange}
-              className="flex items-center w-full border rounded-md px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500 h-[40px]"
+              className="flex items-center w-full border rounded-md px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500 h-[40px] border-gray-500 mt-1"
             />
           </div>
         </div>
@@ -346,7 +350,7 @@ const BookingModal = ({ isOpen, onClose, rooms, bookingData }: Props) => {
             name="doorCode"
             value={formData.doorCode}
             onChange={handleChange}
-            className="flex items-center w-full border rounded-md px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500 h-[40px]"
+            className="flex items-center w-full border rounded-md px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500 h-[40px] border-gray-500 mt-1 "
             required
           />
         </div>
@@ -358,53 +362,43 @@ const BookingModal = ({ isOpen, onClose, rooms, bookingData }: Props) => {
             name="additionalInfo"
             value={formData.additionalInfo}
             onChange={handleChange}
-            className="flex items-center w-full border rounded-md px-3 py-2 mt-1 outline-none focus-within:ring-2 focus-within:ring-blue-500 resize-none h-[100px]"
+            className="flex items-center w-full border rounded-md px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500 resize-none h-[100px] border-gray-500 mt-1"
           />
         </div>
 
+        <hr className="my-5 text-gray-400" />
+
         {/* Finance */}
         <div className="mt-6">
-          <h2 className="font-semibold text-lg flex items-center">
-            <span className="mr-2">$</span> Финансы
+          <h2 className="sm:text-lg font-semibold flex items-center">
+            $ Финансы
           </h2>
 
-          <div className="mt-3">
-            <label className="text-gray-600">За сутки</label>
-            <div className="flex items-center w-full border rounded-md px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500">
+          <div className="flex gap-3 mt-3">
+            <div className="w-full">
+              <label className="text-gray-700">За сутки</label>
+              <div className="flex items-center w-full border rounded-md px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500 border-gray-500 mt-1">
+                <input
+                  type="number"
+                  name="dailyPrice"
+                  className="w-full outline-none bg-transparent "
+                  value={formData.dailyPrice}
+                  onChange={handleChange}
+                />
+                <span className="ml-2 text-gray-500">RUB</span>
+              </div>
+            </div>
+            <div className="w-full">
+              <label className="text-gray-700">Количество дней</label>
               <input
                 type="number"
-                name="dailyPrice"
-                className="w-full outline-none bg-transparent"
-                value={formData.dailyPrice}
-                onChange={handleChange}
+                className="w-full border rounded-md px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500 border-gray-500 mt-1"
+                value={differenceInCalendarDays(
+                  formData.checkOut,
+                  formData.checkIn
+                )}
+                onChange={changeDaysBooked}
               />
-              <span className="ml-2 text-gray-500">RUB</span>
-            </div>
-          </div>
-
-          <div className="mt-3">
-            <label className="text-gray-600">Количество дней пребывания</label>
-            <input
-              type="number"
-              className="w-full border rounded-md px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500"
-              value={differenceInCalendarDays(
-                formData.checkOut,
-                formData.checkIn
-              )}
-              onChange={changeDaysBooked}
-            />
-          </div>
-
-          <div className="mt-3">
-            <label className="text-gray-600">За пребывание</label>
-            <div className="flex items-center w-full border rounded-md px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500">
-              <div className="w-full outline-none bg-transparent">
-                {(
-                  Number(formData.dailyPrice) *
-                  differenceInCalendarDays(formData.checkOut, formData.checkIn)
-                ).toLocaleString('ru', { minimumFractionDigits: 2 })}
-              </div>
-              <span className="ml-2 text-gray-500">RUB</span>
             </div>
           </div>
 
@@ -413,7 +407,7 @@ const BookingModal = ({ isOpen, onClose, rooms, bookingData }: Props) => {
             <select
               name="paid"
               value={formData.paid ? 'true' : 'false'}
-              className="flex items-center w-full border rounded-md px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500 h-[40px]"
+              className="flex items-center w-full border rounded-md px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500 h-[40px] border-gray-500 mt-1"
               onChange={setPaidStatus}
               required
             >
@@ -423,11 +417,26 @@ const BookingModal = ({ isOpen, onClose, rooms, bookingData }: Props) => {
               <option value="true">Оплачено</option>
             </select>
           </div>
+
+          <div className="mt-3">
+            <label className="text-gray-700 font-semibold ">
+              Итого за пребывание -{' '}
+              {(
+                Number(formData.dailyPrice) *
+                differenceInCalendarDays(formData.checkOut, formData.checkIn)
+              ).toLocaleString('ru', { minimumFractionDigits: 2 })}{' '}
+              руб.
+            </label>
+          </div>
         </div>
 
+        <hr className="my-5 text-gray-400" />
+
         {/* Client Info */}
-        <div className="mt-6 p-3 bg-gray-100 rounded-md">
-          <h3 className="font-medium flex items-center gap-2">👤 Клиент</h3>
+        <div className="mt-6 rounded-md">
+          <h3 className="font-semibold flex items-center gap-2 sm:text-lg">
+            👤 Клиент
+          </h3>
           <div className="mt-3">
             <label className="text-gray-700">Имя</label>
             <input
@@ -435,7 +444,7 @@ const BookingModal = ({ isOpen, onClose, rooms, bookingData }: Props) => {
               name="clientName"
               value={formData.clientName}
               onChange={handleChange}
-              className="flex items-center w-full border rounded-md px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500 h-[40px]"
+              className="flex items-center w-full border rounded-md px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500 h-[40px] border-gray-500 mt-1"
               required
             />
           </div>
@@ -447,7 +456,7 @@ const BookingModal = ({ isOpen, onClose, rooms, bookingData }: Props) => {
                 name="clientPhone"
                 value={formData.clientPhone}
                 onChange={handleChange}
-                className="flex items-center w-full border rounded-md px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500 h-[40px] pl-10"
+                className="flex items-center w-full border rounded-md px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500 h-[40px] pl-10 border-gray-500 mt-1"
                 required
               />
               <PhoneIcon className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
@@ -461,7 +470,7 @@ const BookingModal = ({ isOpen, onClose, rooms, bookingData }: Props) => {
                 name="clientEmail"
                 value={formData.clientEmail}
                 onChange={handleChange}
-                className="flex items-center w-full border rounded-md px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500 h-[40px] pl-10"
+                className="flex items-center w-full border rounded-md px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500 h-[40px] pl-10 border-gray-500 mt-1"
               />
               <EnvelopeIcon className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
             </div>
@@ -470,7 +479,7 @@ const BookingModal = ({ isOpen, onClose, rooms, bookingData }: Props) => {
 
         <button
           type="submit"
-          className="mt-4 w-full bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600 hover:cursor-pointer"
+          className="mt-4 w-full bg-blue-500 text-white p-2 rounded-md hover:bg-blue-600 hover:cursor-pointer focus-visible:ring-4 focus-visible:ring-blue-300 outline-none"
           disabled={isSubmitting}
         >
           Сохранить бронирование

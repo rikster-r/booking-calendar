@@ -84,10 +84,13 @@ const RoomModal = ({ isOpen, onClose, roomData }: Props) => {
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose}>
-      <form onSubmit={handleSubmit} className="relative">
+    <Modal isOpen={isOpen} onClose={onClose} className="max-w-md">
+      <form
+        onSubmit={handleSubmit}
+        className="relative p-6 sm:p-7 text-sm sm:text-base"
+      >
         <div className="flex justify-between items-center gap-2 sm:gap-12">
-          <h2 className="text-lg font-semibold flex items-center gap-2">
+          <h2 className="sm:text-lg font-semibold text-base flex items-center gap-2">
             {roomData ? 'Изменить' : 'Добавить'} помещение
           </h2>
           <button
@@ -95,28 +98,28 @@ const RoomModal = ({ isOpen, onClose, roomData }: Props) => {
             className="hover:cursor-pointer"
             onClick={onClose}
           >
-            <XMarkIcon className="w-7 h-7" />
+            <XMarkIcon className="w-6 sm:w-7 h-6 sm:h-7" />
           </button>
         </div>
 
-        <div className="mt-2">
-          <label className="text-gray-700 font-medium">Название</label>
+        <div className="mt-3">
+          <label className="font-medium text-gray-700">Название</label>
           <input
             type="text"
             name="name"
             value={formData.name}
             onChange={handleChange}
-            className="flex items-center w-full border rounded-md px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500 h-[40px]"
+            className="mt-1 flex items-center w-full border border-gray-500 rounded-md px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500 h-[40px]"
             required
           />
         </div>
 
-        <div className="mt-2">
+        <div className="mt-3">
           <label className="text-gray-700 font-medium">Статус</label>
           <select
             name="status"
             value={formData.status}
-            className="flex items-center w-full border rounded-md px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500 h-[40px]"
+            className="mt-1 flex items-center w-full border rounded-md px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500 h-[40px] border-gray-500"
             onChange={handleChange}
             required
           >
@@ -128,14 +131,14 @@ const RoomModal = ({ isOpen, onClose, roomData }: Props) => {
           </select>
         </div>
 
-        <div className="mt-2 relative">
+        <div className="mt-3 relative">
           <div className="flex items-center">
-            <PaintBrushIcon className="w-4 h-4 mr-1" />
+            <PaintBrushIcon className="w-4 h-4 mr-1 fill-gray-700" />
             <label className="text-gray-700 font-medium">Цвет дисплея</label>
           </div>
           <Popover className="relative">
             <PopoverButton
-              className="w-full mt-1 p-2 border rounded-md text-white hover:cursor-pointer flex items-center px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500 h-[40px]"
+              className="w-full mt-1 p-2 border border-gray-500 rounded-md text-white hover:cursor-pointer flex items-center px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500 h-[40px]"
               style={{ backgroundColor: formData.color }}
             >
               {formData.color}
@@ -160,7 +163,7 @@ const RoomModal = ({ isOpen, onClose, roomData }: Props) => {
         <div className="mt-4 flex justify-end">
           <button
             type="submit"
-            className="bg-blue-500 text-white px-4 py-2 rounded-md hover:cursor-pointer"
+            className="bg-blue-500 text-white px-4 py-2 rounded-md hover:cursor-pointer hover:bg-blue-600 focus-visible:ring-4 focus-visible:ring-blue-300 outline-none"
             disabled={isSubmitting}
           >
             {roomData ? 'Сохранить' : 'Добавить'}
