@@ -112,7 +112,7 @@ export default function Home({ initialRooms, initialBookings }: Props) {
           <h1 className="text-2xl sm:text-4xl font-extrabold pb-4 sm:pb-6 pt-4 px-4 text-white">
             Календарь брони
           </h1>
-          <div className="pt-4 bg-white rounded-xl flex gap-2 sm:gap-4 w-full overflow-hidden pl-2 sm:p-8">
+          <div className="py-4 bg-white rounded-xl flex gap-2 sm:gap-4 w-full overflow-hidden pl-2 sm:p-8">
             <div className="flex flex-col gap-2 sm:gap-3 w-max">
               <div className="text-md sm:text-xl font-semibold h-[25px] sm:h-[30px] text-gray-800">
                 {currentYear}
@@ -260,16 +260,16 @@ export default function Home({ initialRooms, initialBookings }: Props) {
           MODAL HAS SHADED BACKDROP WHICH IS NOT NEEDED IN MENU
           */}
           {isMenuOpen && (
-            <div className="bg-white fixed bottom-20 right-5 z-20 shadow-lg rounded-lg">
+            <div className="bg-white fixed bottom-18 sm:bottom-20 right-5 z-20 shadow-lg rounded-lg text-sm sm:text-base">
               <button
-                className="flex items-center gap-2 focus-visible:bg-gray-100 px-6 py-4 hover:cursor-pointer hover:bg-gray-100 w-full"
+                className="flex items-center gap-2 focus-visible:bg-gray-100 px-6 py-4 sm:py-4 hover:cursor-pointer hover:bg-gray-100 w-full"
                 onClick={() => toggleModal('addRoom')}
               >
-                <BuildingOfficeIcon className="w-6 h-6" />
+                <BuildingOfficeIcon className="w-5 sm:w-6 h-5 sm:h-6" />
                 <p>Добавить комнату</p>
               </button>
               <button
-                className="flex items-center gap-2 focus-visible:bg-gray-100 px-6 py-4 hover:cursor-pointer hover:bg-gray-100 w-full"
+                className="flex items-center gap-2 focus-visible:bg-gray-100 px-6 py-4  hover:cursor-pointer hover:bg-gray-100 w-full"
                 onClick={() =>
                   toggleModal('addBooking', {
                     checkIn: new Date(),
@@ -277,7 +277,7 @@ export default function Home({ initialRooms, initialBookings }: Props) {
                   })
                 }
               >
-                <KeyIcon className="w-6 h-6" />
+                <KeyIcon className="w-5 sm:w-6 h-5 sm:h-6" />
                 <p>Забронировать </p>
               </button>
             </div>

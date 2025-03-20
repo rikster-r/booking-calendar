@@ -200,7 +200,7 @@ const BookingModal = ({ isOpen, onClose, rooms, bookingData }: Props) => {
       return;
     }
     if (isEqual(date, formData.checkOut)) {
-      toast.error('Нельзя поставить приезд на то же время, что и выезд');
+      toast.error('Нельзя поставить заезд на то же время, что и выезд');
       return;
     }
     const slotFree = await isTimeSlotFree(date, formData.checkOut);
@@ -214,11 +214,11 @@ const BookingModal = ({ isOpen, onClose, rooms, bookingData }: Props) => {
 
   const setCheckOut = async (date: Date) => {
     if (date < formData.checkIn) {
-      toast.error('Нельзя установить выезд раньше приезда.');
+      toast.error('Нельзя установить выезд раньше заезда.');
       return;
     }
     if (isEqual(date, formData.checkIn)) {
-      toast.error('Нельзя поставить выезд на то же время, что и приезд');
+      toast.error('Нельзя поставить выезд на то же время, что и заезд');
       return;
     }
     const slotFree = await isTimeSlotFree(formData.checkIn, date);
@@ -262,7 +262,7 @@ const BookingModal = ({ isOpen, onClose, rooms, bookingData }: Props) => {
         className="bg-white p-6 sm:p-7 text-sm sm:text-base"
       >
         <div className="flex justify-between items-center">
-          <h2 className="sm:text-lg font-semibold text-base flex items-center gap-2">
+          <h2 className="text-base sm:text-lg font-semibold  flex items-center gap-2">
             📌 Бронирование
           </h2>
           <button
@@ -320,7 +320,7 @@ const BookingModal = ({ isOpen, onClose, rooms, bookingData }: Props) => {
         {/* Adults & Children Count */}
         <div className="mt-3 flex gap-2 w-full">
           <div className="w-full">
-            <label className="text-gray-700">Взр.</label>
+            <label className="text-gray-700">Взрослые</label>
             <input
               type="number"
               name="adultsCount"
@@ -356,7 +356,7 @@ const BookingModal = ({ isOpen, onClose, rooms, bookingData }: Props) => {
         </div>
 
         {/* Additional Info */}
-        <div className="mt-3">
+        <div className="mt-3 mb-6">
           <label className="text-gray-700">Дополнительная информация</label>
           <textarea
             name="additionalInfo"
@@ -369,37 +369,35 @@ const BookingModal = ({ isOpen, onClose, rooms, bookingData }: Props) => {
         <hr className="my-5 text-gray-400" />
 
         {/* Finance */}
-        <div className="mt-6">
-          <h2 className="sm:text-lg font-semibold flex items-center">
+        <div className="mt-6 mb-6">
+          <h2 className="text-base sm:text-lg font-semibold flex items-center">
             $ Финансы
           </h2>
 
-          <div className="flex gap-3 mt-3">
-            <div className="w-full">
-              <label className="text-gray-700">За сутки</label>
-              <div className="flex items-center w-full border rounded-md px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500 border-gray-500 mt-1">
-                <input
-                  type="number"
-                  name="dailyPrice"
-                  className="w-full outline-none bg-transparent "
-                  value={formData.dailyPrice}
-                  onChange={handleChange}
-                />
-                <span className="ml-2 text-gray-500">RUB</span>
-              </div>
-            </div>
-            <div className="w-full">
-              <label className="text-gray-700">Количество дней</label>
+          <div className="w-full mt-3">
+            <label className="text-gray-700">За сутки</label>
+            <div className="flex items-center w-full border rounded-md px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500 border-gray-500 mt-1">
               <input
                 type="number"
-                className="w-full border rounded-md px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500 border-gray-500 mt-1"
-                value={differenceInCalendarDays(
-                  formData.checkOut,
-                  formData.checkIn
-                )}
-                onChange={changeDaysBooked}
+                name="dailyPrice"
+                className="w-full outline-none bg-transparent "
+                value={formData.dailyPrice}
+                onChange={handleChange}
               />
+              <span className="ml-2 text-gray-500">RUB</span>
             </div>
+          </div>
+          <div className="w-full mt-3">
+            <label className="text-gray-700">Количество дней</label>
+            <input
+              type="number"
+              className="w-full border rounded-md px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500 border-gray-500 mt-1"
+              value={differenceInCalendarDays(
+                formData.checkOut,
+                formData.checkIn
+              )}
+              onChange={changeDaysBooked}
+            />
           </div>
 
           <div className="mt-3">
@@ -434,7 +432,7 @@ const BookingModal = ({ isOpen, onClose, rooms, bookingData }: Props) => {
 
         {/* Client Info */}
         <div className="mt-6 rounded-md">
-          <h3 className="font-semibold flex items-center gap-2 sm:text-lg">
+          <h3 className="font-semibold flex items-center gap-2 text-base sm:text-lg">
             👤 Клиент
           </h3>
           <div className="mt-3">

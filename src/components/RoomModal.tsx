@@ -144,7 +144,7 @@ const RoomModal = ({ isOpen, onClose, roomData }: Props) => {
               {formData.color}
             </PopoverButton>
             <PopoverPanel
-              className="grid grid-cols-9 fixed w-[300px] gap-1 bg-white p-2 rounded-md inset-x-auto shadow-xl"
+              className="grid grid-cols-8 fixed w-[300px] gap-1 bg-white p-2 rounded-md inset-x-auto shadow-xl"
               anchor="top"
             >
               {hexColors.map((color) => (
