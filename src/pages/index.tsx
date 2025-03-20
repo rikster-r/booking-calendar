@@ -126,8 +126,8 @@ export default function Home({ initialRooms, initialBookings }: Props) {
                   key={room.id}
                 >
                   <span className="font-bold">
-                    {room.name.slice(0, 6)}
-                    {room.name.length > 6 && '...'}
+                    {room.name.slice(0, 20)}
+                    {room.name.length > 20 && '...'}
                   </span>
                   <span>
                     <RoomStatusBadge status={room.status} />

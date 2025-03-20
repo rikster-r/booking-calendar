@@ -5,13 +5,13 @@ type Props = {
 const RoomStatusBadge = ({ status }: Props) => {
   const statusMap = {
     ready: {
-      text: 'Готово',
+      className: 'bg-green-500',
     },
     'not ready': {
-      text: 'Не готово',
+      className: 'bg-red-500',
     },
     cleaning: {
-      text: 'Уборка',
+      className: 'bg-yellow-500',
     },
   };
 
@@ -19,8 +19,7 @@ const RoomStatusBadge = ({ status }: Props) => {
 
   return (
     <div className="flex items-center gap-1 rounded-lg text-xs text-white font-medium text-nowrap">
-      <span className={`w-1 h-1 rounded-full bg-white`}></span>
-      <span>{data.text}</span>
+      <div className={`w-2 h-2 rounded-full shadow-xl ring-2 ring-white ${data.className}`}></div>
     </div>
   );
 };

@@ -31,8 +31,8 @@ const RoomModal = ({ isOpen, onClose, roomData }: Props) => {
   const [formData, setFormData] = useState(initial);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const statuses = {
-    ready: 'Готова к заселению',
-    'not ready': 'Не готова к заселению',
+    ready: 'Готово к заселению',
+    'not ready': 'Не готово к заселению',
     cleaning: 'Уборка',
   };
 
