@@ -15,6 +15,9 @@ import { get30DayRange } from '@/lib/dates';
 import RoomStatusBadge from '@/components/RoomStatusBadge';
 import useWindowWidth from '@/hooks/useWindowWidth';
 import Head from 'next/head';
+import type { User } from '@supabase/supabase-js';
+import type { GetServerSidePropsContext } from 'next';
+import { createClient } from '@/lib/supabase/server-props';
 
 const inter = Inter({
   weight: ['300', '400', '500', '600', '700', '800'],
@@ -25,26 +28,36 @@ const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 const dateRange = get30DayRange();
 
-export const getServerSideProps: GetServerSideProps = async () => {
-  const [roomsRes, bookingsRes] = await Promise.all([
+export const getServerSideProps: GetServerSideProps = async (
+  context: GetServerSidePropsContext
+) => {
+  const supabase = createClient(context);
+  const [roomsRes, bookingsRes, userRes] = await Promise.all([
     fetch(`${process.env.NEXT_PUBLIC_URL}/api/rooms`),
     fetch(
       `${process.env.NEXT_PUBLIC_URL}/api/bookings/?start=${dateRange.start}&end=${dateRange.end}`
     ),
+    supabase.auth.getUser(),
   ]);
+
+  if (userRes.error || !userRes.data) {
+    return { redirect: { destination: '/login', permanent: false } };
+  }
 
   const [initialRooms, initialBookings]: [Room[], Booking[]] =
     await Promise.all([roomsRes.json(), bookingsRes.json()]);
 
-  return { props: { initialRooms, initialBookings } };
+  return { props: { initialRooms, initialBookings, user: userRes.data.user } };
 };
 
 type Props = {
   initialRooms: Room[];
   initialBookings: Booking[];
+  user: User;
 };
 
-export default function Home({ initialRooms, initialBookings }: Props) {
+export default function Home({ initialRooms, initialBookings, user }: Props) {
+  console.log(user)
   const LOCALE = 'ru-RU';
   const today = new Date();
   const currentYear = today.toLocaleDateString(LOCALE, { year: 'numeric' });

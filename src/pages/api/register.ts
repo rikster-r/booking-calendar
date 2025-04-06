@@ -6,30 +6,28 @@ export default async function handler(
   res: NextApiResponse
 ) {
   const supabase = createClient(req, res);
-  if (req.method === 'GET') {
-    const { data, error } = await supabase
-      .from('rooms')
-      .select('*')
-      .order('created_at', { ascending: true });
-
-    if (error) return res.status(500).json({ error: error.message });
-    return res.status(200).json(data);
-  }
-
   if (req.method === 'POST') {
-    const { name, color, status } = req.body;
+    const {
+      email,
+      password,
+      firstName: first_name,
+      lastName: last_name,
+    } = req.body;
 
-    if (!name || !color || !status) {
+    if (!email || !password || !first_name) {
       return res
         .status(400)
         .json({ error: 'Не все обязательные поля заполнены' });
     }
 
-    const { data, error } = await supabase
-      .from('rooms')
-      .insert([{ name, color, status }]);
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { first_name, last_name, role: 'client' } },
+    });
 
     if (error) return res.status(500).json({ error: error.message });
+
     return res.status(201).json(data);
   }
 

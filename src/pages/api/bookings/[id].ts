@@ -1,10 +1,12 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { supabase } from '@/lib/supabase';
+import createClient from '@/lib/supabase/api';
 
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
+  const supabase = createClient(req, res);
+
   if (req.method === 'DELETE') {
     const { id } = req.query;
 
