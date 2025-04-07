@@ -163,7 +163,7 @@ const RoomModal = ({ isOpen, onClose, roomData }: Props) => {
         <div className="mt-4 flex justify-end">
           <button
             type="submit"
-            className="bg-blue-500 text-white px-4 py-2 rounded-md hover:cursor-pointer hover:bg-blue-600 focus-visible:ring-4 focus-visible:ring-blue-300 outline-none"
+            className="bg-blue-500 text-white px-4 py-2 rounded-xl hover:cursor-pointer hover:bg-blue-600 focus-visible:ring-4 focus-visible:ring-blue-300 outline-none"
             disabled={isSubmitting}
           >
             {roomData ? 'Сохранить' : 'Добавить'}
