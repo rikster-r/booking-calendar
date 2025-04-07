@@ -18,6 +18,7 @@ import Head from 'next/head';
 import type { User } from '@supabase/supabase-js';
 import type { GetServerSidePropsContext } from 'next';
 import { createClient } from '@/lib/supabase/server-props';
+import Sidebar from '@/components/Sidebar';
 
 const inter = Inter({
   weight: ['300', '400', '500', '600', '700', '800'],
@@ -57,7 +58,7 @@ type Props = {
 };
 
 export default function Home({ initialRooms, initialBookings, user }: Props) {
-  console.log(user)
+  console.log(user);
   const LOCALE = 'ru-RU';
   const today = new Date();
   const currentYear = today.toLocaleDateString(LOCALE, { year: 'numeric' });
@@ -91,8 +92,8 @@ export default function Home({ initialRooms, initialBookings, user }: Props) {
   const [modalData, setModalData] = useState<
     Record<string, unknown> | undefined
   >();
-  const windowWidth = useWindowWidth() > 640;
-  const bigScreen = windowWidth;
+  const windowWidth = useWindowWidth();
+  const bigScreen = windowWidth > 1024;
 
   // Helper function to toggle modals
   const toggleModal = (
@@ -115,26 +116,29 @@ export default function Home({ initialRooms, initialBookings, user }: Props) {
         <meta name="description" content="Календарь брони" />
       </Head>
       <div
-        className={`${inter.className} min-h-screen sm:p-8 flex relative 
-    bg-radial-[at_100%_20%] from-[#2980B9] to-[#6DD5FA]`}
+        className={`${inter.className} min-h-screen flex relative 
+    `}
         onClick={() => {
           setMenuOpen(false);
         }}
       >
-        <main className="mx-auto w-full max-w-7xl">
-          <h1 className="text-2xl sm:text-4xl font-extrabold pb-4 sm:pb-6 pt-4 px-4 text-white">
-            Календарь брони
-          </h1>
-          <div className="py-4 bg-white rounded-xl flex gap-2 sm:gap-4 w-full overflow-hidden pl-2 sm:p-8">
-            <div className="flex flex-col gap-2 sm:gap-3 w-max">
-              <div className="text-md sm:text-xl font-semibold h-[25px] sm:h-[30px] text-gray-800">
+        <main className="mx-auto w-full lg:w-[calc(100%-300px)] bg-radial-[at_100%_20%] from-[#2980B9] to-[#6DD5FA] lg:p-8 lg:ml-72">
+          <div className="flex items-center">
+            <Sidebar user={user} />
+            <h1 className="text-2xl lg:text-4xl font-extrabold pb-4 lg:pb-6 pt-4 text-white lg:mx-auto text-left w-full max-w-max">
+              Календарь брони
+            </h1>
+          </div>
+          <div className="py-4 bg-white rounded-xl flex gap-2 lg:gap-4 overflow-hidden pl-2 lg:p-8 w-full max-w-max mx-auto">
+            <div className="flex flex-col gap-2 lg:gap-3 w-max">
+              <div className="text-md lg:text-xl font-semibold h-[25px] lg:h-[30px] text-gray-800">
                 {currentYear}
               </div>
-              <div className="h-[60px] sm:h-[80px]"></div>
+              <div className="h-[60px] lg:h-[80px]"></div>
               {rooms.map((room) => (
                 <button
                   style={{ backgroundColor: room.color }}
-                  className="text-white p-2 sm:p-3 rounded-lg text-center h-[45px] sm:h-[55px] flex items-center justify-center shadow-sm hover:shadow-md transition text-xs sm:text-sm gap-1 sm:min-w-[150px]"
+                  className="text-white p-2 lg:p-3 rounded-lg text-center h-[45px] lg:h-[55px] flex items-center justify-center shadow-sm hover:shadow-md transition text-xs lg:text-sm gap-1 lg:min-w-[150px]"
                   onClick={() => toggleModal('roomInfo', room)}
                   key={room.id}
                 >
@@ -148,20 +152,20 @@ export default function Home({ initialRooms, initialBookings, user }: Props) {
                 </button>
               ))}
             </div>
-            <div className="grid grid-cols-[repeat(30,40px)] sm:grid-cols-[repeat(30,50px)] overflow-x-auto gap-y-2 sm:gap-y-3 relative">
+            <div className="grid grid-cols-[repeat(30,40px)] lg:grid-cols-[repeat(30,50px)] overflow-x-auto gap-y-2 lg:gap-y-3 relative">
               {daysList.map((day) => {
                 const month = day.toLocaleDateString(LOCALE, { month: 'long' });
                 if (seenMonths.has(month))
                   return (
                     <div
-                      className="w-[40px] sm:w-[50px] h-[25px] sm:h-[30px]"
+                      className="w-[40px] lg:w-[50px] h-[25px] lg:h-[30px]"
                       key={day.getTime()}
                     ></div>
                   );
                 seenMonths.add(month);
                 return (
                   <div
-                    className="text-md sm:text-lg font-medium capitalize h-[25px] sm:h-[30px] text-gray-700"
+                    className="text-md lg:text-lg font-medium capitalize h-[25px] lg:h-[30px] text-gray-700"
                     key={day.getTime()}
                   >
                     {month}
@@ -170,13 +174,13 @@ export default function Home({ initialRooms, initialBookings, user }: Props) {
               })}
               {daysList.map((day) => (
                 <div
-                  className="bg-gray-200 p-2 sm:p-3 border border-gray-300 rounded-lg flex flex-col items-center justify-center h-[60px] sm:h-[80px] w-[40px] sm:w-[50px]"
+                  className="bg-gray-200 p-2 lg:p-3 border border-gray-300 rounded-lg flex flex-col items-center justify-center h-[60px] lg:h-[80px] w-[40px] lg:w-[50px]"
                   key={day.toISOString()}
                 >
-                  <p className="text-base sm:text-lg font-semibold text-gray-900">
+                  <p className="text-base lg:text-lg font-semibold text-gray-900">
                     {day.toLocaleDateString(LOCALE, { day: 'numeric' })}
                   </p>
-                  <p className="text-xs sm:text-sm text-gray-500">
+                  <p className="text-xs lg:text-sm text-gray-500">
                     {day.toLocaleDateString(LOCALE, { weekday: 'short' })}
                   </p>
                 </div>
@@ -184,7 +188,7 @@ export default function Home({ initialRooms, initialBookings, user }: Props) {
               {rooms.map((room) =>
                 daysList.map((day, dayIndex) => (
                   <button
-                    className="border border-gray-300 p-2 h-[45px] sm:h-[55px] w-[40px] sm:w-[50px] flex items-center justify-center bg-white hover:bg-gray-100 transition"
+                    className="border border-gray-300 p-2 h-[45px] lg:h-[55px] w-[40px] lg:w-[50px] flex items-center justify-center bg-white hover:bg-gray-100 transition"
                     onClick={() =>
                       toggleModal('addBooking', {
                         checkIn: day,
@@ -241,7 +245,7 @@ export default function Home({ initialRooms, initialBookings, user }: Props) {
                     key={booking.id}
                     className={`${
                       booking.paid ? 'bg-blue-500' : 'bg-red-500'
-                    } text-white p-2 h-[45px] sm:h-[55px] flex items-center justify-center absolute truncate shadow-lg rounded-lg text-xs sm:text-sm`}
+                    } text-white p-2 h-[45px] lg:h-[55px] flex items-center justify-center absolute truncate shadow-lg rounded-lg text-xs lg:text-sm`}
                     style={{
                       top: `${y}px`,
                       left: `${x}px`,
@@ -273,12 +277,12 @@ export default function Home({ initialRooms, initialBookings, user }: Props) {
           MODAL HAS SHADED BACKDROP WHICH IS NOT NEEDED IN MENU
           */}
           {isMenuOpen && (
-            <div className="bg-white fixed bottom-18 sm:bottom-20 right-5 z-20 shadow-lg rounded-lg text-sm sm:text-base">
+            <div className="bg-white fixed bottom-18 lg:bottom-20 right-5 z-20 shadow-lg rounded-lg text-sm lg:text-base">
               <button
-                className="flex items-center gap-2 focus-visible:bg-gray-100 px-6 py-4 sm:py-4 hover:cursor-pointer hover:bg-gray-100 w-full"
+                className="flex items-center gap-2 focus-visible:bg-gray-100 px-6 py-4 lg:py-4 hover:cursor-pointer hover:bg-gray-100 w-full"
                 onClick={() => toggleModal('addRoom')}
               >
-                <BuildingOfficeIcon className="w-5 sm:w-6 h-5 sm:h-6" />
+                <BuildingOfficeIcon className="w-5 lg:w-6 h-5 lg:h-6" />
                 <p>Добавить комнату</p>
               </button>
               <button
@@ -290,7 +294,7 @@ export default function Home({ initialRooms, initialBookings, user }: Props) {
                   })
                 }
               >
-                <KeyIcon className="w-5 sm:w-6 h-5 sm:h-6" />
+                <KeyIcon className="w-5 lg:w-6 h-5 lg:h-6" />
                 <p>Забронировать </p>
               </button>
             </div>
