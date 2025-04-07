@@ -36,12 +36,9 @@ const Sidebar = ({ user }: Props) => {
           <DialogBackdrop className="fixed inset-0 bg-gray-900/60" />
 
           <DialogPanel
-            className="fixed inset-y-0 left-0 bg-white w-72 min-h-screen flex flex-col"
-            style={{
-              transform: isOpen ? 'translateX(0)' : 'translateX(-100%)',
-            }}
+            className="fixed inset-y-0 left-0 bg-white w-72 lg:w-80 min-h-screen flex flex-col"
           >
-            <div className="flex items-center justify-between border-b border-gray-400 bg-white p-4">
+            <div className="flex items-center justify-between border-b border-gray-400 bg-white p-4 ">
               <button
                 className="ml-auto hover:cursor-pointer"
                 aria-label="Закрыть боковую панель"
@@ -63,36 +60,38 @@ const Sidebar = ({ user }: Props) => {
 
 export const SidebarContent = ({ user }: Props) => {
   return (
-    <div className="flex h-screen flex-col border-e border-gray-100 bg-white w-72 text-sm sm:text-md">
+    <div className="flex h-screen flex-col border-e border-gray-100 bg-white w-72 lg:w-80 text-sm lg:text-base">
       <div className="px-2">
         <ul className="mt-6 space-y-1">
-          <li className="flex items-center gap-2 rounded-lg px-4 py-3 hover:bg-gray-100 w-full hover:cursor-pointer">
-            <CalendarIcon className="w-5 h-5" />
+          <li className="rounded-lg px-4 py-3 hover:bg-gray-100 w-full hover:cursor-pointer">
             <Link
               href="/"
-              className="block rounded-lg  text-gray-700 font-semibold"
+              className="rounded-lg text-gray-700 font-semibold flex items-center gap-2"
             >
-              Календарь
+              <CalendarIcon className="w-5 h-5" />
+              <span>Календарь</span>
             </Link>
           </li>
-          <li className="flex items-center gap-2 rounded-lg px-4 py-3 hover:bg-gray-100 w-full hover:cursor-pointer">
-            <UserIcon className="w-5 h-5" />
+          <li className="rounded-lg px-4 py-3 hover:bg-gray-100 w-full hover:cursor-pointer">
             <Link
               href="/profile"
-              className="block rounded-lg text-gray-700 font-semibold"
+              className="rounded-lg text-gray-700 font-semibold flex items-center gap-2"
             >
-              Профиль
+              <UserIcon className="w-5 h-5" />
+              <span>Профиль</span>
             </Link>
           </li>
-          <li className="flex items-center gap-2 rounded-lg px-4 py-3 hover:bg-gray-100 w-full hover:cursor-pointer">
-            <TableCellsIcon className="w-5 h-5" />
-            <Link
-              href="/adminPanel"
-              className="block rounded-lg text-gray-700 font-semibold"
-            >
-              Панель администратора
-            </Link>
-          </li>
+          {user.user_metadata.role === 'admin' && (
+            <li className="rounded-lg px-4 py-3 hover:bg-gray-100 w-full hover:cursor-pointer">
+              <Link
+                href="/adminPanel"
+                className="rounded-lg text-gray-700 font-semibold flex items-center gap-2"
+              >
+                <TableCellsIcon className="w-5 h-5" />
+                <span>Панель администратора</span>
+              </Link>
+            </li>
+          )}
         </ul>
       </div>
 
@@ -104,7 +103,7 @@ export const SidebarContent = ({ user }: Props) => {
           </div>
 
           <div>
-            <p className="text-xs">
+            <p className="text-xs lg:text-sm">
               <strong className="block font-medium">
                 {user.user_metadata.first_name} {user.user_metadata.last_name}
               </strong>

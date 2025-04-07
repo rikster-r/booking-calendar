@@ -122,7 +122,7 @@ export default function Home({ initialRooms, initialBookings, user }: Props) {
           setMenuOpen(false);
         }}
       >
-        <main className="mx-auto w-full lg:w-[calc(100%-300px)] bg-radial-[at_100%_20%] from-[#2980B9] to-[#6DD5FA] lg:p-8 lg:ml-72">
+        <main className="mx-auto w-full lg:w-[calc(100%-320px)] bg-radial-[at_100%_20%] from-[#2980B9] to-[#6DD5FA] lg:p-8 lg:ml-80">
           <div className="flex items-center">
             <Sidebar user={user} />
             <h1 className="text-2xl lg:text-4xl font-extrabold pb-4 lg:pb-6 pt-4 text-white lg:mx-auto text-left w-full max-w-max">
