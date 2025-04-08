@@ -11,6 +11,7 @@ import {
 } from 'date-fns';
 import DateTimePicker from '@/components/DateTimePicker';
 import { toast } from 'react-toastify';
+import { User } from '@supabase/supabase-js';
 
 type Props = {
   isOpen: boolean;
@@ -22,10 +23,11 @@ type Props = {
         checkIn: Date;
         roomId: number;
       };
+  user: User;
 };
 
 // this component is used for both updates and creations of booking
-const BookingModal = ({ isOpen, onClose, rooms, bookingData }: Props) => {
+const BookingModal = ({ isOpen, onClose, rooms, bookingData, user }: Props) => {
   // workaround for typescript reasons
   function hasId(booking: unknown): booking is { id: unknown } {
     return !!booking && typeof booking === 'object' && 'id' in booking;
@@ -123,8 +125,8 @@ const BookingModal = ({ isOpen, onClose, rooms, bookingData }: Props) => {
   const saveBooking = async (data: BookingInput) => {
     const method = hasId(bookingData) ? 'PUT' : 'POST';
     const url = hasId(bookingData)
-      ? `/api/bookings/${bookingData.id}`
-      : '/api/bookings';
+      ? `/api/${user.id}/bookings/${bookingData.id}`
+      : `/api/${user.id}/bookings`;
 
     const res = await fetch(url, {
       method,

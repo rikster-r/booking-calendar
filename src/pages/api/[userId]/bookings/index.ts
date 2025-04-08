@@ -22,6 +22,11 @@ export default async function handler(
       dailyPrice: daily_price,
       paid,
     }: BookingInput = req.body;
+    const { userId: user_id } = req.query;
+
+    if (!user_id) {
+      return res.status(400).json({ error: 'Некорректный ID пользователя.' });
+    }
 
     if (
       !room_id ||
@@ -56,7 +61,8 @@ export default async function handler(
         .from('bookings')
         .select('*')
         .or(`and(check_in.lte.${check_out}, check_out.gte.${check_in})`)
-        .eq('room_id', room_id);
+        .eq('room_id', room_id)
+        .eq('user_id', user_id);
 
     if (existingBookingsError) {
       return res.status(500).json({ error: existingBookingsError.message });
@@ -89,6 +95,7 @@ export default async function handler(
     const { data, error } = await supabase.from('bookings').insert([
       {
         room_id,
+        user_id,
         client_name,
         client_phone,
         client_email,
@@ -111,7 +118,8 @@ export default async function handler(
       .status(201)
       .json({ message: 'Успешно создана бронь.', booking: data });
   } else if (req.method === 'GET') {
-    let { start, end } = req.query;
+    // eslint-disable-next-line prefer-const
+    let { start, end, userId: user_id } = req.query;
 
     // Validate and set default values
     const today = new Date().toISOString().split('T')[0];
@@ -127,7 +135,9 @@ export default async function handler(
       .select('*')
       .or(
         `and(check_in.gte.${start}, check_in.lte.${end}),and(check_out.gte.${start}, check_out.lte.${end})`
-      );
+      )
+      .eq('user_id', user_id)
+      .order('check_in', { ascending: true });
 
     if (error) {
       return res.status(500).json({ error: error.message });

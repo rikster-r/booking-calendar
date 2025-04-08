@@ -9,14 +9,16 @@ import {
   CloseButton,
 } from '@headlessui/react';
 import { toast } from 'react-toastify';
+import { User } from '@supabase/supabase-js';
 
 type Props = {
   isOpen: boolean;
   onClose: () => void;
   roomData?: Room;
+  user: User;
 };
 
-const RoomModal = ({ isOpen, onClose, roomData }: Props) => {
+const RoomModal = ({ isOpen, onClose, roomData, user }: Props) => {
   const initial: RoomInput = roomData
     ? {
         name: roomData.name,
@@ -54,7 +56,9 @@ const RoomModal = ({ isOpen, onClose, roomData }: Props) => {
 
   const saveRoom = async (data: RoomInput) => {
     const method = roomData ? 'PUT' : 'POST';
-    const url = roomData ? `/api/rooms/${roomData.id}` : '/api/rooms';
+    const url = roomData
+      ? `/api/${user.id}/rooms/${roomData.id}`
+      : `/api/${user.id}/rooms`;
 
     const res = await fetch(url, {
       method,

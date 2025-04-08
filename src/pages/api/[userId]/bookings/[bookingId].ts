@@ -8,20 +8,24 @@ export default async function handler(
   const supabase = createClient(req, res);
 
   if (req.method === 'DELETE') {
-    const { id } = req.query;
+    const { bookingId: booking_id } = req.query;
 
-    if (!id) return res.status(400).json({ error: 'Некорректный айди.' });
+    if (!booking_id)
+      return res.status(400).json({ error: 'Некорректный айди.' });
 
-    const { error } = await supabase.from('bookings').delete().eq('id', id);
+    const { error } = await supabase
+      .from('bookings')
+      .delete()
+      .eq('id', booking_id);
 
     if (error) return res.status(500).json({ error: error.message });
-    return res.status(200).json({ message: `Успешно удалена бронь ${id}` });
+    return res.status(200).json({ message: `Успешно удалена бронь ${booking_id}` });
   }
 
   if (req.method === 'PUT') {
-    const { id } = req.query;
-    if (!id || typeof id !== 'string') {
-      return res.status(400).json({ error: 'Неверный ID брони' });
+    const { bookingId: booking_id, userId: user_id } = req.query;
+    if (!booking_id || !user_id) {
+      return res.status(400).json({ error: 'Некорректный ID брони' });
     }
 
     const {
@@ -71,7 +75,8 @@ export default async function handler(
         .select('*')
         .or(`and(check_in.lte.${check_out}, check_out.gte.${check_in})`)
         .eq('room_id', room_id)
-        .neq('id', id); // Exclude current booking
+        .eq('user_id', user_id)
+        .neq('id', booking_id); // Exclude current booking
 
     if (existingBookingsError) {
       return res.status(500).json({ error: existingBookingsError.message });
@@ -105,6 +110,7 @@ export default async function handler(
       .from('bookings')
       .update({
         room_id,
+        user_id,
         client_name,
         client_phone,
         client_email,
@@ -117,7 +123,7 @@ export default async function handler(
         daily_price,
         paid,
       })
-      .eq('id', id)
+      .eq('id', booking_id)
       .select();
 
     if (error) {

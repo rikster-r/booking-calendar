@@ -33,17 +33,19 @@ export const getServerSideProps: GetServerSideProps = async (
   context: GetServerSidePropsContext
 ) => {
   const supabase = createClient(context);
-  const [roomsRes, bookingsRes, userRes] = await Promise.all([
-    fetch(`${process.env.NEXT_PUBLIC_URL}/api/rooms`),
-    fetch(
-      `${process.env.NEXT_PUBLIC_URL}/api/bookings/?start=${dateRange.start}&end=${dateRange.end}`
-    ),
-    supabase.auth.getUser(),
-  ]);
+
+  const userRes = await supabase.auth.getUser();
 
   if (userRes.error || !userRes.data) {
     return { redirect: { destination: '/login', permanent: false } };
   }
+
+  const [roomsRes, bookingsRes] = await Promise.all([
+    fetch(`${process.env.NEXT_PUBLIC_URL}/api/${userRes.data.user.id}/rooms`),
+    fetch(
+      `${process.env.NEXT_PUBLIC_URL}/api/${userRes.data.user.id}/bookings/?start=${dateRange.start}&end=${dateRange.end}`
+    ),
+  ]);
 
   const [initialRooms, initialBookings]: [Room[], Booking[]] =
     await Promise.all([roomsRes.json(), bookingsRes.json()]);
@@ -59,12 +61,12 @@ type Props = {
 
 export default function Home({ initialRooms, initialBookings, user }: Props) {
   const { data: rooms, mutate: mutateRooms } = useSWR<Room[]>(
-    '/api/rooms',
+    `/api/${user.id}/rooms`,
     fetcher,
     { fallbackData: initialRooms }
   );
   const { data: bookings, mutate: mutateBookings } = useSWR<Booking[]>(
-    `/api/bookings/?start=${dateRange.start}&end=${dateRange.end}`,
+    `/api/${user.id}/bookings/?start=${dateRange.start}&end=${dateRange.end}`,
     fetcher,
     { fallbackData: initialBookings }
   );
@@ -112,7 +114,7 @@ export default function Home({ initialRooms, initialBookings, user }: Props) {
             </h1>
           </div>
 
-          {bookings.length > 0 ? (
+          {rooms.length > 0 ? (
             <BookingsCalendar
               rooms={rooms}
               bookings={bookings}
@@ -176,6 +178,7 @@ export default function Home({ initialRooms, initialBookings, user }: Props) {
                       roomId: number;
                     }
               }
+              user={user}
             />
           )}
           {modals.addRoom && (
@@ -185,6 +188,7 @@ export default function Home({ initialRooms, initialBookings, user }: Props) {
                 toggleModal('addRoom');
                 mutateRooms();
               }}
+              user={user}
               roomData={modalData as Room}
             />
           )}
@@ -200,6 +204,7 @@ export default function Home({ initialRooms, initialBookings, user }: Props) {
                 toggleModal('addBooking', modalData as Booking);
               }}
               booking={modalData as Booking}
+              user={user}
             />
           )}
           {modals.roomInfo && (
@@ -215,6 +220,7 @@ export default function Home({ initialRooms, initialBookings, user }: Props) {
                 toggleModal('addRoom', modalData as Room);
               }}
               room={modalData as Room}
+              user={user}
             />
           )}
         </div>

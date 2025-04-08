@@ -1,14 +1,16 @@
 import Modal from '@/components/Modal';
 import { XMarkIcon, InformationCircleIcon } from '@heroicons/react/24/solid';
+import { User } from '@supabase/supabase-js';
 
 type Props = {
   isOpen: boolean;
   onClose: () => void;
   onEditOpen: () => void;
   room: Room | null;
+  user: User;
 };
 
-const RoomInfoModal = ({ isOpen, onClose, onEditOpen, room }: Props) => {
+const RoomInfoModal = ({ isOpen, onClose, onEditOpen, room, user }: Props) => {
   if (!room) return null;
 
   const statusMap = {
@@ -26,7 +28,7 @@ const RoomInfoModal = ({ isOpen, onClose, onEditOpen, room }: Props) => {
   const data = statusMap[room.status];
 
   const deleteRoom = async () => {
-    const res = await fetch(`/api/rooms/${room.id}`, {
+    const res = await fetch(`/api/${user.id}/rooms/${room.id}`, {
       method: 'DELETE',
     });
 

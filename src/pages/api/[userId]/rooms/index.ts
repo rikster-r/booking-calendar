@@ -6,25 +6,30 @@ export default async function handler(
   res: NextApiResponse
 ) {
   const supabase = createClient(req, res);
-  if (req.method === 'DELETE') {
-    const { id } = req.query;
+  if (req.method === 'GET') {
+    const { userId: user_id } = req.query;
 
-    if (!id) return res.status(400).json({ error: 'Некорректный айди.' });
-
-    const { error } = await supabase.from('rooms').delete().eq('id', id);
-
-    if (error) return res.status(500).json({ error: error.message });
-    return res.status(200).json({ message: `Успешно удалено помещение ${id}` });
-  }
-
-  if (req.method === 'PUT') {
-    const { id } = req.query;
-
-    if (!id || typeof id !== 'string') {
-      return res.status(400).json({ error: 'Неверный ID брони' });
+    if (!user_id) {
+      return res.status(400).json({ error: 'Некорректный ID пользователя' });
     }
 
+    const { data, error } = await supabase
+      .from('rooms')
+      .select('*')
+      .eq('user_id', user_id)
+      .order('created_at', { ascending: true });
+
+    if (error) return res.status(500).json({ error: error.message });
+    return res.status(200).json(data);
+  }
+
+  if (req.method === 'POST') {
+    const { userId: user_id } = req.query;
     const { name, color, status } = req.body;
+
+    if (!user_id) {
+      return res.status(400).json({ error: 'Некорректный айди' });
+    }
 
     if (!name || !color || !status) {
       return res
@@ -34,9 +39,7 @@ export default async function handler(
 
     const { data, error } = await supabase
       .from('rooms')
-      .update({ name, color, status })
-      .eq('id', id)
-      .select();
+      .insert([{ name, color, status, user_id }]);
 
     if (error) return res.status(500).json({ error: error.message });
     return res.status(201).json(data);

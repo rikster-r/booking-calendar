@@ -30,7 +30,8 @@ const BookingsCalendar = ({ rooms, bookings, toggleModal }: Props) => {
   const seenMonths = new Set();
 
   return (
-      <div className="py-4 bg-white rounded-xl flex gap-2 lg:gap-4 overflow-hidden pl-2 lg:p-8 w-full max-w-max mx-auto">
+    <div className="mx-4 h-full">
+      <div className="py-4 bg-white rounded-xl flex gap-2 lg:gap-4 overflow-hidden pl-2 lg:p-8 w-full max-w-max mx-auto h-full">
         <div className="flex flex-col gap-2 lg:gap-3 w-max">
           <div className="text-md lg:text-xl font-semibold h-[25px] lg:h-[30px] text-gray-800">
             {currentYear}
@@ -53,8 +54,7 @@ const BookingsCalendar = ({ rooms, bookings, toggleModal }: Props) => {
             </button>
           ))}
         </div>
-
-        <div className="grid grid-cols-[repeat(30,40px)] lg:grid-cols-[repeat(30,50px)] overflow-x-auto gap-y-2 lg:gap-y-3 relative">
+        <div className="grid grid-cols-[repeat(30,40px)] lg:grid-cols-[repeat(30,50px)] overflow-x-auto gap-y-2 lg:gap-y-3 relative content-start">
           {daysList.map((day) => {
             const month = day.toLocaleDateString(LOCALE, { month: 'long' });
             if (seenMonths.has(month))
@@ -74,7 +74,6 @@ const BookingsCalendar = ({ rooms, bookings, toggleModal }: Props) => {
               </div>
             );
           })}
-
           {daysList.map((day) => (
             <div
               className="bg-gray-200 p-2 lg:p-3 border border-gray-300 rounded-lg flex flex-col items-center justify-center h-[60px] lg:h-[80px] w-[40px] lg:w-[50px]"
@@ -88,7 +87,6 @@ const BookingsCalendar = ({ rooms, bookings, toggleModal }: Props) => {
               </p>
             </div>
           ))}
-
           {rooms.map((room) =>
             daysList.map((day, dayIndex) => (
               <button
@@ -103,13 +101,11 @@ const BookingsCalendar = ({ rooms, bookings, toggleModal }: Props) => {
               ></button>
             ))
           )}
-
           {bookings?.map((booking) => {
             const roomIndex = rooms.findIndex(
               (room) => room.id === booking.room_id
             );
             if (roomIndex === -1) return null;
-
             const checkInDate = new Date(booking.check_in);
             const checkOutDate = new Date(booking.check_out);
             const yesterday = new Date();
@@ -117,13 +113,11 @@ const BookingsCalendar = ({ rooms, bookings, toggleModal }: Props) => {
             yesterday.setHours(23, 59, 0, 0);
             const lastDay = daysList[daysList.length - 1];
             const hourPixelRate = bigScreen ? 50 / 24 : 40 / 24;
-
             const hoursOffset = Math.max(
               0,
               (checkInDate.getTime() - yesterday.getTime()) / 36e5
             );
             const x = hoursOffset * hourPixelRate;
-
             let hours = (checkOutDate.getTime() - checkInDate.getTime()) / 36e5;
             if (checkInDate < yesterday) {
               hours = (checkOutDate.getTime() - yesterday.getTime()) / 36e5;
@@ -131,16 +125,13 @@ const BookingsCalendar = ({ rooms, bookings, toggleModal }: Props) => {
               hours = (lastDay.getTime() - checkInDate.getTime()) / 36e5 + 24;
             }
             const width = hours * hourPixelRate;
-
             const y = bigScreen
               ? 30 + 12 + 80 + 12 + roomIndex * (55 + 12)
               : 25 + 8 + 60 + 8 + roomIndex * (45 + 8);
-
-            const borderRadius = `${checkInDate <= yesterday ? '0' : '1rem'} 
-            ${checkOutDate >= lastDay ? '0' : '1rem'} 
-            ${checkOutDate >= lastDay ? '0' : '1rem'} 
-            ${checkInDate <= yesterday ? '0' : '1rem'}`;
-
+            const borderRadius = `${checkInDate <= yesterday ? '0' : '1rem'}
+              ${checkOutDate >= lastDay ? '0' : '1rem'}
+              ${checkOutDate >= lastDay ? '0' : '1rem'}
+              ${checkInDate <= yesterday ? '0' : '1rem'}`;
             return (
               <div
                 key={booking.id}
@@ -161,6 +152,7 @@ const BookingsCalendar = ({ rooms, bookings, toggleModal }: Props) => {
           })}
         </div>
       </div>
+    </div>
   );
 };
 

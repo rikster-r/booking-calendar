@@ -13,15 +13,23 @@ import Image from 'next/image';
 import Telegram from '@/assets/telegram.svg';
 import Whatsapp from '@/assets/whatsapp.svg';
 import { ru } from 'date-fns/locale';
+import { User } from '@supabase/supabase-js';
 
 type Props = {
   isOpen: boolean;
   onClose: () => void;
   onEditOpen: () => void;
   booking: Booking;
+  user: User;
 };
 
-const BookingInfoModal = ({ isOpen, onClose, booking, onEditOpen }: Props) => {
+const BookingInfoModal = ({
+  isOpen,
+  onClose,
+  booking,
+  onEditOpen,
+  user,
+}: Props) => {
   if (!booking) return null;
   if (!booking.client_name) return null;
 
@@ -31,7 +39,7 @@ const BookingInfoModal = ({ isOpen, onClose, booking, onEditOpen }: Props) => {
   const totalPrice = nights * booking.daily_price;
 
   const deleteBooking = async () => {
-    const res = await fetch(`/api/bookings/${booking.id}`, {
+    const res = await fetch(`/api/${user.id}/bookings/${booking.id}`, {
       method: 'DELETE',
     });
     if (res.ok) onClose();
