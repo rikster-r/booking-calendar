@@ -60,8 +60,8 @@ const BookingInfoModal = ({
             }`}
           >
             <h2 className="sm:text-lg font-semibold text-base">
-              {booking.client_name.slice(0, 25)}
-              {booking.client_name.length > 25 && '...'}
+              {booking.client_name.slice(0, 20)}
+              {booking.client_name.length > 20 && '...'}
             </h2>
             <span
               className={`px-3 py-1 rounded-full text-sm text-nowrap w-max ${

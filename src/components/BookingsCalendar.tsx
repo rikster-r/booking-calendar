@@ -18,6 +18,7 @@ const BookingsCalendar = ({ rooms, bookings, toggleModal }: Props) => {
   const currentYear = today.toLocaleDateString(LOCALE, { year: 'numeric' });
   const windowWidth = useWindowWidth();
   const bigScreen = windowWidth > 1024;
+  const maxNameLength = bigScreen ? 18 : 10;
 
   const daysList = Array.from({ length: 30 }, (_, i) => {
     const year = today.getFullYear();
@@ -30,9 +31,9 @@ const BookingsCalendar = ({ rooms, bookings, toggleModal }: Props) => {
   const seenMonths = new Set();
 
   return (
-    <div className="mx-4 h-full">
-      <div className="py-4 bg-white rounded-xl flex gap-2 lg:gap-4 overflow-hidden pl-2 lg:p-8 w-full max-w-max mx-auto h-full">
-        <div className="flex flex-col gap-2 lg:gap-3 w-max">
+    <div className="lg:mx-4 h-full">
+      <div className="py-4 bg-white rounded-t-xl flex gap-2 lg:gap-4 overflow-hidden pl-2 lg:p-8 w-full max-w-max mx-auto h-full">
+        <div className="flex flex-col gap-2 lg:gap-3">
           <div className="text-md lg:text-xl font-semibold h-[25px] lg:h-[30px] text-gray-800">
             {currentYear}
           </div>
@@ -40,13 +41,13 @@ const BookingsCalendar = ({ rooms, bookings, toggleModal }: Props) => {
           {rooms.map((room) => (
             <button
               style={{ backgroundColor: room.color }}
-              className="text-white p-2 lg:p-3 rounded-lg text-center h-[45px] lg:h-[55px] flex items-center justify-center shadow-sm hover:shadow-md transition text-xs lg:text-sm gap-1 lg:min-w-[150px]"
+              className="text-white p-2 lg:p-3 rounded-lg text-center h-[45px] lg:h-[55px] flex items-center justify-center shadow-sm hover:shadow-md transition text-xs lg:text-sm gap-1 w-[100px] lg:w-[200px]"
               onClick={() => toggleModal('roomInfo', room)}
               key={room.id}
             >
-              <span className="font-bold">
-                {room.name.slice(0, 20)}
-                {room.name.length > 20 && '...'}
+              <span className="font-bold text-nowrap">
+                {room.name.slice(0, maxNameLength)}
+                {room.name.length > maxNameLength && '...'}
               </span>
               <span>
                 <RoomStatusBadge status={room.status} />

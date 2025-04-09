@@ -1,6 +1,7 @@
 import Modal from '@/components/Modal';
 import { XMarkIcon, InformationCircleIcon } from '@heroicons/react/24/solid';
 import { User } from '@supabase/supabase-js';
+import useWindowWidth from '@/hooks/useWindowWidth';
 
 type Props = {
   isOpen: boolean;
@@ -11,6 +12,9 @@ type Props = {
 };
 
 const RoomInfoModal = ({ isOpen, onClose, onEditOpen, room, user }: Props) => {
+  const windowWidth = useWindowWidth();
+  const maxNameLength = windowWidth > 1024 ? 30 : 20;
+
   if (!room) return null;
 
   const statusMap = {
@@ -43,8 +47,8 @@ const RoomInfoModal = ({ isOpen, onClose, onEditOpen, room, user }: Props) => {
       <div className="bg-white p-6 sm:p-7 text-sm sm:text-base">
         <div className="flex items-center mb-4 gap-2 ">
           <h2 className="sm:text-lg font-semibold text-base">
-            {room.name.slice(0, 40)}
-            {room.name.length > 40 && '...'}
+            {room.name.slice(0, maxNameLength)}
+            {room.name.length > maxNameLength && '...'}
           </h2>
           <button className="hover:cursor-pointer ml-auto" onClick={onClose}>
             <XMarkIcon className="w-6 sm:w-7 h-6 sm:h-7" />
