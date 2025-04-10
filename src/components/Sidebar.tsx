@@ -35,9 +35,7 @@ const Sidebar = ({ user }: Props) => {
         <Dialog open={isOpen} onClose={toggleSidebar} className="relative z-50">
           <DialogBackdrop className="fixed inset-0 bg-gray-900/60" />
 
-          <DialogPanel
-            className="fixed inset-y-0 left-0 bg-white w-72 lg:w-80 min-h-screen flex flex-col"
-          >
+          <DialogPanel className="fixed inset-y-0 left-0 bg-white w-72 lg:w-80 min-h-screen flex flex-col">
             <div className="flex items-center justify-between border-b border-gray-400 bg-white p-4 ">
               <button
                 className="ml-auto hover:cursor-pointer"

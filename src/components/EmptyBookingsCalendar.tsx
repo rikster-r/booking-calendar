@@ -10,12 +10,12 @@ type Props = {
 
 const EmptyBookingsCalendar = ({ toggleModal }: Props) => {
   return (
-    <div className="h-full w-full lg:px-8">
-      <div className="py-4 bg-white rounded-t-xl flex justify-center items-center w-full max-w-7xl mx-auto h-full flex-col text-center">
+    <div className="h-full w-full lg:px-4">
+      <div className="py-4 bg-white rounded-t-xl flex justify-center items-center w-full max-w-[1800px] mx-auto h-full flex-col text-center">
         <Image src={HouseSearch} alt="" className="w-16 h-16" />
-        <p className="text-lg font-semibold text-gray-900 mt-6">
+        <h2 className="text-lg font-semibold text-gray-900 mt-6">
           У вас пока нет помещений
-        </p>
+        </h2>
         <p className="mt-1 text-gray-500">
           Добавьте своё первое помещение прямо сейчас.
         </p>

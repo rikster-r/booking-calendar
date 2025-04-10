@@ -1,5 +1,4 @@
-import { Inter } from 'next/font/google';
-import { GetServerSideProps } from 'next';
+import { GetServerSideProps, GetServerSidePropsContext } from 'next';
 import useSWR from 'swr';
 import BookingModal from '@/components/BookingModal';
 import RoomModal from '@/components/RoomModal';
@@ -14,18 +13,11 @@ import {
 import { get30DayRange } from '@/lib/dates';
 import Head from 'next/head';
 import type { User } from '@supabase/supabase-js';
-import type { GetServerSidePropsContext } from 'next';
 import { createClient } from '@/lib/supabase/server-props';
 import BookingsCalendar from '@/components/BookingsCalendar';
 import Sidebar from '@/components/Sidebar';
 import EmptyBookingsCalendar from '@/components/EmptyBookingsCalendar';
-
-const inter = Inter({
-  weight: ['300', '400', '500', '600', '700', '800'],
-  subsets: ['latin'],
-});
-
-const fetcher = (url: string) => fetch(url).then((res) => res.json());
+import { fetcher } from '@/lib/fetcher';
 
 const dateRange = get30DayRange();
 
@@ -100,8 +92,7 @@ export default function Home({ initialRooms, initialBookings, user }: Props) {
         <meta name="description" content="Календарь брони" />
       </Head>
       <div
-        className={`${inter.className} min-h-screen flex relative 
-    `}
+        className="min-h-screen flex relative"
         onClick={() => {
           setMenuOpen(false);
         }}
@@ -109,9 +100,11 @@ export default function Home({ initialRooms, initialBookings, user }: Props) {
         <main className="mx-auto w-full lg:w-[calc(100%-320px)] bg-radial-[at_100%_20%] from-[#2980B9] to-[#6DD5FA] lg:ml-80 flex flex-col">
           <div className="flex items-center">
             <Sidebar user={user} />
-            <h1 className="text-2xl lg:text-2xl font-extrabold pb-4 lg:pb-6 pt-4 text-white lg:mx-auto text-left w-full max-w-max lg:mt-4">
-              Календарь брони
-            </h1>
+            <div className="w-full max-w-[1800px] mx-auto">
+              <h1 className="text-xl font-bold pb-4 lg:pb-6 pt-4 text-white lg:pl-8 text-left lg:mt-4">
+                Календарь брони
+              </h1>
+            </div>
           </div>
 
           {rooms.length > 0 ? (
