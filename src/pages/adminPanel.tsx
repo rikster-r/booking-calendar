@@ -72,14 +72,16 @@ const AdminPanel = ({ user, initilalUsers, initialBookings }: Props) => {
           <meta name="description" content="Календарь брони" />
         </Head>
         <div className="flex h-screen bg-gray-100">
-          <Sidebar user={user} />
           <main className="flex-1 w-full lg:w-[calc(100%-320px)] lg:ml-80 lg:px-8 flex flex-col">
-            <div className="w-full max-w-[1800px] mx-auto">
-              <h1 className="text-xl font-bold pb-4 lg:pb-6 pt-4 lg:pl-8 text-left lg:mt-4">
-                Панель администратора
-              </h1>
+            <div className="flex items-center">
+              <Sidebar user={user} buttonClassName="text-black" />
+              <div className="w-full max-w-[1800px] mx-auto">
+                <h1 className="text-xl font-bold pb-4 lg:pb-6 pt-4 lg:pl-8 text-left lg:mt-4">
+                  Панель администратора
+                </h1>
+              </div>
             </div>
-            <div className="py-4 bg-white rounded-t-xl flex justify-center items-center w-full max-w-[1800px] mx-auto h-full flex-col text-center">
+            <div className="p-4 bg-white rounded-t-xl flex justify-center items-center w-full max-w-[1800px] mx-auto h-full flex-col text-center">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
@@ -146,10 +148,14 @@ const AdminPanel = ({ user, initilalUsers, initialBookings }: Props) => {
         <title>Панель администратора</title>
         <meta name="description" content="Календарь брони" />
       </Head>
-      <div className="flex h-screen bg-gray-100">
-        <Sidebar user={user} />
+      <div className="flex h-screen bg-gray-200">
         <main className="flex-1 p-2 w-full lg:w-[calc(100%-320px)] lg:ml-80 lg:px-8">
-          <h1 className="text-2xl font-bold lg:mt-4">Панель администратора</h1>
+          <div className="flex items-center">
+            <Sidebar user={user} />
+            <h1 className="text-2xl font-bold lg:mt-4">
+              Панель администратора
+            </h1>
+          </div>
           <div className="p-6 bg-white mt-4 rounded-xl">
             <div className="flex justify-between items-center mb-4">
               <div className="flex items-center gap-4">

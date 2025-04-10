@@ -13,9 +13,10 @@ import { useState } from 'react';
 
 type Props = {
   user: User;
+  buttonClassName?: string;
 };
 
-const Sidebar = ({ user }: Props) => {
+const Sidebar = ({ user, buttonClassName }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
 
   // Function to toggle sidebar visibility
@@ -26,7 +27,7 @@ const Sidebar = ({ user }: Props) => {
       <div className="lg:hidden">
         <button
           onClick={toggleSidebar}
-          className="text-white rounded hover:cursor-pointer p-4"
+          className={`${buttonClassName} rounded hover:cursor-pointer p-4`}
           aria-label="Открыть боковую панель"
         >
           <Bars3Icon className="w-6 h-6" />
@@ -61,29 +62,29 @@ export const SidebarContent = ({ user }: Props) => {
     <div className="flex h-screen flex-col border-e border-gray-100 bg-white w-72 lg:w-80 text-sm lg:text-base">
       <div className="px-2">
         <ul className="mt-6 space-y-1">
-          <li className="rounded-lg px-4 py-3 hover:bg-gray-100 w-full hover:cursor-pointer">
+          <li className="rounded-lg hover:bg-gray-100 w-full hover:cursor-pointer">
             <Link
               href="/"
-              className="rounded-lg text-gray-700 font-semibold flex items-center gap-2"
+              className="rounded-lg text-gray-700 font-semibold flex items-center gap-2 px-4 py-3"
             >
               <CalendarIcon className="w-5 h-5" />
               <span>Календарь</span>
             </Link>
           </li>
-          <li className="rounded-lg px-4 py-3 hover:bg-gray-100 w-full hover:cursor-pointer">
+          <li className="rounded-lg hover:bg-gray-100 w-full hover:cursor-pointer">
             <Link
               href="/profile"
-              className="rounded-lg text-gray-700 font-semibold flex items-center gap-2"
+              className="rounded-lg text-gray-700 font-semibold flex items-center gap-2 px-4 py-3"
             >
               <UserIcon className="w-5 h-5" />
               <span>Профиль</span>
             </Link>
           </li>
           {user.user_metadata.role === 'admin' && (
-            <li className="rounded-lg px-4 py-3 hover:bg-gray-100 w-full hover:cursor-pointer">
+            <li className="rounded-lg hover:bg-gray-100 w-full hover:cursor-pointer">
               <Link
                 href="/adminPanel"
-                className="rounded-lg text-gray-700 font-semibold flex items-center gap-2"
+                className="rounded-lg text-gray-700 font-semibold flex items-center gap-2 px-4 py-3"
               >
                 <TableCellsIcon className="w-5 h-5" />
                 <span>Панель администратора</span>

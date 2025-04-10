@@ -31,7 +31,7 @@ const BookingsCalendar = ({ rooms, bookings, toggleModal }: Props) => {
   const seenMonths = new Set();
 
   return (
-    <div className="lg:px-4 h-full">
+    <div className="lg:px-8 h-full">
       <div className="py-4 bg-white rounded-t-xl flex gap-2 lg:gap-4 overflow-hidden pl-2 lg:p-8 w-full max-w-max mx-auto h-full">
         <div className="flex flex-col gap-2 lg:gap-3">
           <div className="text-md lg:text-xl font-semibold h-[25px] lg:h-[30px] text-gray-800">
