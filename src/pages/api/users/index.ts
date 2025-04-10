@@ -52,4 +52,43 @@ export default async function handler(
 
     return res.status(200).json({ message: 'Пользователи удалены' });
   }
+
+  if (req.method === 'POST') {
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+    const {
+      email,
+      password,
+      firstName: first_name,
+      lastName: last_name,
+      role,
+    } = req.body;
+
+    if (authError || !user) {
+      return res.status(401).json({ error: 'Ошибка проверки доступа' });
+    }
+
+    if (user.user_metadata.role !== 'admin') {
+      return res.status(403).json({ error: 'Недостаточно прав доступа' });
+    }
+
+    if (!email || !password || !first_name || !last_name || !role) {
+      return res.status(400).json({ error: 'Указаны не все данные' });
+    }
+
+    const { data, error } = await supabase.auth.admin.createUser({
+      email,
+      password,
+      user_metadata: {
+        first_name,
+        last_name,
+        role,
+      },
+    });
+
+    if (error) return res.status(500).json({ error: error.message });
+    return res.status(200).json(data);
+  }
 }

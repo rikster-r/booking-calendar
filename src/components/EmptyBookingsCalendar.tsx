@@ -23,7 +23,7 @@ const EmptyBookingsCalendar = ({ toggleModal }: Props) => {
           className="mt-4 inline-flex items-center px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded-xl shadow hover:bg-blue-600 transition hover:cursor-pointer"
           onClick={() => toggleModal('addRoom')}
         >
-          <span>Добавить помещение</span>
+          Добавить помещение
         </button>
       </div>
     </div>

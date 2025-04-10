@@ -11,6 +11,7 @@ import { ru } from 'date-fns/locale';
 import { useState } from 'react';
 import Head from 'next/head';
 import { toast } from 'react-toastify';
+import AddUserModal from '@/components/AddUserModal';
 
 export const getServerSideProps: GetServerSideProps = async (
   context: GetServerSidePropsContext
@@ -53,16 +54,103 @@ type Props = {
 };
 
 const AdminPanel = ({ user, initilalUsers, initialBookings }: Props) => {
-  const { data: users, mutate: mutateUsers } = useSWR<User[]>(
-    `/api/users`,
-    fetcher,
-    { fallbackData: initilalUsers }
-  );
+  const {
+    data: users,
+    mutate: mutateUsers,
+    isLoading,
+  } = useSWR<User[]>(`/api/users`, fetcher, { fallbackData: initilalUsers });
   const { data: bookings } = useSWR<Booking[]>(`/api/bookings`, fetcher, {
     fallbackData: initialBookings,
   });
   const [selectedUsers, setSelectedUsers] = useState<User[]>([]);
   const [deleteHovered, setDeleteHovered] = useState(false);
+  const [addUserModalOpen, setAddUserModalOpen] = useState(false);
+
+  if (isLoading)
+    return (
+      <>
+        <Head>
+          <title>Панель администратора</title>
+          <meta name="description" content="Календарь брони" />
+        </Head>
+        <div className="flex h-screen bg-gray-100">
+          <main className="flex-1 w-full lg:w-[calc(100%-320px)] lg:ml-80 lg:px-8 flex flex-col">
+            <div className="flex items-center">
+              <Sidebar user={user} buttonClassName="text-black" />
+              <div className="w-full max-w-[1800px] mx-auto">
+                <h1 className="text-xl font-bold pb-4 lg:pb-6 pt-4 lg:pl-8 text-left lg:mt-4">
+                  Панель администратора
+                </h1>
+              </div>
+            </div>
+            <div className="p-6 bg-white mt-4 rounded-xl animate-pulse">
+              <div className="flex justify-between items-center mb-4">
+                <div className="flex items-center gap-4">
+                  <div className="h-4 w-32 bg-gray-200 rounded" />
+                  <div className="h-4 w-24 bg-gray-200 rounded" />
+                </div>
+              </div>
+
+              <div className="mb-4 flex">
+                <div className="h-9 w-40 bg-gray-200 rounded" />
+                <div className="h-9 w-10 bg-gray-200 rounded ml-auto" />
+              </div>
+
+              <div className="overflow-auto rounded-lg">
+                <table className="min-w-full text-sm text-left">
+                  <thead className="bg-gray-50 text-gray-700">
+                    <tr className="uppercase">
+                      <th className="px-4 py-3">
+                        <div className="h-4 w-4 bg-gray-200 rounded" />
+                      </th>
+                      <th className="px-4 py-4">
+                        <div className="h-4 w-24 bg-gray-200 rounded" />
+                      </th>
+                      <th className="px-4 py-4">
+                        <div className="h-4 w-20 bg-gray-200 rounded" />
+                      </th>
+                      <th className="px-4 py-4">
+                        <div className="h-4 w-16 bg-gray-200 rounded" />
+                      </th>
+                      <th className="px-4 py-4">
+                        <div className="h-4 w-28 bg-gray-200 rounded" />
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50 bg-white">
+                    {[...Array(5)].map((_, i) => (
+                      <tr key={i} className="w-full">
+                        <td className="px-4 py-3">
+                          <div className="h-4 w-4 bg-gray-200 rounded" />
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <div className="w-7 h-7 bg-gray-200 rounded-full" />
+                            <div>
+                              <div className="h-3 w-24 bg-gray-200 rounded mb-1" />
+                              <div className="h-2 w-32 bg-gray-200 rounded" />
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="h-3 w-16 bg-gray-200 rounded" />
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="h-3 w-10 bg-gray-200 rounded" />
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="h-3 w-28 bg-gray-200 rounded" />
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </main>
+        </div>
+      </>
+    );
 
   if (!users || users.length === 0) {
     return (
@@ -95,9 +183,22 @@ const AdminPanel = ({ user, initilalUsers, initialBookings }: Props) => {
               <p className="text-gray-500">
                 Добавьте пользователей в систему, чтобы начать управлять.
               </p>
+              <button
+                className="mt-4 inline-flex items-center px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded-xl shadow hover:bg-blue-600 transition hover:cursor-pointer"
+                onClick={() => setAddUserModalOpen(true)}
+              >
+                Добавить пользователя
+              </button>
             </div>
           </main>
         </div>
+        <AddUserModal
+          isOpen={addUserModalOpen}
+          onClose={() => {
+            mutateUsers();
+            setAddUserModalOpen(false);
+          }}
+        />
       </>
     );
   }
@@ -148,7 +249,7 @@ const AdminPanel = ({ user, initilalUsers, initialBookings }: Props) => {
         <title>Панель администратора</title>
         <meta name="description" content="Календарь брони" />
       </Head>
-      <div className="flex h-screen bg-gray-200">
+      <div className="flex h-screen bg-gray-100">
         <main className="flex-1 p-2 w-full lg:w-[calc(100%-320px)] lg:ml-80 lg:px-8">
           <div className="flex items-center">
             <Sidebar user={user} />
@@ -171,7 +272,10 @@ const AdminPanel = ({ user, initilalUsers, initialBookings }: Props) => {
             </div>
 
             <div className="mb-4 flex g">
-              <button className="font-medium bg-blue-500 text-white px-4 py-2 rounded text-sm hover:cursor-pointer hover:bg-blue-600">
+              <button
+                className="font-medium bg-blue-500 text-white px-4 py-2 rounded text-sm hover:cursor-pointer hover:bg-blue-600"
+                onClick={() => setAddUserModalOpen(true)}
+              >
                 + Добавить пользователя
               </button>
               <button
@@ -248,13 +352,11 @@ const AdminPanel = ({ user, initilalUsers, initialBookings }: Props) => {
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        {format(
-                          user.last_sign_in_at as string,
-                          'd MMMM yyyy, HH:mm',
-                          {
-                            locale: ru,
-                          }
-                        )}
+                        {user.last_sign_in_at
+                          ? format(user.last_sign_in_at, 'd MMMM yyyy, HH:mm', {
+                              locale: ru,
+                            })
+                          : '-'}
                       </td>
                     </tr>
                   ))}
@@ -264,6 +366,13 @@ const AdminPanel = ({ user, initilalUsers, initialBookings }: Props) => {
           </div>
         </main>
       </div>
+      <AddUserModal
+        isOpen={addUserModalOpen}
+        onClose={() => {
+          mutateUsers();
+          setAddUserModalOpen(false);
+        }}
+      />
     </>
   );
 };

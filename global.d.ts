@@ -43,3 +43,11 @@ type BookingInput = {
   checkIn: Date;
   checkOut: Date;
 };
+
+type UserInput = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  role: string;
+};
