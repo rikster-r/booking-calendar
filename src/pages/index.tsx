@@ -18,6 +18,7 @@ import BookingsCalendar from '@/components/BookingsCalendar';
 import Sidebar from '@/components/Sidebar';
 import EmptyBookingsCalendar from '@/components/EmptyBookingsCalendar';
 import { fetcher } from '@/lib/fetcher';
+import { useOnlineUsers } from '@/hooks/useOnlineUsers';
 
 const dateRange = get30DayRange();
 

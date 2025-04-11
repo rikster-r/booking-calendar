@@ -8,10 +8,11 @@ import { UserCircleIcon, TrashIcon } from '@heroicons/react/24/outline';
 import UserRoleBadge from '@/components/UserRoleBadge';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
-import { useState } from 'react';
+import { useState, useContext } from 'react';
 import Head from 'next/head';
 import { toast } from 'react-toastify';
 import AddUserModal from '@/components/AddUserModal';
+import { OnlineUsersContext } from '@/context/OnlineUsersContext';
 
 export const getServerSideProps: GetServerSideProps = async (
   context: GetServerSidePropsContext
@@ -65,6 +66,7 @@ const AdminPanel = ({ user, initilalUsers, initialBookings }: Props) => {
   const [selectedUsers, setSelectedUsers] = useState<User[]>([]);
   const [deleteHovered, setDeleteHovered] = useState(false);
   const [addUserModalOpen, setAddUserModalOpen] = useState(false);
+  const onlineUserIds = useContext(OnlineUsersContext);
 
   if (isLoading)
     return (
@@ -349,10 +351,17 @@ const AdminPanel = ({ user, initilalUsers, initialBookings }: Props) => {
                         <UserRoleBadge role={user.user_metadata.role} />
                       </td>
                       <td className="px-4 py-3">
-                        <span className="text-green-500 font-medium">
-                          ● Онлайн
-                        </span>
+                        {onlineUserIds.includes(user.id) ? (
+                          <span className="text-green-500 font-medium">
+                            ● В сети
+                          </span>
+                        ) : (
+                          <span className="text-gray-400 font-medium">
+                            ● Не в сети
+                          </span>
+                        )}
                       </td>
+
                       <td className="px-4 py-3">
                         {user.last_sign_in_at
                           ? format(user.last_sign_in_at, 'd MMMM yyyy, HH:mm', {
