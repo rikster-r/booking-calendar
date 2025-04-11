@@ -169,7 +169,7 @@ const BookingModal = ({ isOpen, onClose, rooms, bookingData, user }: Props) => {
 
   const isTimeSlotFree = async (checkIn: Date, checkOut: Date) => {
     try {
-      const res = await fetch('/api/bookings/validateTimeslot', {
+      const res = await fetch(`/api/${user.id}/bookings/validateTimeslot`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
