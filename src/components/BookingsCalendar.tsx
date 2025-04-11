@@ -18,7 +18,7 @@ const BookingsCalendar = ({ rooms, bookings, toggleModal }: Props) => {
   const currentYear = today.toLocaleDateString(LOCALE, { year: 'numeric' });
   const windowWidth = useWindowWidth();
   const bigScreen = windowWidth > 1024;
-  const maxNameLength = bigScreen ? 18 : 10;
+  const maxNameLength = bigScreen ? 20 : 10;
 
   const daysList = Array.from({ length: 30 }, (_, i) => {
     const year = today.getFullYear();
@@ -32,20 +32,20 @@ const BookingsCalendar = ({ rooms, bookings, toggleModal }: Props) => {
 
   return (
     <div className="lg:px-8 h-full">
-      <div className="py-4 bg-white rounded-t-xl flex gap-2 lg:gap-4 overflow-hidden pl-2 lg:p-8 w-full max-w-max mx-auto h-full">
-        <div className="flex flex-col gap-2 lg:gap-3">
-          <div className="text-md lg:text-xl font-semibold h-[25px] lg:h-[30px] text-gray-800">
+      <div className="py-4 bg-white rounded-t-xl flex gap-2 lg:gap-4 overflow-hidden pl-2 lg:p-8 w-full max-w-max mx-auto h-full text-sm">
+        <div className="flex flex-col gap-y-1">
+          <div className="text-sm lg:text-base font-semibold h-[20px] lg:h-[25px] text-gray-800">
             {currentYear}
           </div>
-          <div className="h-[60px] lg:h-[80px]"></div>
+          <div className="h-[60px] lg:h-[70px] my-1"></div>
           {rooms.map((room) => (
             <button
               style={{ backgroundColor: room.color }}
-              className="text-white p-2 lg:p-3 rounded-lg text-center h-[45px] lg:h-[55px] flex items-center justify-center shadow-sm hover:shadow-md transition text-xs lg:text-sm gap-1 w-[100px] lg:w-[200px]"
+              className="text-white p-2 lg:p-3 rounded-lg text-center h-[38px] lg:h-[45px] flex items-center justify-center shadow-md text-[10px] lg:text-xs gap-1 w-[120px] lg:w-[180px]"
               onClick={() => toggleModal('roomInfo', room)}
               key={room.id}
             >
-              <span className="font-bold text-nowrap">
+              <span className="font-semibold text-nowrap">
                 {room.name.slice(0, maxNameLength)}
                 {room.name.length > maxNameLength && '...'}
               </span>
@@ -55,20 +55,20 @@ const BookingsCalendar = ({ rooms, bookings, toggleModal }: Props) => {
             </button>
           ))}
         </div>
-        <div className="grid grid-cols-[repeat(30,40px)] lg:grid-cols-[repeat(30,50px)] overflow-x-auto gap-y-2 lg:gap-y-3 relative content-start">
+        <div className="grid grid-cols-[repeat(30,38px)] lg:grid-cols-[repeat(30,45px)] overflow-x-auto relative content-start gap-y-1">
           {daysList.map((day) => {
             const month = day.toLocaleDateString(LOCALE, { month: 'long' });
             if (seenMonths.has(month))
               return (
                 <div
-                  className="w-[40px] lg:w-[50px] h-[25px] lg:h-[30px]"
+                  className="w-full h-[20px] lg:h-[25px]"
                   key={day.getTime()}
                 ></div>
               );
             seenMonths.add(month);
             return (
               <div
-                className="text-md lg:text-lg font-medium capitalize h-[25px] lg:h-[30px] text-gray-700"
+                className="text-sm lg:text-base font-medium capitalize h-[20px] lg:h-[25px] text-gray-700"
                 key={day.getTime()}
               >
                 {month}
@@ -77,13 +77,13 @@ const BookingsCalendar = ({ rooms, bookings, toggleModal }: Props) => {
           })}
           {daysList.map((day) => (
             <div
-              className="bg-gray-200 p-2 lg:p-3 border border-gray-300 rounded-lg flex flex-col items-center justify-center h-[60px] lg:h-[80px] w-[40px] lg:w-[50px]"
+              className="bg-gray-200 p-2 border border-gray-300 rounded-lg flex flex-col items-center justify-center h-[60px] lg:h-[70px] w-full my-1"
               key={day.toISOString()}
             >
-              <p className="text-base lg:text-lg font-semibold text-gray-900">
+              <p className="text-sm lg:text-base font-semibold text-gray-900">
                 {day.toLocaleDateString(LOCALE, { day: 'numeric' })}
               </p>
-              <p className="text-xs lg:text-sm text-gray-500">
+              <p className="text-[10px] lg:text-xs text-gray-500">
                 {day.toLocaleDateString(LOCALE, { weekday: 'short' })}
               </p>
             </div>
@@ -91,7 +91,7 @@ const BookingsCalendar = ({ rooms, bookings, toggleModal }: Props) => {
           {rooms.map((room) =>
             daysList.map((day, dayIndex) => (
               <button
-                className="border border-gray-300 p-2 h-[45px] lg:h-[55px] w-[40px] lg:w-[50px] flex items-center justify-center bg-white hover:bg-gray-100 transition"
+                className="border border-gray-300 p-2 h-[38px] lg:h-[45px] w-full flex items-center justify-center bg-white hover:bg-gray-100 transition"
                 onClick={() =>
                   toggleModal('addBooking', {
                     checkIn: day,
@@ -113,7 +113,7 @@ const BookingsCalendar = ({ rooms, bookings, toggleModal }: Props) => {
             yesterday.setDate(yesterday.getDate() - 1);
             yesterday.setHours(23, 59, 0, 0);
             const lastDay = daysList[daysList.length - 1];
-            const hourPixelRate = bigScreen ? 50 / 24 : 40 / 24;
+            const hourPixelRate = bigScreen ? 45 / 24 : 38 / 24;
             const hoursOffset = Math.max(
               0,
               (checkInDate.getTime() - yesterday.getTime()) / 36e5
@@ -127,8 +127,8 @@ const BookingsCalendar = ({ rooms, bookings, toggleModal }: Props) => {
             }
             const width = hours * hourPixelRate;
             const y = bigScreen
-              ? 30 + 12 + 80 + 12 + roomIndex * (55 + 12)
-              : 25 + 8 + 60 + 8 + roomIndex * (45 + 8);
+              ? 25 + 8 + 70 + 8 + roomIndex * (45 + 4)
+              : 20 + 8 + 60 + 8 + roomIndex * (38 + 4);
             const borderRadius = `${checkInDate <= yesterday ? '0' : '1rem'}
               ${checkOutDate >= lastDay ? '0' : '1rem'}
               ${checkOutDate >= lastDay ? '0' : '1rem'}
@@ -138,7 +138,7 @@ const BookingsCalendar = ({ rooms, bookings, toggleModal }: Props) => {
                 key={booking.id}
                 className={`${
                   booking.paid ? 'bg-blue-500' : 'bg-red-500'
-                } text-white p-2 h-[45px] lg:h-[55px] flex items-center justify-center absolute truncate shadow-lg rounded-lg text-xs lg:text-sm`}
+                } text-white p-2 h-[38px] lg:h-[45px] flex items-center justify-center absolute truncate shadow-lg rounded-lg text-xs lg:text-sm`}
                 style={{
                   top: `${y}px`,
                   left: `${x}px`,

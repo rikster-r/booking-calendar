@@ -59,7 +59,7 @@ const Sidebar = ({ user, buttonClassName }: Props) => {
 
 export const SidebarContent = ({ user }: Props) => {
   return (
-    <div className="flex h-screen flex-col border-e border-gray-100 bg-white w-72 lg:w-80 text-sm lg:text-base">
+    <div className="flex h-screen flex-col border-e border-gray-100 bg-white w-72 lg:w-80 text-sm">
       <div className="px-2">
         <ul className="mt-4 space-y-1">
           <li className="rounded-lg hover:bg-gray-100 w-full hover:cursor-pointer">
