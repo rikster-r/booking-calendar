@@ -18,7 +18,7 @@ import BookingsCalendar from '@/components/BookingsCalendar';
 import Sidebar from '@/components/Sidebar';
 import EmptyBookingsCalendar from '@/components/EmptyBookingsCalendar';
 import { fetcher } from '@/lib/fetcher';
-import { useOnlineUsers } from '@/hooks/useOnlineUsers';
+import { toast } from 'react-toastify';
 
 const dateRange = get30DayRange();
 
@@ -144,12 +144,16 @@ export default function Home({ initialRooms, initialBookings, user }: Props) {
               </button>
               <button
                 className="flex items-center gap-2 focus-visible:bg-gray-100 px-6 py-4  hover:cursor-pointer hover:bg-gray-100 w-full"
-                onClick={() =>
-                  toggleModal('addBooking', {
-                    checkIn: new Date(),
-                    roomId: rooms[0].id,
-                  })
-                }
+                onClick={() => {
+                  if (rooms.length > 0) {
+                    toggleModal('addBooking', {
+                      checkIn: new Date(),
+                      roomId: rooms[0].id,
+                    });
+                  } else {
+                    toast.error('Нет помещений для добавления брони.');
+                  }
+                }}
               >
                 <KeyIcon className="w-5 lg:w-6 h-5 lg:h-6" />
                 <p>Забронировать </p>
