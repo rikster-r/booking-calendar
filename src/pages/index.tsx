@@ -97,11 +97,11 @@ export default function Home({ initialRooms, initialBookings, user }: Props) {
           setMenuOpen(false);
         }}
       >
-        <main className="mx-auto w-full lg:w-[calc(100%-320px)] bg-radial-[at_100%_20%] from-[#2980B9] to-[#6DD5FA] lg:ml-80 flex flex-col">
-          <div className="flex items-center">
-            <Sidebar user={user} />
+        <main className="lg:ml-80 flex flex-col mx-auto w-full lg:w-[calc(100%-320px)] bg-radial-[at_100%_20%] from-[#2980B9] to-[#6DD5FA]">
+          <div className="flex items-center lg:mx-8">
+            <Sidebar user={user} buttonClassName="text-white" />
             <div className="w-full max-w-[1800px] mx-auto">
-              <h1 className="text-xl font-bold pb-4 lg:pb-6 pt-4 text-white lg:pl-8 text-left lg:mt-4">
+              <h1 className="text-xl font-bold py-4 lg:py-6 lg:pl-8 text-left text-white">
                 Календарь брони
               </h1>
             </div>

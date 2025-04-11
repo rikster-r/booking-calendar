@@ -37,9 +37,9 @@ const Sidebar = ({ user, buttonClassName }: Props) => {
           <DialogBackdrop className="fixed inset-0 bg-gray-900/60" />
 
           <DialogPanel className="fixed inset-y-0 left-0 bg-white w-72 lg:w-80 min-h-screen flex flex-col">
-            <div className="flex items-center justify-between border-b border-gray-400 bg-white p-4 ">
+            <div className="flex items-center justify-between border-b border-gray-400 bg-white">
               <button
-                className="ml-auto hover:cursor-pointer"
+                className="ml-auto hover:cursor-pointer p-4"
                 aria-label="Закрыть боковую панель"
                 onClick={toggleSidebar}
               >
@@ -61,7 +61,7 @@ export const SidebarContent = ({ user }: Props) => {
   return (
     <div className="flex h-screen flex-col border-e border-gray-100 bg-white w-72 lg:w-80 text-sm lg:text-base">
       <div className="px-2">
-        <ul className="mt-6 space-y-1">
+        <ul className="mt-4 space-y-1">
           <li className="rounded-lg hover:bg-gray-100 w-full hover:cursor-pointer">
             <Link
               href="/"

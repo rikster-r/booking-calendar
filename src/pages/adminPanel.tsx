@@ -159,12 +159,12 @@ const AdminPanel = ({ user, initilalUsers, initialBookings }: Props) => {
           <title>Панель администратора</title>
           <meta name="description" content="Календарь брони" />
         </Head>
-        <div className="flex h-screen bg-gray-100">
-          <main className="flex-1 w-full lg:w-[calc(100%-320px)] lg:ml-80 lg:px-8 flex flex-col">
+        <div className="flex min-h-screen">
+          <main className="flex-1 w-full lg:w-[calc(100%-320px)] lg:ml-80 lg:px-8 flex flex-col bg-gray-100">
             <div className="flex items-center">
               <Sidebar user={user} buttonClassName="text-black" />
               <div className="w-full max-w-[1800px] mx-auto">
-                <h1 className="text-xl font-bold pb-4 lg:pb-6 pt-4 lg:pl-8 text-left lg:mt-4">
+                <h1 className="text-xl font-bold py-4 lg:py-6 lg:pl-8 text-left">
                   Панель администратора
                 </h1>
               </div>
@@ -249,16 +249,18 @@ const AdminPanel = ({ user, initilalUsers, initialBookings }: Props) => {
         <title>Панель администратора</title>
         <meta name="description" content="Календарь брони" />
       </Head>
-      <div className="flex h-screen bg-gray-100">
-        <main className="flex-1 p-2 w-full lg:w-[calc(100%-320px)] lg:ml-80 lg:px-8">
+      <div className="flex min-h-screen bg-gray-100">
+        <main className="flex-1 w-full lg:w-[calc(100%-320px)] lg:ml-80 lg:px-8 flex flex-col">
           <div className="flex items-center">
-            <Sidebar user={user} />
-            <h1 className="text-2xl font-bold lg:mt-4">
-              Панель администратора
-            </h1>
+            <Sidebar user={user} buttonClassName="text-black" />
+            <div className="w-full max-w-[1800px] mx-auto">
+              <h1 className="text-xl font-bold py-4 lg:py-6 lg:pl-8 text-left">
+                Панель администратора
+              </h1>
+            </div>
           </div>
-          <div className="p-6 bg-white mt-4 rounded-xl">
-            <div className="flex justify-between items-center mb-4">
+          <div className="px-4 py-6 bg-white rounded-t-xl gap-2 lg:gap-4 overflow-hidden lg:p-8 w-full max-w-[1800px] mx-auto h-full">
+            <div className="flex justify-between items-center mb-4 text-sm lg:text-base">
               <div className="flex items-center gap-4">
                 <p>
                   <span className="text-gray-500">Все пользователи: </span>
@@ -271,25 +273,25 @@ const AdminPanel = ({ user, initilalUsers, initialBookings }: Props) => {
               </div>
             </div>
 
-            <div className="mb-4 flex g">
+            <div className="mb-4 flex items-center">
               <button
-                className="font-medium bg-blue-500 text-white px-4 py-2 rounded text-sm hover:cursor-pointer hover:bg-blue-600"
+                className="font-medium bg-blue-500 text-white px-4 py-3 rounded text-xs lg:text-sm hover:cursor-pointer hover:bg-blue-600"
                 onClick={() => setAddUserModalOpen(true)}
               >
                 + Добавить пользователя
               </button>
               <button
-                className="border-2 border-gray-100 p-2 rounded text-sm ml-auto font-medium hover:cursor-pointer hover:border-red-300 group"
+                className="border-2 border-gray-100 p-2 rounded text-sm ml-auto font-medium hover:cursor-pointer hover:border-red-300 group h-10 w-10 flex justify-center items-center"
                 onMouseEnter={() => setDeleteHovered(true)}
                 onMouseLeave={() => setDeleteHovered(false)}
                 onClick={deleteSelectedUsers}
               >
-                <TrashIcon className="w-5 h-5 group-hover:stroke-red-500" />
+                <TrashIcon className="w-4 h-4 group-hover:stroke-red-500" />
               </button>
             </div>
 
-            <div className="overflow-auto rounded-lg">
-              <table className="min-w-full text-sm text-left">
+            <div className="overflow-auto rounded-lg text-xs lg:text-sm">
+              <table className="min-w-full text-left text-nowrap">
                 <thead className="bg-gray-50 text-gray-700">
                   <tr className="uppercase">
                     <th className="px-4 py-3">
