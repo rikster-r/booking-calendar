@@ -218,11 +218,11 @@ const AdminPanel = ({ user, initilalUsers, initialBookings }: Props) => {
 
   const toggleAllSelectedUsers = () => {
     setSelectedUsers((prev) => {
-      const isEmpty = prev.length === 0;
-      if (isEmpty) {
-        return users;
-      } else {
+      const toggled = prev.length === users.length;
+      if (toggled) {
         return [];
+      } else {
+        return users;
       }
     });
   };
