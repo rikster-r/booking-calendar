@@ -264,7 +264,7 @@ const BookingModal = ({ isOpen, onClose, rooms, bookingData, user }: Props) => {
         className="bg-white p-6 sm:p-7 text-sm sm:text-base"
       >
         <div className="flex justify-between items-center">
-          <h2 className="text-base sm:text-lg font-semibold  flex items-center gap-2">
+          <h2 className="text-base sm:text-lg font-semibold flex items-center gap-2">
             📌 Бронирование
           </h2>
           <button
@@ -278,7 +278,9 @@ const BookingModal = ({ isOpen, onClose, rooms, bookingData, user }: Props) => {
 
         {/* Room Info */}
         <div className="mt-3">
-          <label className="text-gray-700 font-medium">Помещение</label>
+          <label htmlFor="roomId" className="text-gray-700 font-medium">
+            Помещение
+          </label>
           <select
             name="roomId"
             id="roomId"
@@ -297,8 +299,11 @@ const BookingModal = ({ isOpen, onClose, rooms, bookingData, user }: Props) => {
 
         {/* Check-in */}
         <div className="mt-3">
-          <label className="text-gray-700">Заезд</label>
+          <label htmlFor="checkIn" className="text-gray-700">
+            Заезд
+          </label>
           <DateTimePicker
+            inputName="checkIn"
             onDateChange={setCheckIn}
             selectedDate={formData.checkIn}
             startDate={formData.checkIn}
@@ -309,8 +314,11 @@ const BookingModal = ({ isOpen, onClose, rooms, bookingData, user }: Props) => {
 
         {/* Check-out */}
         <div className="mt-3">
-          <label className="text-gray-700">Выезд</label>
+          <label htmlFor="checkOut" className="text-gray-700">
+            Выезд
+          </label>
           <DateTimePicker
+            inputName="checkOut"
             onDateChange={setCheckOut}
             selectedDate={formData.checkOut}
             startDate={formData.checkIn}
@@ -322,10 +330,13 @@ const BookingModal = ({ isOpen, onClose, rooms, bookingData, user }: Props) => {
         {/* Adults & Children Count */}
         <div className="mt-3 flex gap-2 w-full">
           <div className="w-full">
-            <label className="text-gray-700">Взрослые</label>
+            <label htmlFor="adultsCount" className="text-gray-700">
+              Взрослые
+            </label>
             <input
               type="number"
               name="adultsCount"
+              id="adultsCount"
               value={formData.adultsCount}
               onChange={handleChange}
               className="flex items-center w-full border rounded-md px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500 h-[40px] border-gray-500 mt-1"
@@ -333,10 +344,13 @@ const BookingModal = ({ isOpen, onClose, rooms, bookingData, user }: Props) => {
             />
           </div>
           <div className="w-full">
-            <label className="text-gray-700">Дети</label>
+            <label htmlFor="childrenCount" className="text-gray-700">
+              Дети
+            </label>
             <input
               type="number"
               name="childrenCount"
+              id="childrenCount"
               value={formData.childrenCount}
               onChange={handleChange}
               className="flex items-center w-full border rounded-md px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500 h-[40px] border-gray-500 mt-1"
@@ -346,22 +360,28 @@ const BookingModal = ({ isOpen, onClose, rooms, bookingData, user }: Props) => {
 
         {/* Door Code */}
         <div className="mt-3">
-          <label className="text-gray-700">Код двери</label>
+          <label htmlFor="doorCode" className="text-gray-700">
+            Код двери
+          </label>
           <input
             type="text"
             name="doorCode"
+            id="doorCode"
             value={formData.doorCode}
             onChange={handleChange}
-            className="flex items-center w-full border rounded-md px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500 h-[40px] border-gray-500 mt-1 "
+            className="flex items-center w-full border rounded-md px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500 h-[40px] border-gray-500 mt-1"
             required
           />
         </div>
 
         {/* Additional Info */}
         <div className="mt-3 mb-6">
-          <label className="text-gray-700">Дополнительная информация</label>
+          <label htmlFor="additionalInfo" className="text-gray-700">
+            Дополнительная информация
+          </label>
           <textarea
             name="additionalInfo"
+            id="additionalInfo"
             value={formData.additionalInfo}
             onChange={handleChange}
             className="flex items-center w-full border rounded-md px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500 resize-none h-[100px] border-gray-500 mt-1"
@@ -377,12 +397,15 @@ const BookingModal = ({ isOpen, onClose, rooms, bookingData, user }: Props) => {
           </h2>
 
           <div className="w-full mt-3">
-            <label className="text-gray-700">За сутки</label>
+            <label htmlFor="dailyPrice" className="text-gray-700">
+              За сутки
+            </label>
             <div className="flex items-center w-full border rounded-md px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500 border-gray-500 mt-1">
               <input
                 type="number"
                 name="dailyPrice"
-                className="w-full outline-none bg-transparent "
+                id="dailyPrice"
+                className="w-full outline-none bg-transparent"
                 value={formData.dailyPrice}
                 onChange={handleChange}
               />
@@ -390,9 +413,12 @@ const BookingModal = ({ isOpen, onClose, rooms, bookingData, user }: Props) => {
             </div>
           </div>
           <div className="w-full mt-3">
-            <label className="text-gray-700">Количество дней</label>
+            <label htmlFor="daysBooked" className="text-gray-700">
+              Количество дней
+            </label>
             <input
               type="number"
+              id="daysBooked"
               className="w-full border rounded-md px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500 border-gray-500 mt-1"
               value={differenceInCalendarDays(
                 formData.checkOut,
@@ -403,9 +429,12 @@ const BookingModal = ({ isOpen, onClose, rooms, bookingData, user }: Props) => {
           </div>
 
           <div className="mt-3">
-            <label className="text-gray-700 font-medium">Статус оплаты</label>
+            <label htmlFor="paid" className="text-gray-700 font-medium">
+              Статус оплаты
+            </label>
             <select
               name="paid"
+              id="paid"
               value={formData.paid ? 'true' : 'false'}
               className="flex items-center w-full border rounded-md px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500 h-[40px] border-gray-500 mt-1"
               onChange={setPaidStatus}
@@ -419,7 +448,7 @@ const BookingModal = ({ isOpen, onClose, rooms, bookingData, user }: Props) => {
           </div>
 
           <div className="mt-3">
-            <label className="text-gray-700 font-semibold ">
+            <label className="text-gray-700 font-semibold">
               Итого за пребывание -{' '}
               {(
                 Number(formData.dailyPrice) *
@@ -438,10 +467,13 @@ const BookingModal = ({ isOpen, onClose, rooms, bookingData, user }: Props) => {
             👤 Клиент
           </h3>
           <div className="mt-3">
-            <label className="text-gray-700">Имя</label>
+            <label htmlFor="clientName" className="text-gray-700">
+              Имя
+            </label>
             <input
               type="text"
               name="clientName"
+              id="clientName"
               value={formData.clientName}
               onChange={handleChange}
               className="flex items-center w-full border rounded-md px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500 h-[40px] border-gray-500 mt-1"
@@ -449,11 +481,14 @@ const BookingModal = ({ isOpen, onClose, rooms, bookingData, user }: Props) => {
             />
           </div>
           <div className="mt-3">
-            <label className="text-gray-700">Телефон</label>
+            <label htmlFor="clientPhone" className="text-gray-700">
+              Телефон
+            </label>
             <div className="relative">
               <input
                 type="tel"
                 name="clientPhone"
+                id="clientPhone"
                 value={formData.clientPhone}
                 onChange={handleChange}
                 className="flex items-center w-full border rounded-md px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500 h-[40px] pl-10 border-gray-500 mt-1"
@@ -463,11 +498,14 @@ const BookingModal = ({ isOpen, onClose, rooms, bookingData, user }: Props) => {
             </div>
           </div>
           <div className="mt-3">
-            <label className="text-gray-700">Электронный адрес</label>
+            <label htmlFor="clientEmail" className="text-gray-700">
+              Электронный адрес
+            </label>
             <div className="relative">
               <input
                 type="email"
                 name="clientEmail"
+                id="clientEmail"
                 value={formData.clientEmail}
                 onChange={handleChange}
                 className="flex items-center w-full border rounded-md px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500 h-[40px] pl-10 border-gray-500 mt-1"

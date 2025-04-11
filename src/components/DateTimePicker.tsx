@@ -9,6 +9,7 @@ type Props = {
   startDate?: Date;
   timeValue: string;
   onTimeChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  inputName: string;
 };
 
 const DateTimePicker = ({
@@ -17,6 +18,7 @@ const DateTimePicker = ({
   startDate,
   timeValue,
   onTimeChange,
+  inputName
 }: Props) => {
   return (
     <div className="flex mt-1 gap-2">
@@ -31,6 +33,8 @@ const DateTimePicker = ({
           customInput={
             <input
               type="text"
+              id={inputName}
+              name={inputName}
               className="flex items-center w-full border rounded-md px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500 h-[40px] border-gray-500"
               required
               onBlur={(e) => onDateChange(new Date(e.target.value))}

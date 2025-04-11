@@ -71,7 +71,7 @@ export default function Login() {
                   Имя
                 </label>
                 <input
-                  type="firstName"
+                  type="text"
                   name="firstName"
                   id="firstName"
                   value={firstName}
@@ -89,7 +89,7 @@ export default function Login() {
                   Фамилия
                 </label>
                 <input
-                  type="lastName"
+                  type="text"
                   name="lastName"
                   id="lastName"
                   value={lastName}

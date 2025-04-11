@@ -107,9 +107,12 @@ const RoomModal = ({ isOpen, onClose, roomData, user }: Props) => {
         </div>
 
         <div className="mt-3">
-          <label className="font-medium text-gray-700">Название</label>
+          <label htmlFor="name" className="font-medium text-gray-700">
+            Название
+          </label>
           <input
             type="text"
+            id="name"
             name="name"
             value={formData.name}
             onChange={handleChange}
@@ -119,8 +122,11 @@ const RoomModal = ({ isOpen, onClose, roomData, user }: Props) => {
         </div>
 
         <div className="mt-3">
-          <label className="text-gray-700 font-medium">Статус</label>
+          <label htmlFor="status" className="text-gray-700 font-medium">
+            Статус
+          </label>
           <select
+            id="status"
             name="status"
             value={formData.status}
             className="mt-1 flex items-center w-full border rounded-md px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500 h-[40px] border-gray-500"
@@ -138,10 +144,13 @@ const RoomModal = ({ isOpen, onClose, roomData, user }: Props) => {
         <div className="mt-3 relative">
           <div className="flex items-center">
             <PaintBrushIcon className="w-4 h-4 mr-1 fill-gray-700" />
-            <label className="text-gray-700 font-medium">Цвет дисплея</label>
+            <label htmlFor="color" className="text-gray-700 font-medium">
+              Цвет дисплея
+            </label>
           </div>
           <Popover className="relative">
             <PopoverButton
+              id="color"
               className="w-full mt-1 p-2 border border-gray-500 rounded-md text-white hover:cursor-pointer flex items-center px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500 h-[40px]"
               style={{ backgroundColor: formData.color }}
             >

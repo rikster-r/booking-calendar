@@ -88,9 +88,12 @@ const AddUserModal = ({ isOpen, onClose }: Props) => {
         </div>
 
         <div className="mt-3">
-          <label className="font-medium text-gray-700">Имя</label>
+          <label htmlFor="firstName" className="font-medium text-gray-700">
+            Имя
+          </label>
           <input
             type="text"
+            id="firstName"
             name="firstName"
             value={formData.firstName}
             onChange={handleChange}
@@ -101,9 +104,10 @@ const AddUserModal = ({ isOpen, onClose }: Props) => {
         </div>
 
         <div className="mt-3">
-          <label className="font-medium text-gray-700">Фамилия</label>
+          <label htmlFor="Фамилия" className="font-medium text-gray-700">Фамилия</label>
           <input
             type="text"
+            id="lastName"
             name="lastName"
             value={formData.lastName}
             onChange={handleChange}
@@ -114,9 +118,10 @@ const AddUserModal = ({ isOpen, onClose }: Props) => {
         </div>
 
         <div className="mt-3">
-          <label className="font-medium text-gray-700">Почта</label>
+          <label htmlFor="email" className="font-medium text-gray-700">Почта</label>
           <input
             type="email"
+            id="email"
             name="email"
             value={formData.email}
             onChange={handleChange}
@@ -127,12 +132,12 @@ const AddUserModal = ({ isOpen, onClose }: Props) => {
         </div>
 
         <div className="mt-3">
-          <label className="font-medium text-gray-700">Пароль</label>
+          <label htmlFor="password" className="font-medium text-gray-700">Пароль</label>
           <div className="relative">
             <input
               type={passwordVisible ? 'text' : 'password'}
-              name="password"
               id="password"
+              name="password"
               value={formData.password}
               onChange={handleChange}
               className="mt-1 flex items-center w-full border border-gray-500 rounded-md px-3 py-3.5 outline-none focus-within:ring-2 focus-within:ring-blue-500 h-[40px] pr-10"
@@ -161,8 +166,9 @@ const AddUserModal = ({ isOpen, onClose }: Props) => {
         </div>
 
         <div className="mt-3">
-          <label className="text-gray-700 font-medium">Роль</label>
+          <label htmlFor="role" className="text-gray-700 font-medium">Роль</label>
           <select
+            id="role"
             name="role"
             value={formData.role}
             className="mt-1 flex items-center w-full border rounded-md px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500 h-[40px] border-gray-500"
