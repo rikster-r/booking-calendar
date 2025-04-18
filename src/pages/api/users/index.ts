@@ -82,10 +82,12 @@ export default async function handler(
       email,
       password,
       user_metadata: {
+        email,
         first_name,
         last_name,
         role,
       },
+      email_confirm: true,
     });
 
     if (error) return res.status(500).json({ error: error.message });
