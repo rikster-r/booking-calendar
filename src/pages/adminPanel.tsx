@@ -399,7 +399,9 @@ const AdminPanel = ({ user, initilalUsers }: Props) => {
                                   {user.user_metadata.last_name}
                                 </strong>
 
-                                <span> {user.user_metadata.email} </span>
+                                <span className="text-gray-600">
+                                  {user.user_metadata.email || user.email}
+                                </span>
                               </p>
                             </div>
                           </div>
