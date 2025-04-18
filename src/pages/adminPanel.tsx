@@ -4,11 +4,16 @@ import Sidebar from '@/components/Sidebar';
 import { createClient } from '@/lib/supabase/server-props';
 import { User } from '@supabase/supabase-js';
 import useSWR from 'swr';
-import { UserCircleIcon, TrashIcon } from '@heroicons/react/24/outline';
+import {
+  UserCircleIcon,
+  TrashIcon,
+  PlusIcon,
+  MagnifyingGlassIcon,
+} from '@heroicons/react/24/outline';
 import UserRoleBadge from '@/components/UserRoleBadge';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
-import { useState, useContext } from 'react';
+import { useState, useContext, useEffect } from 'react';
 import Head from 'next/head';
 import { toast } from 'react-toastify';
 import AddUserModal from '@/components/AddUserModal';
@@ -29,10 +34,7 @@ export const getServerSideProps: GetServerSideProps = async (
     return { redirect: { destination: '/', permanent: false } };
   }
 
-  const [usersRes, bookingsRes] = await Promise.all([
-    supabase.auth.admin.listUsers(),
-    fetch(`${process.env.NEXT_PUBLIC_URL}/api/bookings`),
-  ]);
+  const usersRes = await supabase.auth.admin.listUsers();
   if (usersRes.error) {
     return { props: { user: userRes.data.user, users: [] } };
   }
@@ -43,7 +45,6 @@ export const getServerSideProps: GetServerSideProps = async (
       initialUsers: usersRes.error
         ? []
         : usersRes.data.users.filter((x) => x.id !== userRes.data.user.id),
-      initialBookings: bookingsRes.ok ? await bookingsRes.json() : [],
     },
   };
 };
@@ -51,22 +52,34 @@ export const getServerSideProps: GetServerSideProps = async (
 type Props = {
   user: User;
   initilalUsers: User[];
-  initialBookings: Booking[];
 };
 
-const AdminPanel = ({ user, initilalUsers, initialBookings }: Props) => {
+const AdminPanel = ({ user, initilalUsers }: Props) => {
   const {
     data: users,
     mutate: mutateUsers,
     isLoading,
   } = useSWR<User[]>(`/api/users`, fetcher, { fallbackData: initilalUsers });
-  const { data: bookings } = useSWR<Booking[]>(`/api/bookings`, fetcher, {
-    fallbackData: initialBookings,
-  });
   const [selectedUsers, setSelectedUsers] = useState<User[]>([]);
   const [deleteHovered, setDeleteHovered] = useState(false);
   const [addUserModalOpen, setAddUserModalOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filteredUsers, setFilteredUsers] = useState<User[]>(users || []);
   const onlineUserIds = useContext(OnlineUsersContext);
+
+  useEffect(() => {
+    if (!searchQuery) {
+      setFilteredUsers(users || []);
+    }
+  }, [users, searchQuery]);
+
+  useEffect(() => {
+    setSelectedUsers((prevSelected) =>
+      prevSelected.filter((user) =>
+        filteredUsers.some((filtered) => filtered.id === user.id)
+      )
+    );
+  }, [filteredUsers]);
 
   if (isLoading)
     return (
@@ -79,13 +92,13 @@ const AdminPanel = ({ user, initilalUsers, initialBookings }: Props) => {
           <main className="flex-1 w-full lg:w-[calc(100%-320px)] lg:ml-80 lg:px-8 flex flex-col">
             <div className="flex items-center">
               <Sidebar user={user} buttonClassName="text-black" />
-              <div className="w-full max-w-[1800px] mx-auto">
+              <div className="w-full max-w-[1600px] mx-auto">
                 <h1 className="text-xl font-bold pb-4 lg:pb-6 pt-4 lg:pl-8 text-left lg:mt-4">
                   Панель администратора
                 </h1>
               </div>
             </div>
-            <div className="p-6 bg-white mt-4 rounded-xl animate-pulse">
+            <div className="mt-4 rounded-xl animate-pulse max-w-[1600px] px-4 py-6 bg-white rounded-t-xl gap-2 lg:gap-4 overflow-hidden lg:p-8 w-full mx-auto h-full">
               <div className="flex justify-between items-center mb-4">
                 <div className="flex items-center gap-4">
                   <div className="h-4 w-32 bg-gray-200 rounded" />
@@ -165,13 +178,13 @@ const AdminPanel = ({ user, initilalUsers, initialBookings }: Props) => {
           <main className="flex-1 w-full lg:w-[calc(100%-320px)] lg:ml-80 lg:px-8 flex flex-col bg-gray-100">
             <div className="flex items-center">
               <Sidebar user={user} buttonClassName="text-black" />
-              <div className="w-full max-w-[1800px] mx-auto">
+              <div className="w-full max-w-[1600px] mx-auto">
                 <h1 className="text-xl font-bold py-4 lg:py-6 lg:pl-8 text-left">
                   Панель администратора
                 </h1>
               </div>
             </div>
-            <div className="p-4 bg-white rounded-t-xl flex justify-center items-center w-full max-w-[1800px] mx-auto h-full flex-col text-center">
+            <div className="p-4 bg-white rounded-t-xl flex justify-center items-center w-full max-w-[1600px] mx-auto h-full flex-col text-center">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
@@ -245,6 +258,28 @@ const AdminPanel = ({ user, initilalUsers, initialBookings }: Props) => {
     }
   };
 
+  const handleSearch = async (query: string) => {
+    setSearchQuery(query);
+
+    if (!query.trim()) {
+      setFilteredUsers(users || []);
+      return;
+    }
+
+    setFilteredUsers((prev) =>
+      prev.filter((user) => {
+        const email = user.email?.toLowerCase() || '';
+        const firstName = user.user_metadata?.first_name?.toLowerCase() || '';
+        const lastName = user.user_metadata?.last_name?.toLowerCase() || '';
+        const q = query.toLowerCase();
+
+        return (
+          email.includes(q) || firstName.includes(q) || lastName.includes(q)
+        );
+      })
+    );
+  };
+
   return (
     <>
       <Head>
@@ -255,125 +290,156 @@ const AdminPanel = ({ user, initilalUsers, initialBookings }: Props) => {
         <main className="flex-1 w-full lg:w-[calc(100%-320px)] lg:ml-80 lg:px-8 flex flex-col">
           <div className="flex items-center">
             <Sidebar user={user} buttonClassName="text-black" />
-            <div className="w-full max-w-[1800px] mx-auto">
+            <div className="w-full max-w-[1600px] mx-auto">
               <h1 className="text-xl font-bold py-4 lg:py-6 lg:pl-8 text-left">
                 Панель администратора
               </h1>
             </div>
           </div>
-          <div className="px-4 py-6 bg-white rounded-t-xl gap-2 lg:gap-4 overflow-hidden lg:p-8 w-full max-w-[1800px] mx-auto h-full">
+          <div className="px-4 py-6 bg-white rounded-t-xl gap-2 lg:gap-4 overflow-hidden lg:p-8 w-full max-w-[1600px] mx-auto h-full">
             <div className="flex justify-between items-center mb-4 text-sm lg:text-base">
               <div className="flex items-center gap-4">
                 <p>
                   <span className="text-gray-500">Все пользователи: </span>
-                  {users.length}
+                  {filteredUsers.length}
                 </p>
-                <p>
-                  <span className="text-gray-500">Все брони: </span>
-                  {bookings ? bookings.length : 0}
-                </p>
+                {filteredUsers.length === users.length && (
+                  <p>
+                    <span className="text-gray-500">
+                      Пользователей онлайн:{' '}
+                    </span>
+                    {onlineUserIds ? onlineUserIds.length : 0}
+                  </p>
+                )}
               </div>
             </div>
 
             <div className="mb-4 flex items-center">
+              <div className="relative w-full h-9 lg:h-10">
+                <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
+                  <MagnifyingGlassIcon
+                    className="w-5 h-5 text-gray-500"
+                    aria-hidden="true"
+                  />
+                </div>
+                <input
+                  type="search"
+                  id="search"
+                  className="block w-full pr-4 pl-10 h-full text-sm text-gray-900 border border-gray-300 bg-gray-50 focus:ring-blue-500 focus:border-blue-500 rounded-md"
+                  placeholder="Поиск пользователей"
+                  value={searchQuery}
+                  onChange={(e) => handleSearch(e.target.value)}
+                  required
+                />
+              </div>
               <button
-                className="font-medium bg-blue-500 text-white px-4 py-3 rounded text-xs lg:text-sm hover:cursor-pointer hover:bg-blue-600"
+                className="font-medium bg-blue-500 text-white rounded-md text-xs lg:text-sm hover:cursor-pointer hover:bg-blue-600 ml-2 min-w-9 lg:min-w-10 min-h-9 lg:min-h-10 flex justify-center items-center"
                 onClick={() => setAddUserModalOpen(true)}
               >
-                + Добавить пользователя
+                <PlusIcon className="w-5 h-5" />
               </button>
               <button
-                className="border-2 border-gray-100 p-2 rounded text-sm ml-auto font-medium hover:cursor-pointer hover:border-red-300 group h-10 w-10 flex justify-center items-center"
+                className="border-2 border-gray-100 rounded text-sm font-medium hover:cursor-pointer hover:border-red-300 group flex justify-center items-center ml-2 min-w-9 lg:min-w-10 min-h-9 lg:min-h-10"
                 onMouseEnter={() => setDeleteHovered(true)}
                 onMouseLeave={() => setDeleteHovered(false)}
                 onClick={deleteSelectedUsers}
               >
-                <TrashIcon className="w-4 h-4 group-hover:stroke-red-500" />
+                <TrashIcon className="w-5 h-5 group-hover:stroke-red-500" />
               </button>
             </div>
 
-            <div className="overflow-auto rounded-lg text-xs lg:text-sm">
-              <table className="min-w-full text-left text-nowrap">
-                <thead className="bg-gray-50 text-gray-700">
-                  <tr className="uppercase">
-                    <th className="px-4 py-3">
-                      <input
-                        type="checkbox"
-                        checked={selectedUsers.length === users.length}
-                        onChange={toggleAllSelectedUsers}
-                      />
-                    </th>
-                    <th className="px-4 py-4">Пользователь</th>
-                    <th className="px-4 py-4">Роль</th>
-                    <th className="px-4 py-4">Статус</th>
-                    <th className="px-4 py-4">Последний заход</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50 bg-white">
-                  {/* Sample Row */}
-                  {users.map((user) => (
-                    <tr
-                      key={user.id}
-                      className={`${
-                        deleteHovered &&
-                        selectedUsers.some((u) => u.id === user.id)
-                          ? 'bg-red-400'
-                          : ''
-                      } relative w-full`}
-                    >
-                      <td className="px-4 py-3">
+            {filteredUsers.length ? (
+              <div className="overflow-auto rounded-lg text-xs lg:text-sm">
+                <table className="min-w-full text-left text-nowrap">
+                  <thead className="bg-gray-50 text-gray-700">
+                    <tr className="uppercase">
+                      <th className="px-4 py-3">
                         <input
                           type="checkbox"
-                          checked={selectedUsers.includes(user)}
-                          onChange={() => toggleSelectedUser(user)}
+                          checked={selectedUsers.length === users.length}
+                          onChange={toggleAllSelectedUsers}
                         />
-                      </td>
-                      <td className="px-4 py-3 flex items-center gap-2">
-                        <div className="flex items-center gap-2">
-                          {/* todo */}
-                          <div>
-                            <UserCircleIcon className="w-7 h-7" />
-                          </div>
-
-                          <div>
-                            <p className="text-xs lg:text-sm">
-                              <strong className="block font-medium">
-                                {user.user_metadata.first_name}{' '}
-                                {user.user_metadata.last_name}
-                              </strong>
-
-                              <span> {user.user_metadata.email} </span>
-                            </p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <UserRoleBadge role={user.user_metadata.role} />
-                      </td>
-                      <td className="px-4 py-3">
-                        {onlineUserIds.includes(user.id) ? (
-                          <span className="text-green-500 font-medium">
-                            ● В сети
-                          </span>
-                        ) : (
-                          <span className="text-gray-400 font-medium">
-                            ● Не в сети
-                          </span>
-                        )}
-                      </td>
-
-                      <td className="px-4 py-3">
-                        {user.last_sign_in_at
-                          ? format(user.last_sign_in_at, 'd MMMM yyyy, HH:mm', {
-                              locale: ru,
-                            })
-                          : '-'}
-                      </td>
+                      </th>
+                      <th className="px-4 py-4">Пользователь</th>
+                      <th className="px-4 py-4">Роль</th>
+                      <th className="px-4 py-4">Статус</th>
+                      <th className="px-4 py-4">Последний заход</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50 bg-white">
+                    {/* Sample Row */}
+                    {filteredUsers.map((user) => (
+                      <tr
+                        key={user.id}
+                        className={`${
+                          deleteHovered &&
+                          selectedUsers.some((u) => u.id === user.id)
+                            ? 'bg-red-400'
+                            : ''
+                        } relative w-full`}
+                      >
+                        <td className="px-4 py-3">
+                          <input
+                            type="checkbox"
+                            checked={selectedUsers.includes(user)}
+                            onChange={() => toggleSelectedUser(user)}
+                          />
+                        </td>
+                        <td className="px-4 py-3 flex items-center gap-2">
+                          <div className="flex items-center gap-2">
+                            {/* todo */}
+                            <div>
+                              <UserCircleIcon className="w-7 h-7" />
+                            </div>
+
+                            <div>
+                              <p className="text-xs lg:text-sm">
+                                <strong className="block font-medium">
+                                  {user.user_metadata.first_name}{' '}
+                                  {user.user_metadata.last_name}
+                                </strong>
+
+                                <span> {user.user_metadata.email} </span>
+                              </p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <UserRoleBadge role={user.user_metadata.role} />
+                        </td>
+                        <td className="px-4 py-3">
+                          {onlineUserIds.includes(user.id) ? (
+                            <span className="text-green-500 font-medium">
+                              ● В сети
+                            </span>
+                          ) : (
+                            <span className="text-gray-400 font-medium">
+                              ● Не в сети
+                            </span>
+                          )}
+                        </td>
+
+                        <td className="px-4 py-3">
+                          {user.last_sign_in_at
+                            ? format(
+                                user.last_sign_in_at,
+                                'd MMMM yyyy, HH:mm',
+                                {
+                                  locale: ru,
+                                }
+                              )
+                            : '-'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <h2 className="text-base text-gray-500 mt-6">
+                По вашему запросу пользователи не найдены.
+              </h2>
+            )}
           </div>
         </main>
       </div>
