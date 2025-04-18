@@ -16,7 +16,7 @@ const UserRoleBadge = ({ role }: Props) => {
   const roleTitles = {
     admin: 'Администратор',
     client: 'Клиент',
-    cleaner: 'Уборщик(ца)',
+    cleaner: 'Уборщик',
   };
 
   return (
