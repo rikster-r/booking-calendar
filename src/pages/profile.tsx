@@ -7,6 +7,7 @@ import Head from 'next/head';
 import { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { createClient as createComponentClient } from '@/lib/supabase/component';
+import { useRouter } from 'next/router';
 
 export const getServerSideProps: GetServerSideProps = async (
   context: GetServerSidePropsContext
@@ -29,7 +30,13 @@ const Profile = ({ user: initialUser }: Props) => {
   const [activeField, setActiveField] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [user, setUser] = useState<User>(initialUser);
+  const router = useRouter();
+  const code = router.query.code;
   const supabase = createComponentClient();
+
+  useEffect(() => {
+    if (code) setActiveField('password');
+  }, [code]);
 
   const handleMetadataSave = async (field: string, value: string) => {
     setActiveField(null);
@@ -80,7 +87,62 @@ const Profile = ({ user: initialUser }: Props) => {
     if (res.ok) {
       toast.info(`Подтверждение было отправлено на почту ${value}`);
     } else {
-      toast.error('Не удалось обновить данные.');
+      toast.error('Не удалось обновить данные. Попробуйте еще раз.');
+    }
+  };
+
+  const handlePasswordChange = async (value: string) => {
+    if (code) {
+      const res = await fetch(`/api/users/${user.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ password: value }),
+      });
+
+      if (res.ok) {
+        const { data, error } = await supabase.auth.getUser();
+        if (!error && data?.user) {
+          setUser(data.user);
+          toast.success('Пароль успешно изменен.');
+          setActiveField(null);
+        }
+      } else {
+        const error = await res.json();
+        if (
+          error.error ===
+          'New password should be different from the old password.'
+        ) {
+          toast.error('Новый пароль должен отличаться от старого.');
+        } else {
+          toast.error('Ошибка сервера - не удалось обновить пароль.');
+        }
+      }
+    } else {
+      const { error } = await supabase.auth.resetPasswordForEmail(
+        user.email as string,
+        {
+          redirectTo: `${process.env.NEXT_PUBLIC_URL}/profile`,
+        }
+      );
+      if (error) {
+        if (error.code === 'over_email_send_rate_limit') {
+          const timeLeft = parseInt(error.message.match(/\d+/)?.[0] || '1', 10);
+
+          toast.error(
+            `Вы можете изменить пароль не чаще чем раз в минуту. Подождите ${timeLeft} секунд${
+              timeLeft === 1 ? 'у' : ''
+            } до следующей попытки смены пароля. `
+          );
+        } else {
+          toast.error('Произошла ошибка сервера. Попробуйте еще раз.');
+        }
+      } else {
+        toast.info(
+          `Подтверждение смены пароля было отправлено на почту ${user.email}`
+        );
+      }
     }
   };
 
@@ -94,8 +156,17 @@ const Profile = ({ user: initialUser }: Props) => {
       return;
     }
 
+    if (
+      (field === 'password' && code && value.trim() === '') ||
+      (field !== 'password' && value.trim() === '')
+    ) {
+      return;
+    }
+
     if (field === 'email') {
       handleEmailSave(value);
+    } else if (field === 'password') {
+      handlePasswordChange(value);
     } else {
       handleMetadataSave(field, value);
     }
@@ -117,7 +188,7 @@ const Profile = ({ user: initialUser }: Props) => {
         titleClassName="max-w-[800px]"
       >
         <div className="lg:px-8 lg:pb-8">
-          <div className="px-4 rounded-xl gap-2 sm:gap-4 overflow-hidden sm:px-8 sm:pt-2 sm:pb-4 w-full max-w-[800px] mx-auto h-full bg-white">
+          <div className="px-4 rounded-t-xl lg:rounded-xl gap-2 sm:gap-4 overflow-hidden sm:px-8 sm:pt-2 sm:pb-4 w-full max-w-[800px] mx-auto h-full bg-white">
             {/* Personal Information Section */}
             <div className="mb-10">
               <div className="py-4 border-b border-gray-200">
@@ -160,15 +231,34 @@ const Profile = ({ user: initialUser }: Props) => {
                 isSubmitting={isSubmitting}
               />
 
-              <EditableRow
-                label="Пароль"
-                value=""
-                fieldKey="password"
-                activeField={activeField}
-                setActiveField={setActiveField}
-                onSave={handleSave}
-                onCancel={handleCancel}
-              />
+              {code ? (
+                <EditableRow
+                  label="Пароль"
+                  value=""
+                  fieldKey="password"
+                  activeField={activeField}
+                  setActiveField={setActiveField}
+                  onSave={handleSave}
+                  onCancel={handleCancel}
+                />
+              ) : (
+                <div
+                  className={`flex items-start sm:items-center justify-between py-4 border-b border-gray-200`}
+                >
+                  <div className="w-full sm:w-auto">
+                    <h3 className="text-sm font-medium text-gray-500">
+                      Пароль
+                    </h3>
+                  </div>
+
+                  <button
+                    className="mt-2 sm:mt-0 text-sm font-medium text-blue-600 hover:text-blue-500 hover:cursor-pointer"
+                    onClick={() => handleSave('password', '')}
+                  >
+                    Изменить
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Integrations Section */}

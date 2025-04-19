@@ -35,7 +35,6 @@ export default async function handler(
 
   if (req.method === 'PUT') {
     const { email, first_name, last_name, password } = req.body;
-    console.log(req.body)
 
     const {
       data: { user },
