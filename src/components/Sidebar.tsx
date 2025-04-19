@@ -1,4 +1,11 @@
-import { Dialog, DialogBackdrop, DialogPanel } from '@headlessui/react';
+import {
+  Dialog,
+  DialogBackdrop,
+  DialogPanel,
+  Popover,
+  PopoverButton,
+  PopoverPanel,
+} from '@headlessui/react';
 import {
   Bars3Icon,
   XMarkIcon,
@@ -6,10 +13,14 @@ import {
   UserIcon,
   CalendarIcon,
   TableCellsIcon,
+  ArrowLeftStartOnRectangleIcon,
 } from '@heroicons/react/24/outline';
 import { User } from '@supabase/supabase-js';
 import Link from 'next/link';
 import { useState } from 'react';
+import { createClient } from '@/lib/supabase/component';
+import { toast } from 'react-toastify';
+import { useRouter } from 'next/router';
 
 type Props = {
   user: User;
@@ -19,8 +30,7 @@ type Props = {
 const Sidebar = ({ user, buttonClassName }: Props) => {
   const [isOpen, setIsOpen] = useState(false);
 
-  // Function to toggle sidebar visibility
-  const toggleSidebar = () => setIsOpen(!isOpen);
+  const toggleSidebar = () => setIsOpen((prev) => !prev);
 
   return (
     <>
@@ -58,6 +68,19 @@ const Sidebar = ({ user, buttonClassName }: Props) => {
 };
 
 export const SidebarContent = ({ user }: Props) => {
+  const supabase = createClient();
+  const router = useRouter();
+
+  const signOut = async () => {
+    const { error } = await supabase.auth.signOut();
+
+    if (error) {
+      toast.error('Не удалось выйти из аккаунта. Попробуйте еще раз.');
+    } else {
+      router.push('/login');
+    }
+  };
+
   return (
     <div className="flex h-screen flex-col border-e border-gray-100 bg-white w-72 lg:w-80 text-sm">
       <div className="px-2">
@@ -94,8 +117,8 @@ export const SidebarContent = ({ user }: Props) => {
         </ul>
       </div>
 
-      <div className="mt-auto inset-x-0 bottom-0 border-t border-gray-400">
-        <div className="flex items-center gap-2 bg-white p-4">
+      <Popover className="mt-auto inset-x-0 bottom-0 border-t border-gray-400 p-2 relative w-full">
+        <PopoverButton className="flex items-center gap-2 px-3 py-2 hover:cursor-pointer text-left hover:bg-gray-100 rounded-lg w-full">
           {/* todo */}
           <div>
             <UserCircleIcon className="w-7 h-7" />
@@ -110,8 +133,20 @@ export const SidebarContent = ({ user }: Props) => {
               <span> {user.email} </span>
             </p>
           </div>
-        </div>
-      </div>
+        </PopoverButton>
+        <PopoverPanel
+          anchor="bottom"
+          className="absolute z-20 w-76 rounded-xl shadow-lg bg-white ring-1 ring-gray-200 text-sm p-2"
+        >
+          <button
+            className="rounded-lg hover:bg-gray-100 w-full font-semibold flex items-center gap-2 px-4 py-3 text-red-600 hover:cursor-pointer"
+            onClick={signOut}
+          >
+            <ArrowLeftStartOnRectangleIcon className="w-5 h-5" />
+            <span>Выйти из аккаунта</span>
+          </button>
+        </PopoverPanel>
+      </Popover>
     </div>
   );
 };
