@@ -18,6 +18,7 @@ import Head from 'next/head';
 import { toast } from 'react-toastify';
 import AddUserModal from '@/components/AddUserModal';
 import { OnlineUsersContext } from '@/context/OnlineUsersContext';
+import Layout from '@/components/Layout';
 
 export const getServerSideProps: GetServerSideProps = async (
   context: GetServerSidePropsContext
@@ -286,16 +287,8 @@ const AdminPanel = ({ user, initilalUsers }: Props) => {
         <title>Панель администратора</title>
         <meta name="description" content="Календарь брони" />
       </Head>
-      <div className="flex min-h-screen bg-gray-100">
-        <main className="flex-1 w-full lg:w-[calc(100%-320px)] lg:ml-80 lg:px-8 flex flex-col">
-          <div className="flex items-center">
-            <Sidebar user={user} buttonClassName="text-black" />
-            <div className="w-full max-w-[1600px] mx-auto">
-              <h1 className="text-xl font-bold py-4 lg:py-6 lg:pl-8 text-left">
-                Панель администратора
-              </h1>
-            </div>
-          </div>
+      <Layout user={user} title="Панель администратора">
+        <div className="lg:px-8 h-full">
           <div className="px-4 py-6 bg-white rounded-t-xl gap-2 lg:gap-4 overflow-hidden lg:p-8 w-full max-w-[1600px] mx-auto h-full">
             <div className="flex justify-between items-center mb-4 text-sm lg:text-base">
               <div className="flex items-center gap-4">
@@ -313,7 +306,6 @@ const AdminPanel = ({ user, initilalUsers }: Props) => {
                 )}
               </div>
             </div>
-
             <div className="mb-4 flex items-center">
               <div className="relative w-full h-9 lg:h-10">
                 <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
@@ -347,7 +339,6 @@ const AdminPanel = ({ user, initilalUsers }: Props) => {
                 <TrashIcon className="w-5 h-5 group-hover:stroke-red-500" />
               </button>
             </div>
-
             {filteredUsers.length ? (
               <div className="overflow-auto rounded-lg text-xs lg:text-sm">
                 <table className="min-w-full text-left text-nowrap">
@@ -391,14 +382,12 @@ const AdminPanel = ({ user, initilalUsers }: Props) => {
                             <div>
                               <UserCircleIcon className="w-7 h-7" />
                             </div>
-
                             <div>
                               <p className="text-xs lg:text-sm">
                                 <strong className="block font-medium">
                                   {user.user_metadata.first_name}{' '}
                                   {user.user_metadata.last_name}
                                 </strong>
-
                                 <span className="text-gray-600">
                                   {user.user_metadata.email || user.email}
                                 </span>
@@ -420,7 +409,6 @@ const AdminPanel = ({ user, initilalUsers }: Props) => {
                             </span>
                           )}
                         </td>
-
                         <td className="px-4 py-3">
                           {user.last_sign_in_at
                             ? format(
@@ -443,8 +431,9 @@ const AdminPanel = ({ user, initilalUsers }: Props) => {
               </h2>
             )}
           </div>
-        </main>
-      </div>
+        </div>
+      </Layout>
+
       <AddUserModal
         isOpen={addUserModalOpen}
         onClose={() => {

@@ -15,10 +15,10 @@ import Head from 'next/head';
 import type { User } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/server-props';
 import BookingsCalendar from '@/components/BookingsCalendar';
-import Sidebar from '@/components/Sidebar';
 import EmptyBookingsCalendar from '@/components/EmptyBookingsCalendar';
 import { fetcher } from '@/lib/fetcher';
 import { toast } from 'react-toastify';
+import Layout from '@/components/Layout';
 
 const dateRange = get30DayRange();
 
@@ -93,21 +93,16 @@ export default function Home({ initialRooms, initialBookings, user }: Props) {
         <meta name="description" content="Календарь брони" />
       </Head>
       <div
-        className="min-h-screen flex relative"
         onClick={() => {
           setMenuOpen(false);
         }}
       >
-        <main className="lg:ml-80 flex flex-col mx-auto w-full lg:w-[calc(100%-320px)] bg-radial-[at_100%_20%] from-[#2980B9] to-[#6DD5FA]">
-          <div className="flex items-center lg:mx-8">
-            <Sidebar user={user} buttonClassName="text-white" />
-            <div className="w-full max-w-[1800px] mx-auto">
-              <h1 className="text-xl font-bold py-4 lg:py-6 lg:pl-8 text-left text-white">
-                Календарь брони
-              </h1>
-            </div>
-          </div>
-
+        <Layout
+          user={user}
+          title="Календарь брони"
+          mainClassName="bg-radial-[at_100%_20%] from-[#2980B9] to-[#6DD5FA]"
+          titleClassName='text-white'
+        >
           {rooms.length > 0 ? (
             <BookingsCalendar
               rooms={rooms}
@@ -117,111 +112,111 @@ export default function Home({ initialRooms, initialBookings, user }: Props) {
           ) : (
             <EmptyBookingsCalendar toggleModal={toggleModal} />
           )}
-        </main>
+        </Layout>
+      </div>
 
-        <div>
-          <button
-            className="flex z-10 fixed justify-center items-center bottom-5 right-5 bg-amber-300 rounded-full h-12 w-12 p-2 hover:cursor-pointer"
-            onClick={(e) => {
-              e.stopPropagation();
-              setMenuOpen((prev) => !prev);
-            }}
-          >
-            <EllipsisHorizontalIcon />
-          </button>
-          {/*
+      <div>
+        <button
+          className="flex z-10 fixed justify-center items-center bottom-5 right-5 bg-amber-300 rounded-full h-12 w-12 p-2 hover:cursor-pointer"
+          onClick={(e) => {
+            e.stopPropagation();
+            setMenuOpen((prev) => !prev);
+          }}
+        >
+          <EllipsisHorizontalIcon />
+        </button>
+        {/*
           DO NOT CHANGE MENU TO MODAL
           MODAL HAS SHADED BACKDROP WHICH IS NOT NEEDED IN MENU
           */}
-          {isMenuOpen && (
-            <div className="bg-white fixed bottom-18 lg:bottom-20 right-5 z-20 shadow-lg rounded-lg text-sm lg:text-base">
-              <button
-                className="flex items-center gap-2 focus-visible:bg-gray-100 px-6 py-4 lg:py-4 hover:cursor-pointer hover:bg-gray-100 w-full"
-                onClick={() => toggleModal('addRoom')}
-              >
-                <BuildingOfficeIcon className="w-5 lg:w-6 h-5 lg:h-6" />
-                <p>Добавить комнату</p>
-              </button>
-              <button
-                className="flex items-center gap-2 focus-visible:bg-gray-100 px-6 py-4  hover:cursor-pointer hover:bg-gray-100 w-full"
-                onClick={() => {
-                  if (rooms.length > 0) {
-                    toggleModal('addBooking', {
-                      checkIn: new Date(),
-                      roomId: rooms[0].id,
-                    });
-                  } else {
-                    toast.error('Нет помещений для добавления брони.');
+        {isMenuOpen && (
+          <div className="bg-white fixed bottom-18 lg:bottom-20 right-5 z-20 shadow-lg rounded-lg text-sm lg:text-base">
+            <button
+              className="flex items-center gap-2 focus-visible:bg-gray-100 px-6 py-4 lg:py-4 hover:cursor-pointer hover:bg-gray-100 w-full"
+              onClick={() => toggleModal('addRoom')}
+            >
+              <BuildingOfficeIcon className="w-5 lg:w-6 h-5 lg:h-6" />
+              <p>Добавить комнату</p>
+            </button>
+            <button
+              className="flex items-center gap-2 focus-visible:bg-gray-100 px-6 py-4  hover:cursor-pointer hover:bg-gray-100 w-full"
+              onClick={() => {
+                if (rooms.length > 0) {
+                  toggleModal('addBooking', {
+                    checkIn: new Date(),
+                    roomId: rooms[0].id,
+                  });
+                } else {
+                  toast.error('Нет помещений для добавления брони.');
+                }
+              }}
+            >
+              <KeyIcon className="w-5 lg:w-6 h-5 lg:h-6" />
+              <p>Забронировать </p>
+            </button>
+          </div>
+        )}
+        {modals.addBooking && (
+          <BookingModal
+            isOpen={modals.addBooking}
+            onClose={() => {
+              toggleModal('addBooking');
+              mutateBookings();
+            }}
+            rooms={rooms}
+            bookingData={
+              modalData as
+                | Booking
+                | {
+                    checkIn: Date;
+                    roomId: number;
                   }
-                }}
-              >
-                <KeyIcon className="w-5 lg:w-6 h-5 lg:h-6" />
-                <p>Забронировать </p>
-              </button>
-            </div>
-          )}
-          {modals.addBooking && (
-            <BookingModal
-              isOpen={modals.addBooking}
-              onClose={() => {
-                toggleModal('addBooking');
-                mutateBookings();
-              }}
-              rooms={rooms}
-              bookingData={
-                modalData as
-                  | Booking
-                  | {
-                      checkIn: Date;
-                      roomId: number;
-                    }
-              }
-              user={user}
-            />
-          )}
-          {modals.addRoom && (
-            <RoomModal
-              isOpen={modals.addRoom}
-              onClose={() => {
-                toggleModal('addRoom');
-                mutateRooms();
-              }}
-              user={user}
-              roomData={modalData as Room}
-            />
-          )}
-          {modals.bookingInfo && (
-            <BookingInfoModal
-              isOpen={modals.bookingInfo}
-              onClose={() => {
-                toggleModal('bookingInfo');
-                mutateBookings();
-              }}
-              onEditOpen={() => {
-                toggleModal('bookingInfo');
-                toggleModal('addBooking', modalData as Booking);
-              }}
-              booking={modalData as Booking}
-              user={user}
-            />
-          )}
-          {modals.roomInfo && (
-            <RoomInfoModal
-              isOpen={modals.roomInfo}
-              onClose={() => {
-                toggleModal('roomInfo');
-                mutateRooms();
-                mutateBookings();
-              }}
-              onEditOpen={() => {
-                toggleModal('roomInfo');
-                toggleModal('addRoom', modalData as Room);
-              }}
-              room={modalData as Room}
-              user={user}
-            />
-          )}
-        </div>
+            }
+            user={user}
+          />
+        )}
+        {modals.addRoom && (
+          <RoomModal
+            isOpen={modals.addRoom}
+            onClose={() => {
+              toggleModal('addRoom');
+              mutateRooms();
+            }}
+            user={user}
+            roomData={modalData as Room}
+          />
+        )}
+        {modals.bookingInfo && (
+          <BookingInfoModal
+            isOpen={modals.bookingInfo}
+            onClose={() => {
+              toggleModal('bookingInfo');
+              mutateBookings();
+            }}
+            onEditOpen={() => {
+              toggleModal('bookingInfo');
+              toggleModal('addBooking', modalData as Booking);
+            }}
+            booking={modalData as Booking}
+            user={user}
+          />
+        )}
+        {modals.roomInfo && (
+          <RoomInfoModal
+            isOpen={modals.roomInfo}
+            onClose={() => {
+              toggleModal('roomInfo');
+              mutateRooms();
+              mutateBookings();
+            }}
+            onEditOpen={() => {
+              toggleModal('roomInfo');
+              toggleModal('addRoom', modalData as Room);
+            }}
+            room={modalData as Room}
+            user={user}
+          />
+        )}
       </div>
     </>
   );

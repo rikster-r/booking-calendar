@@ -107,7 +107,7 @@ export const SidebarContent = ({ user }: Props) => {
                 {user.user_metadata.first_name} {user.user_metadata.last_name}
               </strong>
 
-              <span> {user.user_metadata.email} </span>
+              <span> {user.email} </span>
             </p>
           </div>
         </div>
