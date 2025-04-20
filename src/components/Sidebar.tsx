@@ -136,7 +136,7 @@ export const SidebarContent = ({ user }: Props) => {
         </PopoverButton>
         <PopoverPanel
           anchor="bottom"
-          className="absolute z-20 w-76 rounded-xl shadow-lg bg-white ring-1 ring-gray-200 text-sm p-2"
+          className="absolute z-20 w-70 lg:w-76 rounded-xl shadow-lg bg-white ring-1 ring-gray-200 text-sm p-2"
         >
           <button
             className="rounded-lg hover:bg-gray-100 w-full font-semibold flex items-center gap-2 px-4 py-3 text-red-600 hover:cursor-pointer"
