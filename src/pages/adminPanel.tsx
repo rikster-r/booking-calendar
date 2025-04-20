@@ -259,6 +259,42 @@ const AdminPanel = ({ user, initilalUsers }: Props) => {
     }
   };
 
+  const changeRole = async (userId: string, role: string) => {
+    // Optimistic update: change the role locally before sending the request
+    mutateUsers(
+      (currentData) => {
+        console.log(
+          (currentData ?? []).map((user) =>
+            user.id === userId
+              ? { ...user, user_metadata: { ...user.user_metadata, role } }
+              : user
+          )
+        );
+        return (currentData ?? []).map((user) =>
+          user.id === userId
+            ? { ...user, user_metadata: { ...user.user_metadata, role } }
+            : user
+        );
+      },
+      false // Avoid revalidation
+    );
+
+    const res = await fetch(`/api/users/${userId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ role }),
+    });
+
+    if (!res.ok) {
+      toast.error('Не удалось изменить роль. Попробуйте еще раз.');
+    }
+
+    // Revalidate
+    mutateUsers();
+  };
+
   const handleSearch = async (query: string) => {
     setSearchQuery(query);
 
@@ -340,7 +376,7 @@ const AdminPanel = ({ user, initilalUsers }: Props) => {
               </button>
             </div>
             {filteredUsers.length ? (
-              <div className="overflow-auto rounded-lg text-xs lg:text-sm">
+              <div className="overflow-auto rounded-lg text-xs lg:text-sm h-full">
                 <table className="min-w-full text-left text-nowrap">
                   <thead className="bg-gray-50 text-gray-700">
                     <tr className="uppercase">
@@ -396,7 +432,12 @@ const AdminPanel = ({ user, initilalUsers }: Props) => {
                           </div>
                         </td>
                         <td className="px-4 py-3">
-                          <UserRoleBadge role={user.user_metadata.role} />
+                          <UserRoleBadge
+                            role={user.user_metadata.role}
+                            onRoleChange={(role: string) =>
+                              changeRole(user.id, role)
+                            }
+                          />
                         </td>
                         <td className="px-4 py-3">
                           {onlineUserIds.includes(user.id) ? (
