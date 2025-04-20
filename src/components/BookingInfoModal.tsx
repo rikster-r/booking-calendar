@@ -14,6 +14,7 @@ import Telegram from '@/assets/telegram.svg';
 import Whatsapp from '@/assets/whatsapp.svg';
 import { ru } from 'date-fns/locale';
 import { User } from '@supabase/supabase-js';
+import { formatPhone } from '@/lib/formatPhone';
 
 type Props = {
   isOpen: boolean;
@@ -83,7 +84,7 @@ const BookingInfoModal = ({
         <div className="space-y-3">
           <div className="flex items-center gap-2 text-gray-700">
             <PhoneIcon className="w-5 h-5" />
-            <span>{booking.client_phone}</span>
+            <span>{formatPhone(booking.client_phone)}</span>
           </div>
 
           <div className="flex items-center gap-2 text-gray-700">

@@ -12,6 +12,7 @@ import {
 import DateTimePicker from '@/components/DateTimePicker';
 import { toast } from 'react-toastify';
 import { User } from '@supabase/supabase-js';
+import { formatPhone, unformatPhone } from '@/lib/formatPhone';
 
 type Props = {
   isOpen: boolean;
@@ -37,7 +38,7 @@ const BookingModal = ({ isOpen, onClose, rooms, bookingData, user }: Props) => {
     ? {
         roomId: bookingData.room_id,
         clientName: bookingData.client_name,
-        clientPhone: bookingData.client_phone,
+        clientPhone: formatPhone(bookingData.client_phone),
         clientEmail: bookingData.client_email,
         adultsCount: bookingData.adults_count,
         childrenCount: bookingData.children_count,
@@ -51,7 +52,7 @@ const BookingModal = ({ isOpen, onClose, rooms, bookingData, user }: Props) => {
     : {
         roomId: bookingData.roomId,
         clientName: '',
-        clientPhone: '',
+        clientPhone: '+7 ',
         clientEmail: '',
         adultsCount: 1,
         childrenCount: 0,
@@ -69,41 +70,7 @@ const BookingModal = ({ isOpen, onClose, rooms, bookingData, user }: Props) => {
     if (!isOpen) {
       setFormData(initial);
     }
-  }, [isOpen]);
-
-  useEffect(() => {
-    if (hasId(bookingData)) {
-      setFormData({
-        roomId: bookingData.room_id,
-        clientName: bookingData.client_name,
-        clientPhone: bookingData.client_phone,
-        clientEmail: bookingData.client_email,
-        adultsCount: bookingData.adults_count,
-        childrenCount: bookingData.children_count,
-        doorCode: bookingData.door_code,
-        additionalInfo: bookingData.additional_info,
-        dailyPrice: bookingData.daily_price,
-        paid: bookingData.paid,
-        checkIn: new Date(bookingData.check_in),
-        checkOut: new Date(bookingData.check_out),
-      });
-    } else {
-      setFormData({
-        roomId: bookingData.roomId,
-        clientName: '',
-        clientPhone: '',
-        clientEmail: '',
-        adultsCount: 1,
-        childrenCount: 0,
-        doorCode: 0,
-        additionalInfo: '',
-        dailyPrice: 0,
-        paid: false,
-        checkIn: bookingData.checkIn,
-        checkOut: getNextDay(bookingData.checkIn),
-      });
-    }
-  }, [bookingData]);
+  }, [initial]);
 
   if (!bookingData) return;
 
@@ -111,6 +78,13 @@ const BookingModal = ({ isOpen, onClose, rooms, bookingData, user }: Props) => {
     HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
   > = (e) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  const handlePhoneChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
+    setFormData((prev) => ({
+      ...prev,
+      clientPhone: formatPhone(e.target.value),
+    }));
   };
 
   // stringify date with respect to timezone
@@ -133,6 +107,7 @@ const BookingModal = ({ isOpen, onClose, rooms, bookingData, user }: Props) => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         ...data,
+        clientPhone: unformatPhone(formData.clientPhone),
         checkIn: formatDateTimeLocal(data.checkIn),
         checkOut: formatDateTimeLocal(data.checkOut),
       }),
@@ -490,7 +465,7 @@ const BookingModal = ({ isOpen, onClose, rooms, bookingData, user }: Props) => {
                 name="clientPhone"
                 id="clientPhone"
                 value={formData.clientPhone}
-                onChange={handleChange}
+                onChange={handlePhoneChange}
                 className="flex items-center w-full border rounded-md px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500 h-[40px] pl-10 border-gray-500 mt-1"
                 required
               />
