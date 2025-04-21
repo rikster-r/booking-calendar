@@ -23,7 +23,9 @@ export default async function handler(
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { first_name, last_name, role: 'client' } },
+      options: {
+        data: { first_name, last_name, role: 'client', related_to: null },
+      },
     });
 
     if (error) return res.status(500).json({ error: error.message });

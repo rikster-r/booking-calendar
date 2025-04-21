@@ -21,6 +21,8 @@ import { useState } from 'react';
 import { createClient } from '@/lib/supabase/component';
 import { toast } from 'react-toastify';
 import { useRouter } from 'next/router';
+import Broom from '@/assets/broom.svg';
+import Image from 'next/image';
 
 type Props = {
   user: User;
@@ -103,6 +105,17 @@ export const SidebarContent = ({ user }: Props) => {
               <span>Профиль</span>
             </Link>
           </li>
+          {user.user_metadata.role !== 'cleaner' && (
+            <li className="rounded-lg hover:bg-gray-100 w-full hover:cursor-pointer">
+              <Link
+                href="/cleaners"
+                className="rounded-lg text-gray-700 font-semibold flex items-center gap-2 px-4 py-3"
+              >
+                <Image src={Broom} alt="" className="w-5 h-5" />
+                <span>Уборщики</span>
+              </Link>
+            </li>
+          )}
           {user.user_metadata.role === 'admin' && (
             <li className="rounded-lg hover:bg-gray-100 w-full hover:cursor-pointer">
               <Link

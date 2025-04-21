@@ -34,7 +34,8 @@ export default async function handler(
   }
 
   if (req.method === 'PUT') {
-    const { email, first_name, last_name, password, role } = req.body;
+    const { email, first_name, last_name, password, role, related_to } =
+      req.body;
     const { id: userId } = req.query;
 
     const {
@@ -87,12 +88,37 @@ export default async function handler(
         user: data,
       });
     } else {
-      const { error } = await supabase.auth.updateUser({
-        ...(email && { email }),
-        ...(password && { password }),
-        ...(first_name && { data: { first_name } }),
-        ...(last_name && { data: { last_name } }),
-      });
+      const { error } = await supabase.auth.admin.updateUserById(
+        userId as string,
+        {
+          ...(email && { email }),
+          ...(password && { password }),
+          ...(first_name || last_name || related_to !== undefined
+            ? {
+                user_metadata: {
+                  ...(first_name && { first_name }),
+                  ...(last_name && { last_name }),
+                  ...(related_to !== undefined && { related_to }),
+                },
+              }
+            : {}),
+        }
+      );
+
+      // add update for public.users too
+      const { error: publicError } = await supabase
+        .from('users')
+        .update({
+          ...(email && { email }),
+          ...(first_name && { first_name }),
+          ...(last_name && { last_name }),
+          ...(related_to !== undefined && { related_to }),
+        })
+        .eq('id', userId);
+
+      if (publicError) {
+        return res.status(500).json({ error: publicError.message });
+      }
 
       if (error) {
         return res.status(500).json({ error: error.message });

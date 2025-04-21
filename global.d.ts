@@ -51,3 +51,13 @@ type UserInput = {
   password: string;
   role: string;
 };
+
+type PublicUser = {
+  id: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  role: string;
+  related_to: string | null;
+  updated_at: string;
+};

@@ -86,6 +86,7 @@ export default async function handler(
         first_name,
         last_name,
         role,
+        related_to: null,
       },
       email_confirm: true,
     });
