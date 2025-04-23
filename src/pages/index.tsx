@@ -19,6 +19,7 @@ import EmptyBookingsCalendar from '@/components/EmptyBookingsCalendar';
 import { fetcher } from '@/lib/fetcher';
 import { toast } from 'react-toastify';
 import Layout from '@/components/Layout';
+import CleaningObjects from '@/components/CleaningObjects';
 
 const dateRange = get30DayRange();
 
@@ -33,8 +34,11 @@ export const getServerSideProps: GetServerSideProps = async (
     return { redirect: { destination: '/login', permanent: false } };
   }
 
+  const roomsOwner =
+    userRes.data.user.user_metadata.related_to ?? userRes.data.user.id;
+
   const [roomsRes, bookingsRes] = await Promise.all([
-    fetch(`${process.env.NEXT_PUBLIC_URL}/api/${userRes.data.user.id}/rooms`),
+    fetch(`${process.env.NEXT_PUBLIC_URL}/api/${roomsOwner}/rooms`),
     fetch(
       `${process.env.NEXT_PUBLIC_URL}/api/${userRes.data.user.id}/bookings/?start=${dateRange.start}&end=${dateRange.end}`
     ),
@@ -53,8 +57,9 @@ type Props = {
 };
 
 export default function Home({ initialRooms, initialBookings, user }: Props) {
+  const roomsOwner = user.user_metadata.related_to ?? user.id;
   const { data: rooms, mutate: mutateRooms } = useSWR<Room[]>(
-    `/api/${user.id}/rooms`,
+    `/api/${roomsOwner}/rooms`,
     fetcher,
     { fallbackData: initialRooms }
   );
@@ -89,8 +94,19 @@ export default function Home({ initialRooms, initialBookings, user }: Props) {
   return (
     <>
       <Head>
-        <title>Календарь брони</title>
-        <meta name="description" content="Календарь брони" />
+        <title>
+          {user.user_metadata.role === 'cleaner'
+            ? 'Объекты уборки'
+            : 'Календарь брони'}
+        </title>
+        <meta
+          name="description"
+          content={
+            user.user_metadata.role === 'cleaner'
+              ? 'Объекты уборки'
+              : 'Календарь брони'
+          }
+        />
       </Head>
       <div
         onClick={() => {
@@ -99,32 +115,50 @@ export default function Home({ initialRooms, initialBookings, user }: Props) {
       >
         <Layout
           user={user}
-          title="Календарь брони"
+          title={
+            user.user_metadata.role === 'cleaner'
+              ? 'Объекты уборки'
+              : 'Календарь брони'
+          }
           mainClassName="bg-radial-[at_100%_20%] from-[#2980B9] to-[#6DD5FA]"
-          titleClassName='text-white'
+          titleClassName={`${
+            user.user_metadata.role === 'cleaner' ? 'max-w-[800px]' : ''
+          } text-white`}
         >
-          {rooms.length > 0 ? (
-            <BookingsCalendar
+          {user.user_metadata.role === 'cleaner' ? (
+            <CleaningObjects
               rooms={rooms}
-              bookings={bookings}
-              toggleModal={toggleModal}
+              mutateRooms={mutateRooms}
+              user={user}
             />
           ) : (
-            <EmptyBookingsCalendar toggleModal={toggleModal} />
+            <>
+              {rooms.length > 0 ? (
+                <BookingsCalendar
+                  rooms={rooms}
+                  bookings={bookings}
+                  toggleModal={toggleModal}
+                />
+              ) : (
+                <EmptyBookingsCalendar toggleModal={toggleModal} />
+              )}
+            </>
           )}
         </Layout>
       </div>
 
       <div>
-        <button
-          className="flex z-10 fixed justify-center items-center bottom-5 right-5 bg-amber-300 rounded-full h-12 w-12 p-2 hover:cursor-pointer"
-          onClick={(e) => {
-            e.stopPropagation();
-            setMenuOpen((prev) => !prev);
-          }}
-        >
-          <EllipsisHorizontalIcon />
-        </button>
+        {user.user_metadata.role !== 'cleaner' && (
+          <button
+            className="flex z-10 fixed justify-center items-center bottom-5 right-5 bg-amber-300 rounded-full h-12 w-12 p-2 hover:cursor-pointer"
+            onClick={(e) => {
+              e.stopPropagation();
+              setMenuOpen((prev) => !prev);
+            }}
+          >
+            <EllipsisHorizontalIcon />
+          </button>
+        )}
         {/*
           DO NOT CHANGE MENU TO MODAL
           MODAL HAS SHADED BACKDROP WHICH IS NOT NEEDED IN MENU

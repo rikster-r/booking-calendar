@@ -190,7 +190,7 @@ const Profile = ({ user: initialUser }: Props) => {
         <div className="lg:px-8 lg:pb-8">
           <div className="px-4 rounded-t-xl lg:rounded-xl gap-2 sm:gap-4 overflow-hidden sm:px-8 sm:pt-2 sm:pb-4 w-full max-w-[800px] mx-auto h-full bg-white">
             {/* Personal Information Section */}
-            <div className="mb-10">
+            <div className="">
               <div className="py-4 border-b border-gray-200">
                 <h2 className="font-medium text-gray-900 mb-1">
                   Личная информация
@@ -262,63 +262,67 @@ const Profile = ({ user: initialUser }: Props) => {
             </div>
 
             {/* Integrations Section */}
-            <div className="mb-10">
-              <h2 className="font-medium text-gray-900 mb-1">Интеграция</h2>
-              <p className="text-sm text-gray-600">
-                Соединение аккаунта авито с системой.
-              </p>
-
-              <button className="mt-4 flex items-center text-sm font-medium text-blue-600 hover:text-blue-500 hover:cursor-pointer ">
-                <LinkIcon className="w-4 h-4 mr-1" />
-                Соединить
-              </button>
-            </div>
-
-            {/* Preferences Section */}
-            <div>
-              <div className="py-4 border-b border-gray-200">
-                <h2 className="font-medium text-gray-900 mb-1">
-                  Настройки календаря
-                </h2>
+            {user.user_metadata.role !== 'cleaner' && (
+              <div className="mt-10">
+                <h2 className="font-medium text-gray-900 mb-1">Интеграция</h2>
                 <p className="text-sm text-gray-600">
-                  Управление параметрами отображения и функций.
+                  Соединение аккаунта авито с системой.
                 </p>
-              </div>
 
-              <div className="flex items-center justify-between py-4">
-                <div>
-                  <h3 className="text-sm font-medium text-gray-500">
-                    Формат даты
-                    {/* todo */}
-                  </h3>
-                  <p className="mt-1 text-sm text-gray-900">DD-MM-YYYY</p>
-                </div>
-                <button className="text-sm font-medium text-blue-600 hover:text-blue-500 hover:cursor-pointer">
-                  Изменить
+                <button className="mt-4 flex items-center text-sm font-medium text-blue-600 hover:text-blue-500 hover:cursor-pointer ">
+                  <LinkIcon className="w-4 h-4 mr-1" />
+                  Соединить
                 </button>
               </div>
+            )}
 
-              <div className="flex items-center justify-between py-4">
-                <div>
-                  <h3 className="text-sm font-medium text-gray-900">
-                    Спрашивать подтверждение удаления
-                  </h3>
+            {/* Preferences Section */}
+            {user.user_metadata.role !== 'cleaner' && (
+              <div className="mt-10">
+                <div className="py-4 border-b border-gray-200">
+                  <h2 className="font-medium text-gray-900 mb-1">
+                    Настройки календаря
+                  </h2>
+                  <p className="text-sm text-gray-600">
+                    Управление параметрами отображения и функций.
+                  </p>
                 </div>
 
-                <label
-                  htmlFor="AcceptConditions"
-                  className="relative block h-6 w-10 rounded-full bg-gray-300 transition-colors [-webkit-tap-highlight-color:_transparent] has-checked:bg-blue-500 hover:cursor-pointer"
-                >
-                  <input
-                    type="checkbox"
-                    id="AcceptConditions"
-                    className="peer sr-only"
-                  />
+                <div className="flex items-center justify-between py-4">
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-500">
+                      Формат даты
+                      {/* todo */}
+                    </h3>
+                    <p className="mt-1 text-sm text-gray-900">DD-MM-YYYY</p>
+                  </div>
+                  <button className="text-sm font-medium text-blue-600 hover:text-blue-500 hover:cursor-pointer">
+                    Изменить
+                  </button>
+                </div>
 
-                  <span className="absolute inset-y-0 start-0 m-1 size-4 rounded-full bg-white transition-[inset-inline-start] peer-checked:start-4"></span>
-                </label>
+                <div className="flex items-center justify-between py-4">
+                  <div>
+                    <h3 className="text-sm font-medium text-gray-900">
+                      Спрашивать подтверждение удаления
+                    </h3>
+                  </div>
+
+                  <label
+                    htmlFor="AcceptConditions"
+                    className="relative block h-6 w-10 rounded-full bg-gray-300 transition-colors [-webkit-tap-highlight-color:_transparent] has-checked:bg-blue-500 hover:cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      id="AcceptConditions"
+                      className="peer sr-only"
+                    />
+
+                    <span className="absolute inset-y-0 start-0 m-1 size-4 rounded-full bg-white transition-[inset-inline-start] peer-checked:start-4"></span>
+                  </label>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
       </Layout>

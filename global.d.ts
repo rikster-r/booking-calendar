@@ -4,6 +4,7 @@ type Room = {
   status: 'not ready' | 'ready' | 'cleaning';
   color: string;
   created_at: string;
+  last_cleaned_at: string;
 };
 
 type RoomInput = {

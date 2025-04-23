@@ -92,8 +92,17 @@ export const SidebarContent = ({ user }: Props) => {
               href="/"
               className="rounded-lg text-gray-700 font-semibold flex items-center gap-2 px-4 py-3"
             >
-              <CalendarIcon className="w-5 h-5" />
-              <span>Календарь</span>
+              {user.user_metadata.role === 'cleaner' ? (
+                <>
+                  <Image src={Broom} alt="" className="w-5 h-5" />
+                  <span>Объекты уборки</span>
+                </>
+              ) : (
+                <>
+                  <CalendarIcon className="w-5 h-5" />
+                  <span>Календарь</span>
+                </>
+              )}
             </Link>
           </li>
           <li className="rounded-lg hover:bg-gray-100 w-full hover:cursor-pointer">

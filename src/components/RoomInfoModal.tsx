@@ -1,7 +1,10 @@
 import Modal from '@/components/Modal';
 import { XMarkIcon, InformationCircleIcon } from '@heroicons/react/24/solid';
+import { ClockIcon } from '@heroicons/react/24/outline';
 import { User } from '@supabase/supabase-js';
 import useWindowWidth from '@/hooks/useWindowWidth';
+import { format } from 'date-fns';
+import { ru } from 'date-fns/locale';
 
 type Props = {
   isOpen: boolean;
@@ -58,6 +61,15 @@ const RoomInfoModal = ({ isOpen, onClose, onEditOpen, room, user }: Props) => {
           <div className="flex items-center gap-2 text-gray-700">
             <InformationCircleIcon className="w-5 h-5" />
             <span>{data.text}</span>
+          </div>
+          <div className="flex items-center gap-2 text-gray-700">
+            <ClockIcon className="w-5 h-5" />
+            <span>
+              Последняя уборка:{' '}
+              {format(room.last_cleaned_at, 'd MMMM, HH:mm', {
+                locale: ru,
+              })}
+            </span>
           </div>
         </div>
         <div className="mt-6 flex gap-2 justify-end">

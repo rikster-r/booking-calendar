@@ -50,7 +50,7 @@ const BookingsCalendar = ({ rooms, bookings, toggleModal }: Props) => {
                 {room.name.length > maxNameLength && '...'}
               </span>
               <span>
-                <RoomStatusBadge status={room.status} />
+                <RoomStatusBadge room={room} />
               </span>
             </button>
           ))}

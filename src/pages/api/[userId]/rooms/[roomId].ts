@@ -21,21 +21,26 @@ export default async function handler(
 
   if (req.method === 'PUT') {
     const { roomId: room_id } = req.query;
-    const { name, color, status } = req.body;
+    const { name, color, status, last_cleaned_at } = req.body;
+    console.log({
+      ...(name && { name }),
+      ...(color && { color }),
+      ...(status && { status }),
+      ...(last_cleaned_at && { last_cleaned_at }),
+    });
 
     if (!room_id) {
       return res.status(400).json({ error: 'Некорректный айди' });
     }
 
-    if (!name || !color || !status) {
-      return res
-        .status(400)
-        .json({ error: 'Не все обязательные поля заполнены' });
-    }
-
     const { data, error } = await supabase
       .from('rooms')
-      .update({ name, color, status })
+      .update({
+        ...(name && { name }),
+        ...(color && { color }),
+        ...(status && { status }),
+        ...(last_cleaned_at && { last_cleaned_at }),
+      })
       .eq('id', room_id)
       .select();
 
