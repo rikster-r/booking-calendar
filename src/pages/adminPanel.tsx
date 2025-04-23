@@ -52,15 +52,15 @@ export const getServerSideProps: GetServerSideProps = async (
 
 type Props = {
   user: User;
-  initilalUsers: User[];
+  initialUsers: User[];
 };
 
-const AdminPanel = ({ user, initilalUsers }: Props) => {
+const AdminPanel = ({ user, initialUsers }: Props) => {
   const {
     data: users,
     mutate: mutateUsers,
     isLoading,
-  } = useSWR<User[]>(`/api/users`, fetcher, { fallbackData: initilalUsers });
+  } = useSWR<User[]>(`/api/users`, fetcher, { fallbackData: initialUsers });
   const [selectedUsers, setSelectedUsers] = useState<User[]>([]);
   const [deleteHovered, setDeleteHovered] = useState(false);
   const [addUserModalOpen, setAddUserModalOpen] = useState(false);
@@ -263,13 +263,6 @@ const AdminPanel = ({ user, initilalUsers }: Props) => {
     // Optimistic update: change the role locally before sending the request
     mutateUsers(
       (currentData) => {
-        console.log(
-          (currentData ?? []).map((user) =>
-            user.id === userId
-              ? { ...user, user_metadata: { ...user.user_metadata, role } }
-              : user
-          )
-        );
         return (currentData ?? []).map((user) =>
           user.id === userId
             ? { ...user, user_metadata: { ...user.user_metadata, role } }

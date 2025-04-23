@@ -15,7 +15,14 @@ export default async function handler(
 
     const { data, error } = await supabase
       .from('rooms')
-      .select('*')
+      .select(
+        `*, last_cleaned_user:users!last_cleaned_by (
+        id,
+        first_name,
+        last_name,
+        email
+      )`
+      )
       .eq('user_id', user_id)
       .order('created_at', { ascending: true });
 

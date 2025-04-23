@@ -21,13 +21,7 @@ export default async function handler(
 
   if (req.method === 'PUT') {
     const { roomId: room_id } = req.query;
-    const { name, color, status, last_cleaned_at } = req.body;
-    console.log({
-      ...(name && { name }),
-      ...(color && { color }),
-      ...(status && { status }),
-      ...(last_cleaned_at && { last_cleaned_at }),
-    });
+    const { name, color, status, last_cleaned_at, last_cleaned_by } = req.body;
 
     if (!room_id) {
       return res.status(400).json({ error: 'Некорректный айди' });
@@ -40,6 +34,7 @@ export default async function handler(
         ...(color && { color }),
         ...(status && { status }),
         ...(last_cleaned_at && { last_cleaned_at }),
+        ...(last_cleaned_by && { last_cleaned_by }),
       })
       .eq('id', room_id)
       .select();

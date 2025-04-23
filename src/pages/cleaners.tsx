@@ -10,6 +10,8 @@ import { toast } from 'react-toastify';
 import { UserCircleIcon, LinkSlashIcon } from '@heroicons/react/24/outline';
 import { OnlineUsersContext } from '@/context/OnlineUsersContext';
 import { useContext, useState } from 'react';
+import { format } from 'date-fns';
+import { ru } from 'date-fns/locale';
 
 export const getServerSideProps: GetServerSideProps = async (
   context: GetServerSidePropsContext
@@ -21,32 +23,45 @@ export const getServerSideProps: GetServerSideProps = async (
     return { redirect: { destination: '/login', permanent: false } };
   }
 
-  const cleanersRes = await fetch(
-    `${process.env.NEXT_PUBLIC_URL}/api/users/${userRes.data.user.id}/cleaners`
-  );
+  const [cleanersRes, roomsRes] = await Promise.all([
+    fetch(
+      `${process.env.NEXT_PUBLIC_URL}/api/users/${userRes.data.user.id}/cleaners`
+    ),
+    fetch(`${process.env.NEXT_PUBLIC_URL}/api/${userRes.data.user.id}/rooms`),
+  ]);
 
   if (cleanersRes.ok) {
+    const [initialCleaners, initialRooms] = await Promise.all([
+      cleanersRes.json(),
+      roomsRes.json(),
+    ]);
     return {
-      props: { user: userRes.data.user, cleaners: await cleanersRes.json() },
+      props: { user: userRes.data.user, initialCleaners, initialRooms },
     };
   } else {
-    return { props: { user: userRes.data.user, cleaners: [] } };
+    return { props: { user: userRes.data.user } };
   }
 };
 
 type Props = {
   user: User;
-  initialCleaners: PublicUser[];
+  initialCleaners?: PublicUser[];
+  initialRooms?: Room[];
 };
 
-const Cleaners = ({ user, initialCleaners }: Props) => {
+const Cleaners = ({ user, initialCleaners, initialRooms }: Props) => {
   const { data: cleaners, mutate: mutateCleaners } = useSWR<PublicUser[]>(
     `/api/users/${user.id}/cleaners`,
     fetcher,
     { fallbackData: initialCleaners }
   );
+  const { data: rooms } = useSWR<Room[]>(`/api/${user.id}/rooms`, fetcher, {
+    fallbackData: initialRooms,
+  });
   const [selectedCleaners, setSelectedCleaners] = useState<PublicUser[]>([]);
   const onlineUserIds = useContext(OnlineUsersContext);
+
+  if (!cleaners || !rooms) return <></>;
 
   const addCleaner = async (email: string) => {
     const res = await fetch(`/api/users/${user.id}/cleaners`, {
@@ -72,12 +87,26 @@ const Cleaners = ({ user, initialCleaners }: Props) => {
     if (res.ok) {
       mutateCleaners();
     } else {
-      console.log(await res.json());
       toast.error('Не удалось удалить уборщика');
     }
   };
 
-  if (!cleaners) return <></>;
+  function getLastCleanedDateByUser(userId: string): string | null {
+    let latestDate: string | null = null;
+
+    for (const room of rooms ?? []) {
+      if (room.last_cleaned_user?.id === userId && room.last_cleaned_at) {
+        if (
+          !latestDate ||
+          new Date(room.last_cleaned_at) > new Date(latestDate)
+        ) {
+          latestDate = room.last_cleaned_at;
+        }
+      }
+    }
+
+    return latestDate;
+  }
 
   return (
     <>
@@ -106,7 +135,7 @@ const Cleaners = ({ user, initialCleaners }: Props) => {
             {cleaners.length > 0 && (
               <div className="overflow-auto rounded-lg text-xs lg:text-sm h-full mt-4">
                 <table className="min-w-full text-left text-nowrap">
-                  <thead className="bg-gray-50 text-gray-700">
+                  <thead className="bg-gray-50 text-gray-700 text-left">
                     <tr className="uppercase">
                       <th className="px-4 py-3">
                         <input
@@ -116,7 +145,9 @@ const Cleaners = ({ user, initialCleaners }: Props) => {
                       </th>
                       <th className="px-4 py-4">Уборщик</th>
                       <th className="px-4 py-4">Статус</th>
-                      <th className="px-4 py-4">Последняя уборка</th>
+                      <th className="px-4 py-4 text-center">
+                        Последняя уборка
+                      </th>
                       <th></th>
                     </tr>
                   </thead>
@@ -131,7 +162,7 @@ const Cleaners = ({ user, initialCleaners }: Props) => {
                             // onChange={() => toggleSelectedUser(user)}
                           />
                         </td>
-                        <td className="px-4 py-3 flex items-center gap-2">
+                        <td className="px-4 py-3 flex items-center gap-2 ">
                           <div className="flex items-center gap-2">
                             {/* todo */}
                             <div>
@@ -160,7 +191,18 @@ const Cleaners = ({ user, initialCleaners }: Props) => {
                             </span>
                           )}
                         </td>
-                        <td>{/* todo */}</td>
+                        <td className="px-4 py-3 text-center">
+                          {(() => {
+                            const lastCleaned = getLastCleanedDateByUser(
+                              cleaner.id
+                            );
+                            return lastCleaned
+                              ? format(lastCleaned, 'd MMMM, HH:mm', {
+                                  locale: ru,
+                                })
+                              : '-';
+                          })()}
+                        </td>
                         <td>
                           <button
                             className="hover:cursor-pointer hover:text-red-500 min-w-9 lg:min-w-10 min-h-9 lg:min-h-10 flex justify-center items-center"

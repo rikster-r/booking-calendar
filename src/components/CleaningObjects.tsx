@@ -16,14 +16,6 @@ type Props = {
 
 const CleaningObjects = ({ rooms, mutateRooms, user }: Props) => {
   const changeRoomStatus = async (roomId: number, status: string) => {
-    const body: { status: string; last_cleaned_at?: string } = { status };
-
-    if (status === 'cleaning') {
-      body.last_cleaned_at = new Date().toISOString();
-    } else {
-      delete body.last_cleaned_at;
-    }
-
     // Optimistic update
     mutateRooms((currentRooms) => {
       if (!currentRooms) return currentRooms;
@@ -36,10 +28,28 @@ const CleaningObjects = ({ rooms, mutateRooms, user }: Props) => {
                 status === 'cleaning'
                   ? new Date().toISOString()
                   : room.last_cleaned_at,
+              last_cleaned_by:
+                status === 'cleaning' ? user.id : room.last_cleaned_by,
             }
           : room
       );
     }, false);
+
+    const body: {
+      status: string;
+      last_cleaned_at?: string;
+      last_cleaned_by?: string;
+    } = {
+      status,
+    };
+
+    if (status === 'cleaning') {
+      body.last_cleaned_at = new Date().toISOString();
+      body.last_cleaned_by = user.id; // Using the user's ID to identify who cleaned
+    } else {
+      delete body.last_cleaned_at;
+      delete body.last_cleaned_by;
+    }
 
     const res = await fetch(
       `/api/${user.user_metadata.related_to}/rooms/${roomId}`,
@@ -54,7 +64,6 @@ const CleaningObjects = ({ rooms, mutateRooms, user }: Props) => {
 
     if (!res.ok) {
       toast.error('Не удалось изменить статус комнаты');
-      // Revert optimistic update if the request fails
     }
 
     mutateRooms();

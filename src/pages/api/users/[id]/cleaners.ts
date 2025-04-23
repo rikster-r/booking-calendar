@@ -59,7 +59,6 @@ export default async function handler(
       cleaner.id,
       { user_metadata: { related_to: userId } }
     );
-    console.log(updateError);
     if (updateError) {
       return res.status(500).json({
         error: 'Ошибка при обновлении данных',

@@ -4,7 +4,14 @@ type Room = {
   status: 'not ready' | 'ready' | 'cleaning';
   color: string;
   created_at: string;
-  last_cleaned_at: string;
+  last_cleaned_at: string | null;
+  last_cleaned_by: string | null;
+  last_cleaned_user?: {
+    id: string;
+    email: string;
+    first_name: string;
+    last_name: string;
+  };
 };
 
 type RoomInput = {
