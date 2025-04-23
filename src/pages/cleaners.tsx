@@ -9,7 +9,7 @@ import useSWR from 'swr';
 import { toast } from 'react-toastify';
 import { UserCircleIcon, LinkSlashIcon } from '@heroicons/react/24/outline';
 import { OnlineUsersContext } from '@/context/OnlineUsersContext';
-import { useContext, useState } from 'react';
+import { useContext } from 'react';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
 
@@ -58,7 +58,6 @@ const Cleaners = ({ user, initialCleaners, initialRooms }: Props) => {
   const { data: rooms } = useSWR<Room[]>(`/api/${user.id}/rooms`, fetcher, {
     fallbackData: initialRooms,
   });
-  const [selectedCleaners, setSelectedCleaners] = useState<PublicUser[]>([]);
   const onlineUserIds = useContext(OnlineUsersContext);
 
   if (!cleaners || !rooms) return <></>;
@@ -137,13 +136,7 @@ const Cleaners = ({ user, initialCleaners, initialRooms }: Props) => {
                 <table className="min-w-full text-left text-nowrap">
                   <thead className="bg-gray-50 text-gray-700 text-left">
                     <tr className="uppercase">
-                      <th className="px-4 py-3">
-                        <input
-                          type="checkbox"
-                          checked={selectedCleaners.length === cleaners.length}
-                        />
-                      </th>
-                      <th className="px-4 py-4">Уборщик</th>
+                      <th className="pr-4 pl-8 py-4">Уборщик</th>
                       <th className="px-4 py-4">Статус</th>
                       <th className="px-4 py-4 text-center">
                         Последняя уборка
@@ -155,14 +148,7 @@ const Cleaners = ({ user, initialCleaners, initialRooms }: Props) => {
                     {/* Sample Row */}
                     {cleaners.map((cleaner) => (
                       <tr key={cleaner.id} className={`relative w-full`}>
-                        <td className="px-4 py-3">
-                          <input
-                            type="checkbox"
-                            checked={selectedCleaners.includes(cleaner)}
-                            // onChange={() => toggleSelectedUser(user)}
-                          />
-                        </td>
-                        <td className="px-4 py-3 flex items-center gap-2 ">
+                        <td className="pl-8 pr-4 py-3 flex items-center gap-2 ">
                           <div className="flex items-center gap-2">
                             {/* todo */}
                             <div>
