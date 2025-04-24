@@ -34,8 +34,17 @@ export default async function handler(
   }
 
   if (req.method === 'PUT') {
-    const { email, first_name, last_name, password, role, related_to } =
-      req.body;
+    const {
+      email,
+      first_name,
+      last_name,
+      password,
+      role,
+      related_to,
+      preferred_date_format,
+      preferred_time_format,
+      confirmItemDelete,
+    } = req.body;
     const { id: userId } = req.query;
 
     const {
@@ -93,12 +102,20 @@ export default async function handler(
         {
           ...(email && { email }),
           ...(password && { password }),
-          ...(first_name || last_name || related_to !== undefined
+          ...(first_name ||
+          last_name ||
+          related_to !== undefined ||
+          preferred_date_format ||
+          preferred_time_format ||
+          confirmItemDelete !== undefined
             ? {
                 user_metadata: {
                   ...(first_name && { first_name }),
                   ...(last_name && { last_name }),
                   ...(related_to !== undefined && { related_to }),
+                  ...(preferred_date_format && { preferred_date_format }),
+                  ...(preferred_time_format && { preferred_time_format }),
+                  ...(confirmItemDelete !== undefined && { confirmItemDelete }),
                 },
               }
             : {}),
@@ -113,6 +130,9 @@ export default async function handler(
           ...(first_name && { first_name }),
           ...(last_name && { last_name }),
           ...(related_to !== undefined && { related_to }),
+          ...(preferred_date_format && { preferred_date_format }),
+          ...(preferred_time_format && { preferred_time_format }),
+          ...(confirmItemDelete !== undefined && { confirmItemDelete }),
         })
         .eq('id', userId);
 

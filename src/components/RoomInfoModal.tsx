@@ -68,9 +68,16 @@ const RoomInfoModal = ({ isOpen, onClose, onEditOpen, room, user }: Props) => {
                 <ClockIcon className="w-5 h-5" />
                 <span>
                   Последняя уборка:{' '}
-                  {format(room.last_cleaned_at, 'd MMMM, HH:mm', {
-                    locale: ru,
-                  })}
+                  {format(
+                    room.last_cleaned_at,
+                    user.user_metadata.preferred_date_format ?? 'd MMMM',
+                    { locale: ru }
+                  )}
+                  ,{' '}
+                  {format(
+                    room.last_cleaned_at,
+                    user.user_metadata.preferred_time_format ?? 'HH:mm'
+                  )}
                 </span>
               </div>
               <div className="flex items-center gap-2 text-gray-700">

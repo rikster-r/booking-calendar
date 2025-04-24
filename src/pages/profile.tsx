@@ -8,6 +8,8 @@ import { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { createClient as createComponentClient } from '@/lib/supabase/component';
 import { useRouter } from 'next/router';
+import { dateFormats, timeFormats } from '@/lib/dates';
+import FormatDropdown from '@/components/FormatDropdown';
 
 export const getServerSideProps: GetServerSideProps = async (
   context: GetServerSidePropsContext
@@ -288,20 +290,20 @@ const Profile = ({ user: initialUser }: Props) => {
                   </p>
                 </div>
 
-                <div className="flex items-center justify-between py-4">
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-500">
-                      Формат даты
-                      {/* todo */}
-                    </h3>
-                    <p className="mt-1 text-sm text-gray-900">DD-MM-YYYY</p>
-                  </div>
-                  <button className="text-sm font-medium text-blue-600 hover:text-blue-500 hover:cursor-pointer">
-                    Изменить
-                  </button>
-                </div>
+                <FormatDropdown
+                  userId={user.id}
+                  type="date"
+                  formats={dateFormats}
+                  initialFormat={user.user_metadata.preferred_date_format}
+                />
+                <FormatDropdown
+                  userId={user.id}
+                  type="time"
+                  formats={timeFormats}
+                  initialFormat={user.user_metadata.preferred_time_format}
+                />
 
-                <div className="flex items-center justify-between py-4">
+                <div className="flex items-center justify-between py-4 border-t border-gray-200">
                   <div>
                     <h3 className="text-sm font-medium text-gray-900">
                       Спрашивать подтверждение удаления

@@ -183,9 +183,16 @@ const Cleaners = ({ user, initialCleaners, initialRooms }: Props) => {
                               cleaner.id
                             );
                             return lastCleaned
-                              ? format(lastCleaned, 'd MMMM, HH:mm', {
-                                  locale: ru,
-                                })
+                              ? `${format(
+                                  lastCleaned,
+                                  user.user_metadata.preferred_date_format ??
+                                    'd MMMM yyyy',
+                                  { locale: ru }
+                                )}, ${format(
+                                  lastCleaned,
+                                  user.user_metadata.preferred_time_format ??
+                                    'HH:mm'
+                                )}`
                               : '-';
                           })()}
                         </td>

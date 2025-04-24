@@ -87,6 +87,9 @@ export default async function handler(
         last_name,
         role,
         related_to: null,
+        preferred_date_format: 'd MMMM yyyy',
+        preferred_time_format: 'HH:mm',
+        confirmItemDelete: true,
       },
       email_confirm: true,
     });

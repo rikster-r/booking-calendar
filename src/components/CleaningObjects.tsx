@@ -120,9 +120,11 @@ const CleaningObjects = ({ rooms, mutateRooms, user }: Props) => {
                   <p className="text-sm text-gray-100 flex flex-col sm:flex-row">
                     <span>Последняя уборка:</span>
                     <span>
-                      {format(room.last_cleaned_at, 'd MMMM, HH:mm', {
-                        locale: ru,
-                      })}
+                      {format(room.last_cleaned_at, 'd MMMM', { locale: ru })},{' '}
+                      {format(
+                        room.last_cleaned_at,
+                        user.user_metadata.preferred_time_format ?? 'HH:mm'
+                      )}
                     </span>
                   </p>
                 )}

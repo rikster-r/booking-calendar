@@ -52,7 +52,7 @@ const BookingInfoModal = ({
   const telegramLink = `https://t.me/${phone.replace(/\D/g, '')}`;
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} className="max-w-md">
+    <Modal isOpen={isOpen} onClose={onClose} className="max-w-[500px]">
       <div className="bg-white p-6 sm:p-7 text-sm sm:text-base">
         <div className="flex items-center mb-4 gap-2 ">
           <div
@@ -115,11 +115,29 @@ const BookingInfoModal = ({
             <div className="flex flex-col gap-1">
               <div className="flex flex-col gap-1 sm:flex-row">
                 <span>
-                  {format(checkIn, 'd MMMM yyyy, HH:mm', { locale: ru })}
+                  {format(
+                    checkIn,
+                    user.user_metadata.preferred_date_format ?? 'd MMMM yyyy',
+                    { locale: ru }
+                  )}
+                  ,{' '}
+                  {format(
+                    checkIn,
+                    user.user_metadata.preferred_time_format ?? 'HH:mm'
+                  )}
                 </span>
                 <span className="sm:block hidden"> - </span>
                 <span>
-                  {format(checkOut, 'd MMMM yyyy, HH:mm', { locale: ru })}
+                  {format(
+                    checkOut,
+                    user.user_metadata.preferred_date_format ?? 'd MMMM yyyy',
+                    { locale: ru }
+                  )}
+                  ,{' '}
+                  {format(
+                    checkOut,
+                    user.user_metadata.preferred_time_format ?? 'HH:mm'
+                  )}
                 </span>
               </div>
               <span>

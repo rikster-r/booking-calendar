@@ -445,13 +445,16 @@ const AdminPanel = ({ user, initialUsers }: Props) => {
                         </td>
                         <td className="px-4 py-3">
                           {user.last_sign_in_at
-                            ? format(
+                            ? `${format(
                                 user.last_sign_in_at,
-                                'd MMMM yyyy, HH:mm',
-                                {
-                                  locale: ru,
-                                }
-                              )
+                                user.user_metadata.preferred_date_format ??
+                                  'd MMMM yyyy',
+                                { locale: ru }
+                              )}, ${format(
+                                user.last_sign_in_at,
+                                user.user_metadata.preferred_time_format ??
+                                  'HH:mm'
+                              )}`
                             : '-'}
                         </td>
                       </tr>
