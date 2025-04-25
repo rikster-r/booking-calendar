@@ -11,7 +11,7 @@ export default async function handler(
     const { tokenId } = req.query;
 
     if (!tokenId || typeof tokenId !== 'string') {
-      return res.status(400).json({ error: 'Invalid tokenId' });
+      return res.status(400).json({ error: 'Некорректный токен' });
     }
 
     const { error } = await supabase
@@ -23,6 +23,6 @@ export default async function handler(
       return res.status(500).json({ error: error.message });
     }
 
-    return res.status(200).json({ message: 'Token deleted successfully' });
+    return res.status(200).json({ message: 'Интеграция успешно удалена' });
   }
 }

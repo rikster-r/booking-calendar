@@ -333,7 +333,7 @@ const Profile = ({
               />
             )}
 
-            {avitoTokenData && (
+            {avitoTokenData && Object.keys(avitoTokenData).length !== 0 && (
               <RoomsLinks user={user} rooms={rooms} mutateRooms={mutateRooms} />
             )}
 

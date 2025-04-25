@@ -93,7 +93,7 @@ const AvitoIntegration = ({ tokenData, isLoading, mutateTokenData }: Props) => {
       </div>
     );
 
-  return tokenData ? (
+  return tokenData && Object.keys(tokenData).length !== 0 ? (
     <div className="mt-10 py-4">
       <h2 className="font-medium text-gray-900 mb-1">Интеграция</h2>
       <p className="text-sm text-gray-600">
