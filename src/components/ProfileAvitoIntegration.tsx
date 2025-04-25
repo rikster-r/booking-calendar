@@ -40,7 +40,7 @@ const AvitoIntegration = ({ tokenData, isLoading, mutateTokenData }: Props) => {
     const state = generateStateToken();
 
     openCenteredPopup(
-      `https://avito.ru/oauth?response_type=code&client_id=${process.env.NEXT_PUBLIC_AVITO_CLIENT_ID}&scope=short_term_rent:read,short_term_rent:write,user:read&state=${state}`,
+      `https://avito.ru/oauth?response_type=code&client_id=${process.env.NEXT_PUBLIC_AVITO_CLIENT_ID}&scope=short_term_rent:read,short_term_rent:write,user:read,items:info&state=${state}`,
       600,
       600
     );
