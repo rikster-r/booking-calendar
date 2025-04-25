@@ -12,6 +12,7 @@ import FormatDropdown from '@/components/FormatDropdown';
 import AvitoIntegration from '@/components/ProfileAvitoIntegration';
 import useSWR from 'swr';
 import { fetcher } from '@/lib/fetcher';
+import RoomsLinks from '@/components/RoomsLinks';
 
 export const getServerSideProps: GetServerSideProps = async (
   context: GetServerSidePropsContext
@@ -23,18 +24,30 @@ export const getServerSideProps: GetServerSideProps = async (
     return { redirect: { destination: '/login', permanent: false } };
   }
 
-  const avitoTokenRes = await fetch(
-    `${process.env.NEXT_PUBLIC_URL}/api/avito/accessToken`
-  );
+  const [avitoTokenRes, roomsRes] = await Promise.all([
+    fetch(`${process.env.NEXT_PUBLIC_URL}/api/avito/accessToken`),
+    fetch(
+      `${process.env.NEXT_PUBLIC_URL}/api/${userRes.data.user.id}/rooms?withAvitoLink=true`
+    ),
+  ]);
 
-  if (!avitoTokenRes.ok) {
-    return { props: { user: userRes.data.user, avitoTokenData: [] } };
+  if (!avitoTokenRes.ok || !roomsRes.ok) {
+    return {
+      props: {
+        user: userRes.data.user,
+        initialAvitoTokenData: {},
+        initialRooms: [],
+      },
+    };
   }
+
+  const rooms: Room[] = await roomsRes.json();
 
   return {
     props: {
       user: userRes.data.user,
-      avitoTokenData: await avitoTokenRes.json(),
+      initialAvitoTokenData: await avitoTokenRes.json(),
+      initialRooms: rooms.filter((room) => room.avito_link !== undefined),
     },
   };
 };
@@ -42,9 +55,14 @@ export const getServerSideProps: GetServerSideProps = async (
 type Props = {
   user: User;
   initialAvitoTokenData: AvitoTokenData;
+  initialRooms: Room[];
 };
 
-const Profile = ({ user: initialUser, initialAvitoTokenData }: Props) => {
+const Profile = ({
+  user: initialUser,
+  initialAvitoTokenData,
+  initialRooms,
+}: Props) => {
   const {
     data: avitoTokenData,
     isLoading: isTokenLoading,
@@ -52,6 +70,13 @@ const Profile = ({ user: initialUser, initialAvitoTokenData }: Props) => {
   } = useSWR<AvitoTokenData>(`/api/avito/accessToken`, fetcher, {
     fallbackData: initialAvitoTokenData,
   });
+  const { data: rooms, mutate: mutateRooms } = useSWR<Room[]>(
+    `/api/${initialUser.id}/rooms?withAvitoLink=true`,
+    fetcher,
+    {
+      fallbackData: initialRooms,
+    }
+  );
 
   const [activeField, setActiveField] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -306,6 +331,10 @@ const Profile = ({ user: initialUser, initialAvitoTokenData }: Props) => {
                 isLoading={isTokenLoading}
                 mutateTokenData={mutateAvitoTokenData}
               />
+            )}
+
+            {avitoTokenData && (
+              <RoomsLinks user={user} rooms={rooms} mutateRooms={mutateRooms} />
             )}
 
             {/* Preferences Section */}

@@ -12,6 +12,8 @@ type Room = {
     first_name: string;
     last_name: string;
   };
+  avito_link: string | null;
+  avito_id: string | null;
 };
 
 type RoomInput = {
@@ -79,4 +81,18 @@ type AvitoTokenData = {
   refresh_token: string;
   token_type: string;
   created_at: string;
+  avito_user_id: string;
+};
+
+type AvitoListing = {
+  address: string;
+  category: {
+    id: number;
+    name: string;
+  };
+  id: number;
+  price: number;
+  status: string;
+  title: string;
+  url: string;
 };
