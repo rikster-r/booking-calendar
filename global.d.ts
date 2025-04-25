@@ -69,3 +69,14 @@ type PublicUser = {
   related_to: string | null;
   updated_at: string;
 };
+
+type AvitoTokenData = {
+  id: number;
+  user_id: string;
+  access_token: string;
+  expires_in: number;
+  scope: string;
+  refresh_token: string;
+  token_type: string;
+  created_at: string;
+};

@@ -26,6 +26,15 @@ const dateRange = get30DayRange();
 export const getServerSideProps: GetServerSideProps = async (
   context: GetServerSidePropsContext
 ) => {
+  // this is to prevent supabase from treating avito code as its own supabase auth flow code
+  if (context.query.code)
+    return {
+      redirect: {
+        destination: `/avitoCallback?avitoCode=${context.query.code}&avitoState=${context.query.state}`,
+        permanent: false,
+      },
+    };
+
   const supabase = createClient(context);
 
   const userRes = await supabase.auth.getUser();

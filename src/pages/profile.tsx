@@ -2,7 +2,6 @@ import Layout from '@/components/Layout';
 import { createClient } from '@/lib/supabase/server-props';
 import { User } from '@supabase/supabase-js';
 import { GetServerSideProps, GetServerSidePropsContext } from 'next';
-import { LinkIcon } from '@heroicons/react/24/outline';
 import Head from 'next/head';
 import { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
@@ -10,6 +9,9 @@ import { createClient as createComponentClient } from '@/lib/supabase/component'
 import { useRouter } from 'next/router';
 import { dateFormats, timeFormats } from '@/lib/dates';
 import FormatDropdown from '@/components/FormatDropdown';
+import AvitoIntegration from '@/components/ProfileAvitoIntegration';
+import useSWR from 'swr';
+import { fetcher } from '@/lib/fetcher';
 
 export const getServerSideProps: GetServerSideProps = async (
   context: GetServerSidePropsContext
@@ -21,14 +23,36 @@ export const getServerSideProps: GetServerSideProps = async (
     return { redirect: { destination: '/login', permanent: false } };
   }
 
-  return { props: { user: userRes.data.user } };
+  const avitoTokenRes = await fetch(
+    `${process.env.NEXT_PUBLIC_URL}/api/avito/accessToken`
+  );
+
+  if (!avitoTokenRes.ok) {
+    return { props: { user: userRes.data.user, avitoTokenData: [] } };
+  }
+
+  return {
+    props: {
+      user: userRes.data.user,
+      avitoTokenData: await avitoTokenRes.json(),
+    },
+  };
 };
 
 type Props = {
   user: User;
+  initialAvitoTokenData: AvitoTokenData;
 };
 
-const Profile = ({ user: initialUser }: Props) => {
+const Profile = ({ user: initialUser, initialAvitoTokenData }: Props) => {
+  const {
+    data: avitoTokenData,
+    isLoading: isTokenLoading,
+    mutate: mutateAvitoTokenData,
+  } = useSWR<AvitoTokenData>(`/api/avito/accessToken`, fetcher, {
+    fallbackData: initialAvitoTokenData,
+  });
+
   const [activeField, setActiveField] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [user, setUser] = useState<User>(initialUser);
@@ -39,6 +63,18 @@ const Profile = ({ user: initialUser }: Props) => {
   useEffect(() => {
     if (code) setActiveField('password');
   }, [code]);
+
+  useEffect(() => {
+    if (router.query.error === 'expired') {
+      toast.error('Срок действия ссылки истёк. Пожалуйста, запросите новую.');
+    }
+
+    if (router.query.error === 'token') {
+      toast.error(
+        'Не удалось добавить интеграцию. Пожалуйста, попробуйте ещё раз.'
+      );
+    }
+  }, []);
 
   const handleMetadataSave = async (field: string, value: string) => {
     setActiveField(null);
@@ -265,17 +301,11 @@ const Profile = ({ user: initialUser }: Props) => {
 
             {/* Integrations Section */}
             {user.user_metadata.role !== 'cleaner' && (
-              <div className="mt-10">
-                <h2 className="font-medium text-gray-900 mb-1">Интеграция</h2>
-                <p className="text-sm text-gray-600">
-                  Соединение аккаунта авито с системой.
-                </p>
-
-                <button className="mt-4 flex items-center text-sm font-medium text-blue-600 hover:text-blue-500 hover:cursor-pointer ">
-                  <LinkIcon className="w-4 h-4 mr-1" />
-                  Соединить
-                </button>
-              </div>
+              <AvitoIntegration
+                tokenData={avitoTokenData}
+                isLoading={isTokenLoading}
+                mutateTokenData={mutateAvitoTokenData}
+              />
             )}
 
             {/* Preferences Section */}
@@ -411,7 +441,7 @@ const EditableRow = ({
                     fill="currentFill"
                   />
                 </svg>
-                <span className="sr-only">Loading...</span>
+                <span className="sr-only">Загрузка...</span>
               </div>
             )}
           </div>
