@@ -39,11 +39,26 @@ export default async function handler(
       return res.status(avitoRes.status).json({ error: data });
     }
 
+    const avitoUserRes = await fetch(
+      'https://api.avito.ru/core/v1/accounts/self',
+      {
+        headers: {
+          Authorization: `Bearer ${data.access_token}`,
+        },
+      }
+    );
+
+    if (!avitoUserRes.ok)
+      return res.status(500).json({ error: 'Не удалось добавить интеграцию.' });
+
+    const userData = await avitoUserRes.json();
+
     const { data: accessTokenData, error } = await supabase
       .from('avito_access_tokens')
       .insert([
         {
           user_id: userId,
+          avito_user_id: userData.id,
           access_token: encrypt(data.access_token),
           expires_in: data.expires_in,
           scope: data.scope,
