@@ -27,7 +27,7 @@ export const getServerSideProps: GetServerSideProps = async (
   const [avitoTokenRes, roomsRes] = await Promise.all([
     fetch(`${process.env.NEXT_PUBLIC_URL}/api/avito/accessToken`),
     fetch(
-      `${process.env.NEXT_PUBLIC_URL}/api/${userRes.data.user.id}/rooms?withAvitoLink=true`
+      `${process.env.NEXT_PUBLIC_URL}/api/users/${userRes.data.user.id}/rooms?withAvitoLink=true`
     ),
   ]);
 
@@ -71,7 +71,7 @@ const Profile = ({
     fallbackData: initialAvitoTokenData,
   });
   const { data: rooms, mutate: mutateRooms } = useSWR<Room[]>(
-    `/api/${initialUser.id}/rooms?withAvitoLink=true`,
+    `/api/users/${initialUser.id}/rooms?withAvitoLink=true`,
     fetcher,
     {
       fallbackData: initialRooms,

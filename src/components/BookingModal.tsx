@@ -99,8 +99,8 @@ const BookingModal = ({ isOpen, onClose, rooms, bookingData, user }: Props) => {
   const saveBooking = async (data: BookingInput) => {
     const method = hasId(bookingData) ? 'PUT' : 'POST';
     const url = hasId(bookingData)
-      ? `/api/${user.id}/bookings/${bookingData.id}`
-      : `/api/${user.id}/bookings`;
+      ? `/api/users/${user.id}/bookings/${bookingData.id}`
+      : `/api/users/${user.id}/bookings`;
 
     const res = await fetch(url, {
       method,
@@ -144,7 +144,7 @@ const BookingModal = ({ isOpen, onClose, rooms, bookingData, user }: Props) => {
 
   const isTimeSlotFree = async (checkIn: Date, checkOut: Date) => {
     try {
-      const res = await fetch(`/api/${user.id}/bookings/validateTimeslot`, {
+      const res = await fetch(`/api/users/${user.id}/bookings/validateTimeslot`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -342,7 +342,7 @@ const BookingModal = ({ isOpen, onClose, rooms, bookingData, user }: Props) => {
             type="text"
             name="doorCode"
             id="doorCode"
-            value={formData.doorCode}
+            value={formData.doorCode ?? ''}
             onChange={handleChange}
             className="flex items-center w-full border rounded-md px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500 h-[40px] border-gray-500 mt-1"
             required

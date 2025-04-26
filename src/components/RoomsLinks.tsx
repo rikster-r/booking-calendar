@@ -19,7 +19,7 @@ const RoomsLinks = ({ user, rooms, mutateRooms }: Props) => {
   const [inputLink, setInputLink] = useState('');
 
   const addRoomByLink = async (link: string) => {
-    const res = await fetch(`/api/${user.id}/rooms`, {
+    const res = await fetch(`/api/users/${user.id}/rooms`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ avitoLink: link }),
@@ -27,13 +27,14 @@ const RoomsLinks = ({ user, rooms, mutateRooms }: Props) => {
 
     if (res.ok) {
       mutateRooms();
+      setInputLink('');
     } else {
       toast.error('Не удалось добавить помещение. Попробуйте еще раз.');
     }
   };
 
   const deleteRoom = async (roomId: number) => {
-    const res = await fetch(`/api/${user.id}/rooms/${roomId}`, {
+    const res = await fetch(`/api/users/${user.id}/rooms/${roomId}`, {
       method: 'DELETE',
     });
 

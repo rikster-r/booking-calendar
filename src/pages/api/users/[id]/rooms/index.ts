@@ -10,7 +10,7 @@ export default async function handler(
 ) {
   const supabase = createClient(req, res);
   if (req.method === 'GET') {
-    const { userId: user_id, withAvitoLink } = req.query;
+    const { id: user_id, withAvitoLink } = req.query;
 
     if (!user_id) {
       return res.status(400).json({ error: 'Некорректный ID пользователя' });
@@ -40,7 +40,7 @@ export default async function handler(
   }
 
   if (req.method === 'POST') {
-    const { userId: user_id } = req.query;
+    const { id: user_id } = req.query;
     const { name, color, status, avitoLink } = req.body;
 
     const {

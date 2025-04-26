@@ -8,7 +8,7 @@ export default async function handler(
   const supabase = createClient(req, res);
   if (req.method === 'POST') {
     const { id, room_id, check_in, check_out } = req.body;
-    const { userId: user_id } = req.query;
+    const { id: user_id } = req.query;
     if (!user_id) {
       return res.status(400).json({ error: 'Некорректный ID пользователя' });
     }

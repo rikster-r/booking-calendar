@@ -47,9 +47,9 @@ export const getServerSideProps: GetServerSideProps = async (
     userRes.data.user.user_metadata.related_to ?? userRes.data.user.id;
 
   const [roomsRes, bookingsRes] = await Promise.all([
-    fetch(`${process.env.NEXT_PUBLIC_URL}/api/${roomsOwner}/rooms`),
+    fetch(`${process.env.NEXT_PUBLIC_URL}/api/users/${roomsOwner}/rooms`),
     fetch(
-      `${process.env.NEXT_PUBLIC_URL}/api/${userRes.data.user.id}/bookings/?start=${dateRange.start}&end=${dateRange.end}`
+      `${process.env.NEXT_PUBLIC_URL}/api/users/${userRes.data.user.id}/bookings/?start=${dateRange.start}&end=${dateRange.end}`
     ),
   ]);
 
@@ -68,12 +68,12 @@ type Props = {
 export default function Home({ initialRooms, initialBookings, user }: Props) {
   const roomsOwner = user.user_metadata.related_to ?? user.id;
   const { data: rooms, mutate: mutateRooms } = useSWR<Room[]>(
-    `/api/${roomsOwner}/rooms`,
+    `/api/users/${roomsOwner}/rooms`,
     fetcher,
     { fallbackData: initialRooms }
   );
   const { data: bookings, mutate: mutateBookings } = useSWR<Booking[]>(
-    `/api/${user.id}/bookings/?start=${dateRange.start}&end=${dateRange.end}`,
+    `/api/users/${user.id}/bookings/?start=${dateRange.start}&end=${dateRange.end}`,
     fetcher,
     { fallbackData: initialBookings }
   );

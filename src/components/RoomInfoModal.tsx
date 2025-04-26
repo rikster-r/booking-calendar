@@ -35,7 +35,7 @@ const RoomInfoModal = ({ isOpen, onClose, onEditOpen, room, user }: Props) => {
   const data = statusMap[room.status];
 
   const deleteRoom = async () => {
-    const res = await fetch(`/api/${user.id}/rooms/${room.id}`, {
+    const res = await fetch(`/api/users/${user.id}/rooms/${room.id}`, {
       method: 'DELETE',
     });
 

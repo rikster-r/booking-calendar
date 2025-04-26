@@ -40,7 +40,7 @@ const BookingInfoModal = ({
   const totalPrice = nights * booking.daily_price;
 
   const deleteBooking = async () => {
-    const res = await fetch(`/api/${user.id}/bookings/${booking.id}`, {
+    const res = await fetch(`/api/users/${user.id}/bookings/${booking.id}`, {
       method: 'DELETE',
     });
     if (res.ok) onClose();

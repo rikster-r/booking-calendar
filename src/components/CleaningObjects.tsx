@@ -52,7 +52,7 @@ const CleaningObjects = ({ rooms, mutateRooms, user }: Props) => {
     }
 
     const res = await fetch(
-      `/api/${user.user_metadata.related_to}/rooms/${roomId}`,
+      `/api/users/${user.user_metadata.related_to}/rooms/${roomId}`,
       {
         method: 'PUT',
         headers: {

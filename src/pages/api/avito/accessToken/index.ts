@@ -75,12 +75,14 @@ export default async function handler(
   }
 
   if (req.method === 'GET') {
+    const { user_id } = req.query;
+
     const {
       data: { user },
       error: authError,
     } = await supabase.auth.getUser();
 
-    if (authError || !user) {
+    if (!user_id && (authError || !user)) {
       return res
         .status(401)
         .json({ error: 'Войдите в аккаунт перед запросом' });
@@ -89,7 +91,7 @@ export default async function handler(
     let { data: tokenData, error: tokenError } = await supabase
       .from('avito_access_tokens')
       .select('*')
-      .eq('user_id', user.id)
+      .eq('user_id', user?.id ?? user_id)
       .single();
 
     if (tokenError) return res.status(500).json({ error: tokenError.message });
@@ -138,7 +140,7 @@ export default async function handler(
           token_type: refreshData.token_type,
         },
       ])
-      .eq('user_id', user.id));
+      .eq('user_id', user?.id ?? user_id));
 
     if (tokenError) {
       return res.status(500).json({ error: tokenError.message });

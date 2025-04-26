@@ -27,7 +27,7 @@ export const getServerSideProps: GetServerSideProps = async (
     fetch(
       `${process.env.NEXT_PUBLIC_URL}/api/users/${userRes.data.user.id}/cleaners`
     ),
-    fetch(`${process.env.NEXT_PUBLIC_URL}/api/${userRes.data.user.id}/rooms`),
+    fetch(`${process.env.NEXT_PUBLIC_URL}/api/users/${userRes.data.user.id}/rooms`),
   ]);
 
   if (cleanersRes.ok) {
@@ -55,7 +55,7 @@ const Cleaners = ({ user, initialCleaners, initialRooms }: Props) => {
     fetcher,
     { fallbackData: initialCleaners }
   );
-  const { data: rooms } = useSWR<Room[]>(`/api/${user.id}/rooms`, fetcher, {
+  const { data: rooms } = useSWR<Room[]>(`/api/users/${user.id}/rooms`, fetcher, {
     fallbackData: initialRooms,
   });
   const onlineUserIds = useContext(OnlineUsersContext);

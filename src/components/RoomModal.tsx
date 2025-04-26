@@ -57,8 +57,8 @@ const RoomModal = ({ isOpen, onClose, roomData, user }: Props) => {
   const saveRoom = async (data: RoomInput) => {
     const method = roomData ? 'PUT' : 'POST';
     const url = roomData
-      ? `/api/${user.id}/rooms/${roomData.id}`
-      : `/api/${user.id}/rooms`;
+      ? `/api/users/${user.id}/rooms/${roomData.id}`
+      : `/api/users/${user.id}/rooms`;
 
     const res = await fetch(url, {
       method,
