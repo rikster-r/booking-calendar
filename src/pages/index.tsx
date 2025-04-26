@@ -46,26 +46,45 @@ export const getServerSideProps: GetServerSideProps = async (
   const roomsOwner =
     userRes.data.user.user_metadata.related_to ?? userRes.data.user.id;
 
-  const [roomsRes, bookingsRes] = await Promise.all([
+  const [roomsRes, bookingsRes, tokenRes] = await Promise.all([
     fetch(`${process.env.NEXT_PUBLIC_URL}/api/users/${roomsOwner}/rooms`),
     fetch(
       `${process.env.NEXT_PUBLIC_URL}/api/users/${userRes.data.user.id}/bookings/?start=${dateRange.start}&end=${dateRange.end}`
     ),
+    fetch(
+      `${process.env.NEXT_PUBLIC_URL}/api/avito/accessToken?user_id=${userRes.data.user.id}`
+    ),
   ]);
 
-  const [initialRooms, initialBookings]: [Room[], Booking[]] =
-    await Promise.all([roomsRes.json(), bookingsRes.json()]);
+  const [initialRooms, initialBookings, tokenData]: [
+    Room[],
+    Booking[],
+    AvitoTokenData
+  ] = await Promise.all([roomsRes.json(), bookingsRes.json(), tokenRes.json()]);
 
-  return { props: { initialRooms, initialBookings, user: userRes.data.user } };
+  return {
+    props: {
+      initialRooms,
+      initialBookings,
+      user: userRes.data.user,
+      tokenData: tokenRes.ok ? tokenData : {},
+    },
+  };
 };
 
 type Props = {
   initialRooms: Room[];
   initialBookings: Booking[];
+  tokenData: AvitoTokenData;
   user: User;
 };
 
-export default function Home({ initialRooms, initialBookings, user }: Props) {
+export default function Home({
+  initialRooms,
+  initialBookings,
+  tokenData,
+  user,
+}: Props) {
   const roomsOwner = user.user_metadata.related_to ?? user.id;
   const { data: rooms, mutate: mutateRooms } = useSWR<Room[]>(
     `/api/users/${roomsOwner}/rooms`,
@@ -227,6 +246,7 @@ export default function Home({ initialRooms, initialBookings, user }: Props) {
             }}
             user={user}
             roomData={modalData as Room}
+            avitoIntegrated={Object.keys(tokenData).length !== 0}
           />
         )}
         {modals.bookingInfo && (

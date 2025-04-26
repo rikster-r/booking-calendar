@@ -3,3 +3,9 @@ export function extractAvitoId(url: string) {
   const match = url.match(/_(\d{6,})(?:[/?]|$)/);
   return match ? Number(match[1]) : undefined;
 }
+
+export function validateAvitoUrl(url: string) {
+  const avitoLinkRegex =
+    /^https:\/\/www\.avito\.ru(\/[\w\-._~:\/?#[\]@!$&'()*+,;=]*)?$/;
+  return avitoLinkRegex.test(url);
+}

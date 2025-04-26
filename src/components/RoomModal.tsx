@@ -16,19 +16,22 @@ type Props = {
   onClose: () => void;
   roomData?: Room;
   user: User;
+  avitoIntegrated: boolean;
 };
 
-const RoomModal = ({ isOpen, onClose, roomData, user }: Props) => {
+const RoomModal = ({ isOpen, onClose, roomData, user, avitoIntegrated }: Props) => {
   const initial: RoomInput = roomData
     ? {
         name: roomData.name,
         status: roomData.status,
         color: roomData.color,
+        avitoLink: roomData.avito_link,
       }
     : {
         name: '',
         status: 'ready',
         color: hexColors[5],
+        avitoLink: '',
       };
   const [formData, setFormData] = useState(initial);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -63,7 +66,7 @@ const RoomModal = ({ isOpen, onClose, roomData, user }: Props) => {
     const res = await fetch(url, {
       method,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
+      body: JSON.stringify({ ...data, avito_link: data.avitoLink }),
     });
 
     if (res.ok) {
@@ -120,6 +123,22 @@ const RoomModal = ({ isOpen, onClose, roomData, user }: Props) => {
             required
           />
         </div>
+
+        {avitoIntegrated &&
+          <div className="mt-3">
+            <label htmlFor="avitoLink" className="font-medium text-gray-700">
+              Ссылка на авито
+            </label>
+            <input
+              type="text"
+              id="avitoLink"
+              name="avitoLink"
+              value={String(formData.avitoLink)}
+              onChange={handleChange}
+              className="mt-1 flex items-center w-full border border-gray-500 rounded-md px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500 h-[40px]"
+            />
+          </div>
+        }
 
         <div className="mt-3">
           <label htmlFor="status" className="text-gray-700 font-medium">

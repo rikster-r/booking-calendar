@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import createClient from '@/lib/supabase/api';
+import { extractAvitoId } from '@/lib/avito';
 
 export default async function handler(
   req: NextApiRequest,
@@ -21,7 +22,14 @@ export default async function handler(
 
   if (req.method === 'PUT') {
     const { roomId: room_id } = req.query;
-    const { name, color, status, last_cleaned_at, last_cleaned_by } = req.body;
+    const {
+      name,
+      color,
+      status,
+      last_cleaned_at,
+      last_cleaned_by,
+      avito_link,
+    } = req.body;
 
     if (!room_id) {
       return res.status(400).json({ error: 'Некорректный айди' });
@@ -35,6 +43,8 @@ export default async function handler(
         ...(status && { status }),
         ...(last_cleaned_at && { last_cleaned_at }),
         ...(last_cleaned_by && { last_cleaned_by }),
+        ...(avito_link && { avito_link }),
+        ...(avito_link && { avito_id: extractAvitoId(avito_link) }),
       })
       .eq('id', room_id)
       .select();

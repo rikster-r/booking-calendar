@@ -5,6 +5,9 @@ import { User } from '@supabase/supabase-js';
 import useWindowWidth from '@/hooks/useWindowWidth';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
+import Link from 'next/link';
+import AvitoLogo from '@/assets/avitoLogo.svg';
+import Image from 'next/image';
 
 type Props = {
   isOpen: boolean;
@@ -57,11 +60,26 @@ const RoomInfoModal = ({ isOpen, onClose, onEditOpen, room, user }: Props) => {
             <XMarkIcon className="w-6 sm:w-7 h-6 sm:h-7" />
           </button>
         </div>
+
         <div className="space-y-3">
           <div className="flex items-center gap-2 text-gray-700">
             <InformationCircleIcon className="w-5 h-5" />
             <span>{data.text}</span>
           </div>
+          {room.avito_link && (
+            <div className="flex items-center gap-2 text-gray-700">
+              <Image src={AvitoLogo} className="w-5 h-5" alt="Авито" />
+              <span className="hover:underline">
+                <Link
+                  href={room.avito_link}
+                  target="_blank"
+                  className="line-clamp-1"
+                >
+                  {room.avito_link}
+                </Link>
+              </span>
+            </div>
+          )}
           {room.last_cleaned_at && room.last_cleaned_user && (
             <>
               <div className="flex items-center gap-2 text-gray-700">

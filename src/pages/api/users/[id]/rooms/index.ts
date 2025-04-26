@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import createClient from '@/lib/supabase/api';
-import { extractAvitoId } from '@/lib/extractAvitoId';
+import { extractAvitoId, validateAvitoUrl } from '@/lib/avito';
 import { decrypt } from '@/lib/encrypt';
 import { hexColors } from '@/lib/colors';
 
@@ -41,7 +41,8 @@ export default async function handler(
 
   if (req.method === 'POST') {
     const { id: user_id } = req.query;
-    const { name, color, status, avitoLink } = req.body;
+    const { color, status, avito_link } = req.body;
+    let { name } = req.body;
 
     const {
       data: { user },
@@ -54,49 +55,60 @@ export default async function handler(
         .json({ error: 'Войдите в аккаунт перед запросом' });
     }
 
-    if (avitoLink) {
-      // Retrieve the user's access token from the database
-      const { data: tokenData, error: tokenError } = await supabase
-        .from('avito_access_tokens')
-        .select('*')
-        .eq('user_id', user_id)
-        .single();
-
-      if (tokenError || !tokenData) {
-        return res
-          .status(500)
-          .json({ error: 'Токен доступа не найден для пользователя' });
+    const avitoRoomId = extractAvitoId(avito_link);
+    if (avito_link) {
+      if (!validateAvitoUrl(avito_link)) {
+        return res.status(400).json({ error: 'Некорректная ссылка на Avito.' });
       }
 
-      const decryptedToken = decrypt(tokenData.access_token);
+      // get name from avito if not specified
+      if (!name) {
+        // Retrieve the user's access token from the database
+        const tokenDataRes = await fetch(
+          `${process.env.NEXT_PUBLIC_URL}/api/avito/accessToken?user_id=${user_id}`
+        );
+        const tokenData: AvitoTokenData = await tokenDataRes.json();
 
-      /* Tried using 
-      https://api.avito.ru/core/v1/accounts/${(tokenData as AvitoTokenData)
-      .avito_user_id}/items/${avitoRoomId}
-      but it doesn't return any relevant data. Had to get all items and search with find.
-      */
-      const avitoRes = await fetch(`https://api.avito.ru/core/v1/items`, {
-        headers: {
-          Authorization: `Bearer ${decryptedToken}`,
-        },
-      });
+        if (!tokenDataRes.ok) {
+          return res.status(500).json({ error: tokenData });
+        }
 
-      if (!avitoRes.ok) {
-        return res
-          .status(avitoRes.status)
-          .json({ error: 'Ошибка при запросе к Avito' });
+        const decryptedToken = decrypt(tokenData.access_token);
+
+        /* 
+        Tried using 
+        https://api.avito.ru/core/v1/accounts/${(tokenData as AvitoTokenData)
+        .avito_user_id}/items/${avitoRoomId}
+        but it doesn't return any relevant data. Had to get all items and search with find.
+        */
+        const avitoRes = await fetch(`https://api.avito.ru/core/v1/items`, {
+          headers: {
+            Authorization: `Bearer ${decryptedToken}`,
+          },
+        });
+
+        if (!avitoRes.ok) {
+          return res
+            .status(avitoRes.status)
+            .json({ error: 'Ошибка при запросе к Avito' });
+        }
+        const avitoData = await avitoRes.json();
+        const roomData = avitoData.resources.find(
+          (resource: AvitoListing) => resource.id === avitoRoomId
+        );
+
+        if (!roomData) {
+          return res.status(403).json({ error: 'Объект не принадлежит вам.' });
+        }
+
+        name = roomData.title;
       }
-      const avitoData = await avitoRes.json();
-      const avitoRoomId = extractAvitoId(avitoLink);
-      const roomData = avitoData.resources.find(
-        (resource: AvitoListing) => resource.id === avitoRoomId
-      );
 
       // Check if a room with the same Avito link already exists
       const { data: existingRoom, error: existingRoomError } = await supabase
         .from('rooms')
         .select('*')
-        .eq('avito_link', avitoLink)
+        .eq('avito_link', avito_link)
         .single();
 
       if (existingRoomError && existingRoomError.code !== 'PGRST116') {
@@ -109,11 +121,12 @@ export default async function handler(
 
       const { data, error } = await supabase.from('rooms').insert([
         {
-          name: roomData.title,
-          color: hexColors[Math.floor(Math.random() * hexColors.length)],
-          status: 'ready',
+          name,
+          color:
+            color ?? hexColors[Math.floor(Math.random() * hexColors.length)],
+          status: status ?? 'ready',
           user_id,
-          avito_link: avitoLink,
+          avito_link,
           avito_id: avitoRoomId,
         },
       ]);
@@ -121,22 +134,29 @@ export default async function handler(
       if (error) return res.status(500).json({ error: error.message });
       return res.status(201).json(data);
     } else {
-      if (!user_id) {
-        return res.status(400).json({ error: 'Некорректный айди' });
-      }
-
       if (!name || !color || !status) {
         return res
           .status(400)
           .json({ error: 'Не все обязательные поля заполнены' });
       }
 
-      const { data, error } = await supabase
-        .from('rooms')
-        .insert([{ name, color, status, user_id }]);
+      const { data, error } = await supabase.from('rooms').insert([
+        {
+          name,
+          color,
+          status,
+          user_id,
+          avito_link: avito_link === undefined ? null : avito_link,
+          avito_id:
+            avito_link === undefined ? null : extractAvitoId(avito_link),
+        },
+      ]);
 
-      if (error) return res.status(500).json({ error: error.message });
-      return res.status(201).json(data);
+      if (error) {
+        return res.status(500).json({ error });
+      }
+
+      return res.status(200).json({ data });
     }
   }
 

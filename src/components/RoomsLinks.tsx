@@ -22,14 +22,17 @@ const RoomsLinks = ({ user, rooms, mutateRooms }: Props) => {
     const res = await fetch(`/api/users/${user.id}/rooms`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ avitoLink: link }),
+      body: JSON.stringify({ avito_link: link }),
     });
 
     if (res.ok) {
       mutateRooms();
       setInputLink('');
     } else {
-      toast.error('Не удалось добавить помещение. Попробуйте еще раз.');
+      const errorData = await res.json();
+      toast.error(
+        errorData.error || 'Не удалось добавить помещение. Попробуйте еще раз.'
+      );
     }
   };
 
