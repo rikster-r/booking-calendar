@@ -50,7 +50,7 @@ const RoomStatusBadge = ({
               />
             </PopoverButton>
             <PopoverPanel
-              className="absolute z-20 mt-2 w-max rounded-lg shadow-lg bg-white ring-1 ring-gray-200 text-sm p-2"
+              className="absolute z-10 bg-white rounded-md shadow-lg p-2"
               anchor="bottom end"
             >
               {['cleaning', 'ready'].map((s) => (
@@ -73,7 +73,7 @@ const RoomStatusBadge = ({
     <div className="flex items-center gap-1 rounded-lg text-xs text-white font-medium text-nowrap">
       {includeTitle ? (
         <div
-          className={`px-2 py-1 rounded-md shadow-md ${data.titleClassName}`}
+          className={`px-2 py-1 rounded-full shadow-md ${data.titleClassName}`}
         >
           {data.title}
         </div>

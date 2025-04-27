@@ -46,44 +46,54 @@ export const getServerSideProps: GetServerSideProps = async (
   const roomsOwner =
     userRes.data.user.user_metadata.related_to ?? userRes.data.user.id;
 
-  const [roomsRes, bookingsRes, tokenRes] = await Promise.all([
+  const [roomsRes, bookingsRes, commentsRes, tokenRes] = await Promise.all([
     fetch(`${process.env.NEXT_PUBLIC_URL}/api/users/${roomsOwner}/rooms`),
     fetch(
-      `${process.env.NEXT_PUBLIC_URL}/api/users/${userRes.data.user.id}/bookings/?start=${dateRange.start}&end=${dateRange.end}`
+      `${process.env.NEXT_PUBLIC_URL}/api/users/${roomsOwner}/bookings/?start=${dateRange.start}&end=${dateRange.end}`
     ),
+    fetch(`${process.env.NEXT_PUBLIC_URL}/api/users/${roomsOwner}/comments`),
     fetch(
       `${process.env.NEXT_PUBLIC_URL}/api/avito/accessToken?user_id=${userRes.data.user.id}`
     ),
   ]);
 
-  const [initialRooms, initialBookings, tokenData]: [
+  const [initialRooms, initialBookings, initialComments, tokenData]: [
     Room[],
     Booking[],
+    Comment[],
     AvitoTokenData
-  ] = await Promise.all([roomsRes.json(), bookingsRes.json(), tokenRes.json()]);
+  ] = await Promise.all([
+    roomsRes.json(),
+    bookingsRes.json(),
+    commentsRes.json(),
+    tokenRes.json(),
+  ]);
 
   return {
     props: {
+      user: userRes.data.user,
       initialRooms,
       initialBookings,
-      user: userRes.data.user,
+      initialComments,
       tokenData: tokenRes.ok ? tokenData : {},
     },
   };
 };
 
 type Props = {
+  user: User;
   initialRooms: Room[];
   initialBookings: Booking[];
+  initialComments: RoomComment[];
   tokenData: AvitoTokenData;
-  user: User;
 };
 
 export default function Home({
+  user,
   initialRooms,
   initialBookings,
+  initialComments,
   tokenData,
-  user,
 }: Props) {
   const roomsOwner = user.user_metadata.related_to ?? user.id;
   const { data: rooms, mutate: mutateRooms } = useSWR<Room[]>(
@@ -95,6 +105,11 @@ export default function Home({
     `/api/users/${user.id}/bookings/?start=${dateRange.start}&end=${dateRange.end}`,
     fetcher,
     { fallbackData: initialBookings }
+  );
+  const { data: comments, mutate: mutateComments } = useSWR<RoomComment[]>(
+    `/api/users/${roomsOwner}/comments`,
+    fetcher,
+    { fallbackData: initialComments }
   );
 
   const [isMenuOpen, setMenuOpen] = useState(false);
@@ -158,6 +173,8 @@ export default function Home({
               rooms={rooms}
               mutateRooms={mutateRooms}
               user={user}
+              comments={comments ?? []}
+              mutateComments={mutateComments}
             />
           ) : (
             <>
@@ -278,6 +295,8 @@ export default function Home({
             }}
             room={modalData as Room}
             user={user}
+            comments={comments ?? []}
+            mutateComments={mutateComments}
           />
         )}
       </div>

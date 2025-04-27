@@ -3,7 +3,6 @@ type Room = {
   name: string;
   status: 'not ready' | 'ready' | 'cleaning';
   color: string;
-  created_at: string;
   last_cleaned_at: string | null;
   last_cleaned_by: string | null;
   last_cleaned_user?: {
@@ -14,6 +13,26 @@ type Room = {
   };
   avito_link: string | null;
   avito_id: string | null;
+  comments: { author: string; text: string };
+  created_at: string;
+};
+
+type RoomComment = {
+  id: number;
+  author_id: string;
+  room_id: number;
+  text: string;
+  room?: {
+    id: number;
+    owner?: {
+      id: string;
+    };
+  };
+  author?: {
+    first_name: string;
+    last_name: string;
+  };
+  created_at: string;
 };
 
 type RoomInput = {
