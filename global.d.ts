@@ -39,6 +39,7 @@ type RoomInput = {
   name: string;
   status: 'not ready' | 'ready' | 'cleaning';
   color: string;
+  avitoLink?: string | null;
 };
 
 type Booking = {
