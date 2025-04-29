@@ -24,58 +24,47 @@ export const getServerSideProps: GetServerSideProps = async (
     return { redirect: { destination: '/login', permanent: false } };
   }
 
+  const userId = userRes.data.user.id;
+
   const [avitoTokenRes, roomsRes] = await Promise.all([
-    fetch(`${process.env.NEXT_PUBLIC_URL}/api/avito/accessToken`),
     fetch(
-      `${process.env.NEXT_PUBLIC_URL}/api/users/${userRes.data.user.id}/rooms?withAvitoLink=true`
+      `${process.env.NEXT_PUBLIC_URL}/api/avito/accessToken?user_id=${userId}`
+    ),
+    fetch(
+      `${process.env.NEXT_PUBLIC_URL}/api/users/${userId}/rooms?withAvitoLink=true`
     ),
   ]);
 
-  if (!avitoTokenRes.ok || !roomsRes.ok) {
-    return {
-      props: {
-        user: userRes.data.user,
-        initialAvitoTokenData: {},
-        initialRooms: [],
-      },
-    };
-  }
-
-  const rooms: Room[] = await roomsRes.json();
+  const [avitoTokenData, rooms] = await Promise.all([
+    avitoTokenRes.ok ? avitoTokenRes.json() : Promise.resolve({}),
+    roomsRes.ok ? roomsRes.json() : Promise.resolve([]),
+  ]);
 
   return {
     props: {
       user: userRes.data.user,
-      initialAvitoTokenData: await avitoTokenRes.json(),
-      initialRooms: rooms.filter((room) => room.avito_link !== undefined),
+      fallback: {
+        '/api/avito/accessToken': avitoTokenData,
+        [`/api/users/${userId}/rooms?withAvitoLink=true`]: rooms,
+      },
     },
   };
 };
 
 type Props = {
   user: User;
-  initialAvitoTokenData: AvitoTokenData;
-  initialRooms: Room[];
+  fallback?: Record<string, unknown>;
 };
 
-const Profile = ({
-  user: initialUser,
-  initialAvitoTokenData,
-  initialRooms,
-}: Props) => {
+const Profile = ({ user: initialUser }: Props) => {
   const {
     data: avitoTokenData,
     isLoading: isTokenLoading,
     mutate: mutateAvitoTokenData,
-  } = useSWR<AvitoTokenData>(`/api/avito/accessToken`, fetcher, {
-    fallbackData: initialAvitoTokenData,
-  });
+  } = useSWR<AvitoTokenData>(`/api/avito/accessToken`, fetcher);
   const { data: rooms, mutate: mutateRooms } = useSWR<Room[]>(
     `/api/users/${initialUser.id}/rooms?withAvitoLink=true`,
-    fetcher,
-    {
-      fallbackData: initialRooms,
-    }
+    fetcher
   );
 
   const [activeField, setActiveField] = useState<string | null>(null);

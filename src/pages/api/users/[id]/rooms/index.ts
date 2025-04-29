@@ -27,7 +27,7 @@ export default async function handler(
       )`
       )
       .eq('user_id', user_id)
-      .order('created_at', { ascending: true });
+      .order('created_at', { ascending: false });
 
     if (withAvitoLink === 'true') {
       query = query.not('avito_link', 'is', null).neq('avito_link', '');

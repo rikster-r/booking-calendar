@@ -47,7 +47,9 @@ export default function FormatDropdown({
   };
 
   useEffect(() => {
-    updateFormat(selectedFormat.format);
+    if (initialFormat !== selectedFormat.format) {
+      updateFormat(selectedFormat.format);
+    }
   }, [selectedFormat]);
 
   return (

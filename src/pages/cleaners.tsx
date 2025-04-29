@@ -27,37 +27,41 @@ export const getServerSideProps: GetServerSideProps = async (
     fetch(
       `${process.env.NEXT_PUBLIC_URL}/api/users/${userRes.data.user.id}/cleaners`
     ),
-    fetch(`${process.env.NEXT_PUBLIC_URL}/api/users/${userRes.data.user.id}/rooms`),
+    fetch(
+      `${process.env.NEXT_PUBLIC_URL}/api/users/${userRes.data.user.id}/rooms`
+    ),
   ]);
 
-  if (cleanersRes.ok) {
-    const [initialCleaners, initialRooms] = await Promise.all([
-      cleanersRes.json(),
-      roomsRes.json(),
-    ]);
-    return {
-      props: { user: userRes.data.user, initialCleaners, initialRooms },
-    };
-  } else {
-    return { props: { user: userRes.data.user } };
-  }
+  const [cleanersData, roomsData] = await Promise.all([
+    cleanersRes.ok ? cleanersRes.json() : Promise.resolve([]),
+    roomsRes.ok ? roomsRes.json() : Promise.resolve([]),
+  ]);
+
+  return {
+    props: {
+      user: userRes.data.user,
+      fallback: {
+        [`/api/users/${userRes.data.user.id}/cleaners`]: cleanersData,
+        [`/api/users/${userRes.data.user.id}/rooms`]: roomsData,
+      },
+    },
+  };
 };
 
 type Props = {
   user: User;
-  initialCleaners?: PublicUser[];
-  initialRooms?: Room[];
+  fallback?: Record<string, unknown>;
 };
 
-const Cleaners = ({ user, initialCleaners, initialRooms }: Props) => {
+const Cleaners = ({ user }: Props) => {
   const { data: cleaners, mutate: mutateCleaners } = useSWR<PublicUser[]>(
     `/api/users/${user.id}/cleaners`,
-    fetcher,
-    { fallbackData: initialCleaners }
+    fetcher
   );
-  const { data: rooms } = useSWR<Room[]>(`/api/users/${user.id}/rooms`, fetcher, {
-    fallbackData: initialRooms,
-  });
+  const { data: rooms } = useSWR<Room[]>(
+    `/api/users/${user.id}/rooms`,
+    fetcher
+  );
   const onlineUserIds = useContext(OnlineUsersContext);
 
   if (!cleaners || !rooms) return <></>;

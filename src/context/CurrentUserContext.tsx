@@ -1,5 +1,11 @@
 import { User } from '@supabase/supabase-js';
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useCallback,
+  useEffect,
+} from 'react';
 import { createClient } from '@/lib/supabase/component';
 
 type CurrentUserContextType = {
@@ -31,6 +37,23 @@ const CurrentUserProvider = ({
     if (!error && data?.user) {
       setUser(data.user);
     }
+  }, [supabase]);
+
+  useEffect(() => {
+    const { data: subscription } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (session?.user) {
+          setUser(session.user);
+        } else {
+          setUser(null);
+        }
+      }
+    );
+
+    // Cleanup subscription on unmount
+    return () => {
+      subscription.subscription.unsubscribe();
+    };
   }, [supabase]);
 
   return (

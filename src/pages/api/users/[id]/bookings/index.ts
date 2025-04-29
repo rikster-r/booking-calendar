@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import createClient from '@/lib/supabase/api';
+import { get30DayRange } from '@/lib/dates';
 
 export default async function handler(
   req: NextApiRequest,
@@ -143,32 +144,28 @@ export default async function handler(
       .status(201)
       .json({ message: 'Успешно создана бронь.', booking: data });
   } else if (req.method === 'GET') {
-      // eslint-disable-next-line prefer-const
-      let { start, end, id: user_id } = req.query;
+    // eslint-disable-next-line prefer-const
+    let { start, end, id: user_id } = req.query;
 
-      // Validate and set default values
-      const today = new Date().toISOString().split('T')[0];
-      const futureDate = new Date();
-      futureDate.setDate(futureDate.getDate() + 30);
-      const next30Days = futureDate.toISOString().split('T')[0];
+    // Validate and set default values
+    const { start: today, end: in30Days } = get30DayRange();
 
-      if (!start || typeof start !== 'string') start = today;
-      if (!end || typeof end !== 'string') end = next30Days;
+    if (!start || typeof start !== 'string') start = today;
+    if (!end || typeof end !== 'string') end = in30Days;
 
-      const { data, error } = await supabase
-        .from('bookings')
-        .select('*')
-        .or(
-          `and(check_in.gte.${start}, check_in.lte.${end}),and(check_out.gte.${start}, check_out.lte.${end})`
-        )
-        .eq('user_id', user_id)
-        .order('check_in', { ascending: true });
+    const { data, error } = await supabase
+      .from('bookings')
+      .select('*')
+      .eq('user_id', user_id)
+      .lte('check_in', end)
+      .gte('check_out', start)
+      .order('check_in', { ascending: true });
 
-      if (error) {
-        return res.status(500).json({ error: error.message });
-      }
+    if (error) {
+      return res.status(500).json({ error: error.message });
+    }
 
-      return res.status(200).json(data);
+    return res.status(200).json(data);
   } else {
     return res.status(405).json({ error: 'Данный метод API не существует.' });
   }

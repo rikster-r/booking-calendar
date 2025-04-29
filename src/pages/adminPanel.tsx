@@ -35,32 +35,24 @@ export const getServerSideProps: GetServerSideProps = async (
     return { redirect: { destination: '/', permanent: false } };
   }
 
-  const usersRes = await supabase.auth.admin.listUsers();
-  if (usersRes.error) {
-    return { props: { user: userRes.data.user, users: [] } };
-  }
-
   return {
     props: {
       user: userRes.data.user,
-      initialUsers: usersRes.error
-        ? []
-        : usersRes.data.users.filter((x) => x.id !== userRes.data.user.id),
     },
   };
 };
 
 type Props = {
   user: User;
-  initialUsers: User[];
+  fallback?: Record<string, unknown>;
 };
 
-const AdminPanel = ({ user, initialUsers }: Props) => {
+const AdminPanel = ({ user }: Props) => {
   const {
     data: users,
     mutate: mutateUsers,
     isLoading,
-  } = useSWR<User[]>(`/api/users`, fetcher, { fallbackData: initialUsers });
+  } = useSWR<User[]>(`/api/users`, fetcher);
   const [selectedUsers, setSelectedUsers] = useState<User[]>([]);
   const [deleteHovered, setDeleteHovered] = useState(false);
   const [addUserModalOpen, setAddUserModalOpen] = useState(false);

@@ -20,9 +20,7 @@ export default async function handler(
       .eq('related_to', userId);
 
     if (error) {
-      return res
-        .status(500)
-        .json({ error: 'Ошибка при получении данных', details: error.message });
+      return res.status(500).json({ error: error.message });
     }
 
     return res.status(200).json(data);

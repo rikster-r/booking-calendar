@@ -5,7 +5,7 @@ import { useRouter } from 'next/router';
 import { toast } from 'react-toastify';
 import Head from 'next/head';
 
-export default function Login() {
+export default function Register() {
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [email, setEmail] = useState('');
   const [firstName, setFirstName] = useState('');
