@@ -36,7 +36,7 @@ export default function Login() {
         <title>Войти в аккаунт</title>
         <meta name="description" content="Вход в аккаунт" />
       </Head>
-      <div className="bg-gray-100 flex justify-center items-center min-h-[100dvh]">
+      <div className="bg-gray-100 flex justify-center items-center min-h-[100dvh] flex-col ">
         <div className="w-full bg-white rounded-lg shadow md:mt-0 sm:max-w-md xl:p-0">
           <div className="p-6 space-y-4 md:space-y-6 sm:p-8">
             <h1 className="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl text-center">
@@ -56,7 +56,7 @@ export default function Login() {
                   id="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="mt-1 flex items-center w-full border border-gray-500 rounded-md px-3 py-3.5 outline-none focus-within:ring-2 focus-within:ring-blue-500 h-[40px]"
+                  className="mt-1 flex items-center w-full border border-gray-200 shadow rounded-md px-3 py-3.5 outline-none focus-within:ring-2 focus-within:ring-blue-500 h-[40px]"
                   placeholder="andrey.petrov@gmail.com"
                   required
                 />
@@ -75,7 +75,7 @@ export default function Login() {
                     id="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="mt-1 flex items-center w-full border border-gray-500 rounded-md px-3 py-3.5 outline-none focus-within:ring-2 focus-within:ring-blue-500 h-[40px] pr-10"
+                    className="mt-1 flex items-center w-full border border-gray-200 shadow rounded-md px-3 py-3.5 outline-none focus-within:ring-2 focus-within:ring-blue-500 h-[40px] pr-10"
                     required
                   />
                   <button
@@ -98,17 +98,19 @@ export default function Login() {
               >
                 Войти
               </button>
-              <p className="text-sm font-light text-gray-500 text-center">
-                У вас еще нет аккаунта?{' '}
-                <Link
-                  href="/register"
-                  className="font-medium text-blue-600 hover:underline"
-                >
-                  Регистрация
-                </Link>
-              </p>
             </form>
           </div>
+        </div>
+        <div className="bg-white mt-4 w-full h-[60px] flex items-center justify-center max-w-md shadow rounded-md">
+          <p className="text-sm font-light text-gray-500 text-center">
+            У вас еще нет аккаунта?{' '}
+            <Link
+              href="/register"
+              className="font-medium text-blue-600 hover:underline"
+            >
+              Регистрация
+            </Link>
+          </p>
         </div>
       </div>
     </>
