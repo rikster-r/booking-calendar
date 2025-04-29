@@ -10,7 +10,7 @@ export default async function handler(
 ) {
   const supabase = createClient(req, res);
   if (req.method === 'GET') {
-    const { id: user_id, withAvitoLink } = req.query;
+    const { id: user_id, onlyFromAvito, sortOrder } = req.query;
 
     if (!user_id) {
       return res.status(400).json({ error: 'Некорректный ID пользователя' });
@@ -27,9 +27,10 @@ export default async function handler(
       )`
       )
       .eq('user_id', user_id)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: sortOrder !== 'descending' });
+    // basically only sort descending if specified
 
-    if (withAvitoLink === 'true') {
+    if (onlyFromAvito === 'true') {
       query = query.not('avito_link', 'is', null).neq('avito_link', '');
     }
 

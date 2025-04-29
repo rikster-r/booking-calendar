@@ -82,7 +82,7 @@ export default async function handler(
       const { data, error } = await supabase.auth.admin.updateUserById(
         userId as string,
         {
-          user_metadata: { ...userToChange.user.user_metadata, role },
+          user_metadata: { role },
         }
       );
 

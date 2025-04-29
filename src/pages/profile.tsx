@@ -31,7 +31,7 @@ export const getServerSideProps: GetServerSideProps = async (
       `${process.env.NEXT_PUBLIC_URL}/api/avito/accessToken?user_id=${userId}`
     ),
     fetch(
-      `${process.env.NEXT_PUBLIC_URL}/api/users/${userId}/rooms?withAvitoLink=true`
+      `${process.env.NEXT_PUBLIC_URL}/api/users/${userId}/rooms?onlyFromAvito=true&sortOrder=descending`
     ),
   ]);
 
@@ -45,7 +45,8 @@ export const getServerSideProps: GetServerSideProps = async (
       user: userRes.data.user,
       fallback: {
         '/api/avito/accessToken': avitoTokenData,
-        [`/api/users/${userId}/rooms?withAvitoLink=true`]: rooms,
+        [`/api/users/${userId}/rooms?onlyFromAvito=true&sortOrder=descending`]:
+          rooms,
       },
     },
   };
@@ -63,7 +64,7 @@ const Profile = ({ user: initialUser }: Props) => {
     mutate: mutateAvitoTokenData,
   } = useSWR<AvitoTokenData>(`/api/avito/accessToken`, fetcher);
   const { data: rooms, mutate: mutateRooms } = useSWR<Room[]>(
-    `/api/users/${initialUser.id}/rooms?withAvitoLink=true`,
+    `/api/users/${initialUser.id}/rooms?onlyFromAvito=true&sortOrder=descending`,
     fetcher
   );
 

@@ -17,6 +17,6 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "src/pages/api/users/[id]"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "src/pages/api/users/[id]", "src/pages/api/avito/bookings"],
   "exclude": ["node_modules"]
 }

@@ -28,6 +28,12 @@ export const isBeforeByDay = (date1: Date, date2: Date) => {
   return isBefore(date1WithoutTime, date2WithoutTime);
 };
 
+export function formatDateForAvito(date: string) {
+  return date.slice(0, 10);
+  const parsedDate = typeof date === 'string' ? new Date(date) : date;
+  return format(parsedDate, 'yyyy-MM-dd');
+}
+
 export const dateFormats = [
   { example: '24 апреля 2025', format: 'd MMMM yyyy' },
   { example: '24.04.2025', format: 'dd.MM.yyyy' },

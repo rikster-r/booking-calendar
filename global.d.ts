@@ -50,13 +50,34 @@ type Booking = {
   client_email: string;
   adults_count: number;
   children_count: number;
-  door_code: number;
+  door_code: number | null;
   additional_info: string;
   daily_price: number;
   paid: boolean;
-  check_in: string;
-  check_out: string;
+  check_in: string | Date;
+  check_out: string | Date;
   created_at: string;
+  room?: Room;
+  avito_id: number | null;
+  user_id: string;
+};
+
+type BookingToInsert = {
+  room_id: number;
+  client_name: string;
+  client_phone: string;
+  client_email: string;
+  adults_count: number;
+  children_count: number;
+  door_code: number | null;
+  additional_info: string;
+  daily_price: number;
+  paid: boolean;
+  check_in: string | Date;
+  check_out: string | Date;
+  room?: Room;
+  avito_id: number | null;
+  user_id: string;
 };
 
 type BookingInput = {
@@ -66,7 +87,7 @@ type BookingInput = {
   clientEmail: string;
   adultsCount: number | string;
   childrenCount: number | string;
-  doorCode: number | string;
+  doorCode: number | string | null;
   additionalInfo: string;
   dailyPrice: number | string;
   paid: boolean;
@@ -115,4 +136,34 @@ type AvitoListing = {
   status: string;
   title: string;
   url: string;
+};
+
+type AvitoResponse = {
+  bookings?: AvitoBooking[];
+  error?: AvitoError;
+};
+
+type AvitoBooking = {
+  avito_booking_id: number;
+  base_price: number;
+  check_in: string;
+  check_out: string;
+  contact: {
+    email: string;
+    name: string;
+    phone: string;
+  };
+  guest_count: number;
+  nights: number;
+  safe_deposit: {
+    owner_amount: number;
+    tax: number;
+    totalAmount: number;
+  };
+  status: 'active' | 'canceled' | 'pending';
+};
+
+type AvitoError = {
+  code: number;
+  message: string;
 };

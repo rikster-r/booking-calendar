@@ -10,6 +10,17 @@ export default async function handler(
 
   if (req.method === 'POST') {
     const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser();
+
+    if (authError || !user) {
+      return res
+        .status(401)
+        .json({ error: 'Войдите в аккаунт перед запросом' });
+    }
+
+    const {
       roomId: room_id,
       clientName: client_name,
       clientPhone: client_phone,
@@ -92,36 +103,36 @@ export default async function handler(
     }
 
     // Insert into avito
-    // const avitoCreateRes = await fetch(
-    //   `${process.env.NEXT_PUBLIC_URL}/api/avito/bookings`,
-    //   {
-    //     method: 'POST',
-    //     headers: {
-    //       'Content-Type': 'application/json',
-    //     },
-    //     body: JSON.stringify({
-    //       user_id,
-    //       room_id,
-    //       check_in,
-    //       check_out,
-    //       additional_info,
-    //     }),
-    //   }
-    // );
+    const avitoCreateRes = await fetch(
+      `${process.env.NEXT_PUBLIC_URL}/api/avito/bookings`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          user_id,
+          room_id,
+          check_in,
+          check_out,
+          additional_info,
+        }),
+      }
+    );
 
-    // const avitoCreateData = await avitoCreateRes.json();
-    // if (!avitoCreateRes.ok) {
-    //   return res.status(500).json(avitoCreateData);
-    // }
+    const avitoCreateData = await avitoCreateRes.json();
+    if (!avitoCreateRes.ok) {
+      return res.status(500).json(avitoCreateData);
+    }
 
-    // const avito_booking_id = avitoCreateData.avito_booking_id;
+    const avito_booking_id = avitoCreateData.avito_booking_id;
 
     // Insert new booking
     const { data, error } = await supabase.from('bookings').insert([
       {
         room_id,
         user_id,
-        // avito_id: avito_booking_id,
+        avito_id: avito_booking_id,
         client_name,
         client_phone,
         client_email,
