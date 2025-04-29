@@ -351,27 +351,6 @@ const Profile = ({ user: initialUser }: Props) => {
                   formats={timeFormats}
                   initialFormat={user.user_metadata.preferred_time_format}
                 />
-
-                <div className="flex items-center justify-between py-4 border-t border-gray-200">
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-900">
-                      Спрашивать подтверждение удаления
-                    </h3>
-                  </div>
-
-                  <label
-                    htmlFor="AcceptConditions"
-                    className="relative block h-6 w-10 rounded-full bg-gray-300 transition-colors [-webkit-tap-highlight-color:_transparent] has-checked:bg-blue-500 hover:cursor-pointer"
-                  >
-                    <input
-                      type="checkbox"
-                      id="AcceptConditions"
-                      className="peer sr-only"
-                    />
-
-                    <span className="absolute inset-y-0 start-0 m-1 size-4 rounded-full bg-white transition-[inset-inline-start] peer-checked:start-4"></span>
-                  </label>
-                </div>
               </div>
             )}
           </div>
