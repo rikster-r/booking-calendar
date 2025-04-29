@@ -12,9 +12,10 @@ export default async function handler(
       password,
       firstName: first_name,
       lastName: last_name,
+      role,
     } = req.body;
 
-    if (!email || !password || !first_name || !last_name) {
+    if (!email || !password || !first_name || !last_name || !role) {
       return res
         .status(400)
         .json({ error: 'Не все обязательные поля заполнены' });
@@ -27,7 +28,7 @@ export default async function handler(
         data: {
           first_name,
           last_name,
-          role: 'client',
+          role,
           related_to: null,
           preferred_date_format: 'd MMMM yyyy',
           preferred_time_format: 'HH:mm',
