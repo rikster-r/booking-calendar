@@ -11,7 +11,7 @@ export default async function handler(
   const supabase = createClient(req, res);
 
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Метод не поддерживается' });
+    return res.status(405).json({ error: 'Данный метод API не существует.' });
   }
 
   // Step 1: Fetch all user access tokens

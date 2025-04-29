@@ -65,7 +65,9 @@ export default async function handler(
     }
 
     return res
-      .status(200)
+      .status(201)
       .json({ message: 'Уборщик успешно связан с пользователем' });
   }
+
+  return res.status(405).json({ error: 'Данный метод API не существует.' });
 }

@@ -154,7 +154,9 @@ export default async function handler(
     return res
       .status(201)
       .json({ message: 'Успешно создана бронь.', booking: data });
-  } else if (req.method === 'GET') {
+  }
+
+  if (req.method === 'GET') {
     // eslint-disable-next-line prefer-const
     let { start, end, id: user_id } = req.query;
 
@@ -177,7 +179,7 @@ export default async function handler(
     }
 
     return res.status(200).json(data);
-  } else {
-    return res.status(405).json({ error: 'Данный метод API не существует.' });
   }
+  
+  return res.status(405).json({ error: 'Данный метод API не существует.' });
 }

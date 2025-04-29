@@ -48,4 +48,6 @@ export default async function handler(
       .status(200)
       .json({ message: 'Интеграция и связанные комнаты успешно удалены' });
   }
+
+  return res.status(405).json({ error: 'Данный метод API не существует.' });
 }

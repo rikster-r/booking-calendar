@@ -71,7 +71,7 @@ export default async function handler(
       return res.status(500).json({ error: error.message });
     }
 
-    return res.status(200).json(accessTokenData);
+    return res.status(201).json(accessTokenData);
   }
 
   if (req.method === 'GET') {
@@ -168,4 +168,6 @@ export default async function handler(
       return res.status(500).json({ error: 'Internal server error' });
     }
   }
+
+  return res.status(405).json({ error: 'Данный метод API не существует.' });
 }

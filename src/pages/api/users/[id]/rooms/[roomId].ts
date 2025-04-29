@@ -53,5 +53,5 @@ export default async function handler(
     return res.status(201).json(data);
   }
 
-  res.status(405).json({ error: 'Данный метод API не существует.' });
+  return res.status(405).json({ error: 'Данный метод API не существует.' });
 }

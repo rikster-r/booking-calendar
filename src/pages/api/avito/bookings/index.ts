@@ -61,7 +61,7 @@ export default async function handler(
 
     if (avitoCreateRes.status === 403 || avitoCreateRes.status === 404) {
       // No such room found in avito
-      return res.status(204).json({ avito_booking_id: null });
+      return res.status(200).json({ avito_booking_id: null });
     }
 
     const avitoCreateData = await avitoCreateRes.json();
@@ -158,6 +158,8 @@ export default async function handler(
             : 'Произошла неизвестная ошибка',
       });
     }
-    return res.status(200).json(avitoBookingsByRoom);
+    return res.status(201).json(avitoBookingsByRoom);
   }
+
+  return res.status(405).json({ error: 'Данный метод API не существует.' });
 }

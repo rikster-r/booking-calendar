@@ -135,5 +135,5 @@ export default async function handler(
       .json({ message: 'Бронь успешно обновлена.', booking: data });
   }
 
-  res.status(405).json({ error: 'Данный метод API не существует.' });
+  return res.status(405).json({ error: 'Данный метод API не существует.' });
 }
