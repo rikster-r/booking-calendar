@@ -2,51 +2,62 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import createClient from '@/lib/supabase/api';
 import { decrypt } from '@/lib/encrypt';
 
+// route used by external cron job service every 5 minutes
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
   const supabase = createClient(req, res);
 
-  if (req.method === 'POST') {
-    const { userId } = req.body;
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Метод не поддерживается' });
+  }
 
-    if (!userId) {
-      return res.status(400).json({ error: 'Не указан айди пользователя' });
-    }
+  // Step 1: Fetch all user access tokens
+  const { data: tokenRows, error: tokenError } = await supabase
+    .from('avito_access_tokens')
+    .select('user_id');
 
-    // Get bookings in the database
-    const { data: dbBookings, error } = await supabase
-      .from('bookings')
-      .select('*, rooms(id,room_id,avito_id,avito_link)')
-      .neq('rooms.avito_link', null)
-      .neq('rooms.avito_link', '')
-      .eq('user_id', userId);
+  if (tokenError) {
+    return res
+      .status(500)
+      .json({ error: 'Не удалось получить токены пользователей' });
+  }
 
-    if (error) {
-      return res
-        .status(500)
-        .json({ error: 'Не удалось получить брони с датабазы' });
-    }
+  for (const tokenRow of tokenRows) {
+    const { user_id } = tokenRow;
 
-    // Get the user token
-    const tokenDataRes = await fetch(
-      `${process.env.NEXT_PUBLIC_URL}/api/avito/accessToken`
-    );
+    // Get the user token separately because it might be expired
+    const tokenDataRes = await fetch(`
+      ${process.env.NEXT_PUBLIC_URL}/api/avito/accessToken?user_id=${user_id}`);
     const tokenData: AvitoTokenData = await tokenDataRes.json();
 
     if (!tokenDataRes.ok) {
-      return res.status(500).json({ error: tokenData });
+      continue;
     }
 
     const decryptedToken = decrypt(tokenData.access_token);
 
-    // Get bookings in Avito for each room
+    // Step 2: Fetch that user's bookings
+    const { data: dbBookings, error: bookingsError } = await supabase
+      .from('bookings')
+      .select('*, rooms(id,room_id,avito_id,avito_link)')
+      .neq('rooms.avito_link', null)
+      .neq('rooms.avito_link', '')
+      .eq('user_id', user_id);
+
+    if (bookingsError) {
+      console.error(`User ${user_id}: failed to get bookings`, bookingsError);
+      continue;
+    }
+
     const avitoBookingsByRoom: Record<number, AvitoBooking[]> = {};
 
     try {
       const bookingsPromises = dbBookings.map(async (booking: Booking) => {
         if (!booking.room) return;
+
         const avitoRes = await fetch(
           `https://api.avito.ru/realty/v1/accounts/${tokenData.avito_user_id}/items/${booking.room.avito_id}/bookings`,
           {
@@ -57,9 +68,10 @@ export default async function handler(
         );
 
         if (!avitoRes.ok) {
-          throw new Error(
-            `Не удалось получить брони с Авито для комнаты ${booking.room.id}`
+          console.error(
+            `Room ${booking.room.id}: failed to get Avito bookings`
           );
+          return;
         }
 
         const avitoData = await avitoRes.json();
@@ -67,16 +79,12 @@ export default async function handler(
       });
 
       await Promise.all(bookingsPromises);
-    } catch (error: unknown) {
-      return res.status(500).json({
-        error:
-          error instanceof Error
-            ? error.message
-            : 'Произошла неизвестная ошибка',
-      });
+    } catch (err) {
+      console.error(`User ${user_id}: error fetching Avito data`, err);
+      continue;
     }
 
-    // Compare and sync bookings
+    // Step 3: Prepare data to sync
     const bookingsToUpsert: Booking[] = [];
     const bookingsToCreate: BookingToInsert[] = [];
 
@@ -103,7 +111,7 @@ export default async function handler(
             check_out: new Date(avitoBooking.check_out),
             created_at: matchingDbBooking.created_at,
             avito_id: avitoBooking.avito_booking_id,
-            user_id: userId as string,
+            user_id,
           });
         } else {
           bookingsToCreate.push({
@@ -120,13 +128,13 @@ export default async function handler(
             check_in: new Date(avitoBooking.check_in),
             check_out: new Date(avitoBooking.check_out),
             avito_id: avitoBooking.avito_booking_id,
-            user_id: userId as string,
+            user_id,
           });
         }
       });
     });
 
-    // Perform updates
+    // Step 4: Upsert and insert bookings
     if (bookingsToUpsert.length > 0) {
       const { error: updateError } = await supabase
         .from('bookings')
@@ -136,23 +144,28 @@ export default async function handler(
         });
 
       if (updateError) {
-        return res.status(500).json({ error: 'Не удалось обновить брони.' });
+        console.error(
+          `User ${user_id}: failed to upsert bookings`,
+          updateError
+        );
       }
     }
 
-    // Perform inserts
     if (bookingsToCreate.length > 0) {
       const { error: insertError } = await supabase
         .from('bookings')
         .insert(bookingsToCreate);
 
       if (insertError) {
-        return res
-          .status(500)
-          .json({ error: 'Не удалось создать новые брони.' });
+        console.error(
+          `User ${user_id}: failed to insert new bookings`,
+          insertError
+        );
       }
     }
-
-    return res.status(200).json({ message: 'Брони успешно синхронизированы' });
   }
+
+  return res
+    .status(200)
+    .json({ message: 'Синхронизация завершена для всех пользователей' });
 }
