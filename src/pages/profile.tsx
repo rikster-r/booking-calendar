@@ -329,7 +329,7 @@ const Profile = ({ user: initialUser }: Props) => {
 
             {/* Preferences Section */}
             {user.user_metadata.role !== 'cleaner' && (
-              <div className="mt-10">
+              <div className="my-10 lg:mt-10 lg:mb-0">
                 <div className="py-4 border-b border-gray-200">
                   <h2 className="font-medium text-gray-900 mb-1">
                     Настройки календаря
