@@ -144,16 +144,19 @@ const BookingModal = ({ isOpen, onClose, rooms, bookingData, user }: Props) => {
 
   const isTimeSlotFree = async (checkIn: Date, checkOut: Date) => {
     try {
-      const res = await fetch(`/api/users/${user.id}/bookings/validateTimeslot`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          id: hasId(bookingData) ? bookingData.id : undefined,
-          room_id: formData.roomId,
-          check_in: formatDateTimeLocal(checkIn),
-          check_out: formatDateTimeLocal(checkOut),
-        }),
-      });
+      const res = await fetch(
+        `/api/users/${user.id}/bookings/validateTimeslot`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: hasId(bookingData) ? bookingData.id : undefined,
+            room_id: formData.roomId,
+            check_in: formatDateTimeLocal(checkIn),
+            check_out: formatDateTimeLocal(checkOut),
+          }),
+        }
+      );
 
       return res.ok;
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -214,23 +217,20 @@ const BookingModal = ({ isOpen, onClose, rooms, bookingData, user }: Props) => {
     setCheckOut(addDays(formData.checkIn, num));
   };
 
-  const setCheckInTime: React.ChangeEventHandler<HTMLInputElement> = (e) => {
+  const setTime: (
+    field: 'checkIn' | 'checkOut'
+  ) => React.ChangeEventHandler<HTMLInputElement> = (field) => (e) => {
+    if (e.target.value === '' || !e.target.value) return;
     const [hours, minutes] = e.target.value.split(':').map(Number);
     setFormData((prev) => {
-      const copy = new Date(prev.checkIn);
+      const copy = new Date(prev[field]);
       copy.setHours(hours, minutes, 0, 0);
-      return { ...prev, checkIn: copy };
+      return { ...prev, [field]: copy };
     });
   };
 
-  const setCheckOutTime: React.ChangeEventHandler<HTMLInputElement> = (e) => {
-    const [hours, minutes] = e.target.value.split(':').map(Number);
-    setFormData((prev) => {
-      const copy = new Date(prev.checkOut);
-      copy.setHours(hours, minutes, 0, 0);
-      return { ...prev, checkOut: copy };
-    });
-  };
+  const setCheckInTime = setTime('checkIn');
+  const setCheckOutTime = setTime('checkOut');
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} className="max-w-lg">
