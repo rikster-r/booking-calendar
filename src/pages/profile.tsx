@@ -147,25 +147,17 @@ const Profile = ({ user: initialUser }: Props) => {
 
   const handlePasswordChange = async (value: string) => {
     if (code) {
-      const res = await fetch(`/api/users/${user.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ password: value }),
+      const { data, error } = await supabase.auth.updateUser({
+        password: value,
       });
 
-      if (res.ok) {
-        const { data, error } = await supabase.auth.getUser();
-        if (!error && data?.user) {
-          setUser(data.user);
-          toast.success('Пароль успешно изменен.');
-          setActiveField(null);
-        }
+      if (!error) {
+        setUser(data.user);
+        toast.success('Пароль успешно изменен.');
+        setActiveField(null);
       } else {
-        const error = await res.json();
         if (
-          error.error ===
+          error.message ===
           'New password should be different from the old password.'
         ) {
           toast.error('Новый пароль должен отличаться от старого.');
@@ -181,17 +173,14 @@ const Profile = ({ user: initialUser }: Props) => {
         }
       );
       if (error) {
-        if (error.code === 'over_email_send_rate_limit') {
-          const timeLeft = parseInt(error.message.match(/\d+/)?.[0] || '1', 10);
-
-          toast.error(
-            `Вы можете изменить пароль не чаще чем раз в минуту. Подождите ${timeLeft} секунд${
-              timeLeft === 1 ? 'у' : ''
-            } до следующей попытки смены пароля. `
-          );
-        } else {
-          toast.error('Произошла ошибка сервера. Попробуйте еще раз.');
-        }
+        const timeLeft = parseInt(error.message.match(/\d+/)?.[0] || '1', 10);
+        toast.error(
+          error.code === 'over_email_send_rate_limit'
+            ? `Подождите ${timeLeft} секунд${
+                timeLeft === 1 ? 'у' : ''
+              } перед следующей попыткой.`
+            : 'Произошла ошибка сервера. Попробуйте еще раз.'
+        );
       } else {
         toast.info(
           `Подтверждение смены пароля было отправлено на почту ${user.email}`

@@ -38,7 +38,6 @@ export default async function handler(
       email,
       first_name,
       last_name,
-      password,
       role,
       related_to,
       preferred_date_format,
@@ -140,30 +139,16 @@ export default async function handler(
 
       return res.status(200).json({ message: 'Email успешно обновлен' });
     } else {
-      const { error } = await supabase.auth.admin.updateUserById(
-        userId as string,
-        {
-          ...(email && { email }),
-          ...(password && { password }),
-          ...(first_name ||
-          last_name ||
-          related_to !== undefined ||
-          preferred_date_format ||
-          preferred_time_format ||
-          confirmItemDelete !== undefined
-            ? {
-                user_metadata: {
-                  ...(first_name && { first_name }),
-                  ...(last_name && { last_name }),
-                  ...(related_to !== undefined && { related_to }),
-                  ...(preferred_date_format && { preferred_date_format }),
-                  ...(preferred_time_format && { preferred_time_format }),
-                  ...(confirmItemDelete !== undefined && { confirmItemDelete }),
-                },
-              }
-            : {}),
-        }
-      );
+      const { error } = await supabase.auth.updateUser({
+        data: {
+          ...(first_name && { first_name }),
+          ...(last_name && { last_name }),
+          ...(related_to !== undefined && { related_to }),
+          ...(preferred_date_format && { preferred_date_format }),
+          ...(preferred_time_format && { preferred_time_format }),
+          ...(confirmItemDelete !== undefined && { confirmItemDelete }),
+        },
+      });
 
       if (error) {
         return res.status(500).json({ error: error.message });
