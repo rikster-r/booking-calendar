@@ -380,12 +380,12 @@ const AdminPanel = ({ user }: Props) => {
                   </thead>
                   <tbody className="divide-y divide-gray-50 bg-white">
                     {/* Sample Row */}
-                    {filteredUsers.map((user) => (
+                    {filteredUsers.map((filteredUser) => (
                       <tr
-                        key={user.id}
+                        key={filteredUser.id}
                         className={`${
                           deleteHovered &&
-                          selectedUsers.some((u) => u.id === user.id)
+                          selectedUsers.some((u) => u.id === filteredUser.id)
                             ? 'bg-red-400'
                             : ''
                         } relative w-full`}
@@ -393,8 +393,8 @@ const AdminPanel = ({ user }: Props) => {
                         <td className="px-4 py-3">
                           <input
                             type="checkbox"
-                            checked={selectedUsers.includes(user)}
-                            onChange={() => toggleSelectedUser(user)}
+                            checked={selectedUsers.includes(filteredUser)}
+                            onChange={() => toggleSelectedUser(filteredUser)}
                           />
                         </td>
                         <td className="px-4 py-3 flex items-center gap-2">
@@ -406,11 +406,12 @@ const AdminPanel = ({ user }: Props) => {
                             <div>
                               <p className="text-xs lg:text-sm">
                                 <strong className="block font-medium">
-                                  {user.user_metadata.first_name}{' '}
-                                  {user.user_metadata.last_name}
+                                  {filteredUser.user_metadata.first_name}{' '}
+                                  {filteredUser.user_metadata.last_name}
                                 </strong>
                                 <span className="text-gray-600">
-                                  {user.user_metadata.email || user.email}
+                                  {filteredUser.user_metadata.email ||
+                                    filteredUser.email}
                                 </span>
                               </p>
                             </div>
@@ -418,14 +419,14 @@ const AdminPanel = ({ user }: Props) => {
                         </td>
                         <td className="px-4 py-3">
                           <UserRoleBadge
-                            role={user.user_metadata.role}
+                            role={filteredUser.user_metadata.role}
                             onRoleChange={(role: string) =>
-                              changeRole(user.id, role)
+                              changeRole(filteredUser.id, role)
                             }
                           />
                         </td>
                         <td className="px-4 py-3">
-                          {onlineUserIds.includes(user.id) ? (
+                          {onlineUserIds.includes(filteredUser.id) ? (
                             <span className="text-green-500 font-medium">
                               ● В сети
                             </span>
@@ -436,14 +437,14 @@ const AdminPanel = ({ user }: Props) => {
                           )}
                         </td>
                         <td className="px-4 py-3">
-                          {user.last_sign_in_at
+                          {filteredUser.last_sign_in_at
                             ? `${format(
-                                user.last_sign_in_at,
+                                filteredUser.last_sign_in_at,
                                 user.user_metadata.preferred_date_format ??
                                   'd MMMM yyyy',
                                 { locale: ru }
                               )}, ${format(
-                                user.last_sign_in_at,
+                                filteredUser.last_sign_in_at,
                                 user.user_metadata.preferred_time_format ??
                                   'HH:mm'
                               )}`
