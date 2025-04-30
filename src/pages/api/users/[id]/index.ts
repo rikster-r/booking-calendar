@@ -96,6 +96,49 @@ export default async function handler(
         message: `Роль успешно изменена`,
         user: data,
       });
+    } else if (email) {
+      // Check if the email is already taken
+      const { data: existingUser, error: emailCheckError } = await supabase
+        .from('users')
+        .select('id')
+        .eq('email', email)
+        .single();
+
+      if (emailCheckError && emailCheckError.code !== 'PGRST116') {
+        return res
+          .status(500)
+          .json({ error: 'Ошибка сервера при изменении почты.' });
+      }
+
+      if (existingUser && existingUser.id !== userId) {
+        return res
+          .status(400)
+          .json({ error: 'Почта уже используется другим пользователем.' });
+      }
+
+      // Update the user's email
+      const { error: emailUpdateError } = await supabase.auth.updateUser({
+        email,
+        data: {
+          email,
+        },
+      });
+
+      if (emailUpdateError) {
+        return res.status(500).json({ error: emailUpdateError.message });
+      }
+
+      // Update the email in the public.users table
+      const { error: publicEmailUpdateError } = await supabase
+        .from('users')
+        .update({ email })
+        .eq('id', userId);
+
+      if (publicEmailUpdateError) {
+        return res.status(500).json({ error: publicEmailUpdateError.message });
+      }
+
+      return res.status(200).json({ message: 'Email успешно обновлен' });
     } else {
       const { error } = await supabase.auth.admin.updateUserById(
         userId as string,
@@ -122,6 +165,10 @@ export default async function handler(
         }
       );
 
+      if (error) {
+        return res.status(500).json({ error: error.message });
+      }
+
       // add update for public.users too
       const { error: publicError } = await supabase
         .from('users')
@@ -138,10 +185,6 @@ export default async function handler(
 
       if (publicError) {
         return res.status(500).json({ error: publicError.message });
-      }
-
-      if (error) {
-        return res.status(500).json({ error: error.message });
       }
 
       return res.status(200).json({ message: 'Пользователь обновлен' });

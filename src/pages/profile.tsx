@@ -140,7 +140,8 @@ const Profile = ({ user: initialUser }: Props) => {
     if (res.ok) {
       toast.info(`Подтверждение было отправлено на почту ${value}`);
     } else {
-      toast.error('Не удалось обновить данные. Попробуйте еще раз.');
+      const error = await res.json();
+      toast.error(error.error || 'Ошибка сервера - не удалось обновить email.');
     }
   };
 
@@ -202,8 +203,10 @@ const Profile = ({ user: initialUser }: Props) => {
   const handleSave = async (field: string, value: string) => {
     // exit if no changes made
     if (
-      (field in user.user_metadata && user.user_metadata[field] === value) ||
-      (field in user && user[field as keyof User] === value)
+      (field === 'email' && user[field as keyof User] === value) ||
+      (field !== 'email' &&
+        (user.user_metadata[field] === value ||
+          user[field as keyof User] === value))
     ) {
       setActiveField(null);
       return;
