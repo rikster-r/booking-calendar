@@ -323,9 +323,15 @@ const Profile = ({ user: initialUser }: Props) => {
               />
             )}
 
-            {avitoTokenData && Object.keys(avitoTokenData).length !== 0 && (
-              <RoomsLinks user={user} rooms={rooms} mutateRooms={mutateRooms} />
-            )}
+            {user.user_metadata.role !== 'cleaner' &&
+              avitoTokenData &&
+              Object.keys(avitoTokenData).length !== 0 && (
+                <RoomsLinks
+                  user={user}
+                  rooms={rooms}
+                  mutateRooms={mutateRooms}
+                />
+              )}
 
             {/* Preferences Section */}
             {user.user_metadata.role !== 'cleaner' && (
