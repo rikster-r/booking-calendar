@@ -25,7 +25,7 @@ const BookingsCalendar = ({
   setBookingsSize,
 }: Props) => {
   const today = new Date();
-  const currentYear = today.toLocaleDateString(LOCALE, { year: 'numeric' });
+  const [dateInView, setDateInView] = useState(today);
   const windowWidth = useWindowWidth();
   const bigScreen = windowWidth > 1024;
   const maxNameLength = bigScreen ? 20 : 10;
@@ -73,12 +73,34 @@ const BookingsCalendar = ({
     return () => ref.removeEventListener('scroll', handleScroll);
   }, []);
 
+  useEffect(() => {
+    const calculateLeftMostCellMonth = () => {
+      if (scrollRef.current) {
+        const { scrollLeft } = scrollRef.current;
+        const cellWidth = bigScreen ? 45 : 38;
+        const leftMostCellIndex = Math.floor(scrollLeft / cellWidth);
+        const leftMostCellDate = daysList[leftMostCellIndex];
+        if (leftMostCellDate) {
+          setDateInView(leftMostCellDate);
+        }
+      }
+    };
+
+    const ref = scrollRef.current;
+    if (!ref) return;
+    ref.addEventListener('scroll', calculateLeftMostCellMonth);
+    return () => ref.removeEventListener('scroll', calculateLeftMostCellMonth);
+  }, [daysList, bigScreen]);
+
   return (
     <div className="lg:px-8 h-full">
       <div className="py-4 bg-white rounded-t-xl flex gap-2 lg:gap-4 overflow-hidden pl-2 lg:p-8 w-full max-w-max mx-auto h-full text-sm">
         <div className="flex flex-col gap-y-1">
           <div className="text-sm lg:text-base font-semibold h-[20px] lg:h-[25px] text-gray-800">
-            {currentYear}
+            {dateInView.toLocaleDateString(LOCALE, {
+              month: 'long',
+              year: 'numeric',
+            })}
           </div>
           <div className="h-[60px] lg:h-[70px] my-1"></div>
           {rooms.map((room) => (
