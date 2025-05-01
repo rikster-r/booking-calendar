@@ -159,8 +159,12 @@ export default function Home({ user, tokenData }: Props) {
           user={user}
           title={
             user.user_metadata.role === 'cleaner'
-              ? 'Объекты уборки'
-              : 'Календарь брони'
+              ? `Объекты уборки • ${rooms.length} объект${
+                  rooms.length > 1 ? 'а' : ''
+                }`
+              : `Календарь брони • ${rooms.length} объект${
+                  rooms.length > 1 ? 'а' : ''
+                }`
           }
           mainClassName="bg-radial-[at_100%_20%] from-[#2980B9] to-[#6DD5FA]"
           titleClassName={`${
