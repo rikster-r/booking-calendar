@@ -10,7 +10,7 @@ import { useRouter } from 'next/router';
 import { dateFormats, timeFormats } from '@/lib/dates';
 import FormatDropdown from '@/components/FormatDropdown';
 import AvitoIntegration from '@/components/ProfileAvitoIntegration';
-import useSWR from 'swr';
+import useSWR, { mutate } from 'swr';
 import { fetcher } from '@/lib/fetcher';
 import RoomsLinks from '@/components/RoomsLinks';
 
@@ -62,7 +62,12 @@ const Profile = ({ user: initialUser }: Props) => {
     data: avitoTokenData,
     isLoading: isTokenLoading,
     mutate: mutateAvitoTokenData,
-  } = useSWR<AvitoTokenData>(`/api/avito/accessToken`, fetcher);
+  } = useSWR<AvitoTokenData>(`/api/avito/accessToken`, fetcher, {
+    onError(err, key) {
+      // Clear the cache manually on error
+      mutate(key, null, false); // false = don't revalidate
+    },
+  });
   const { data: rooms, mutate: mutateRooms } = useSWR<Room[]>(
     `/api/users/${initialUser.id}/rooms?onlyFromAvito=true&sortOrder=descending`,
     fetcher
