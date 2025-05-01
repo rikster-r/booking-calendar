@@ -16,10 +16,18 @@ export default async function handler(
     const tokenDataRes = await fetch(
       `${process.env.NEXT_PUBLIC_URL}/api/avito/accessToken?user_id=${user_id}`
     );
-    const tokenData: AvitoTokenData = await tokenDataRes.json();
+    const tokenData = await tokenDataRes.json();
 
-    if (!tokenDataRes.ok) {
-      return res.status(500).json({ error: tokenData });
+    if (
+      tokenData.error ===
+      'JSON object requested, multiple (or no) rows returned'
+    ) {
+      // user is not connected to avito
+      return res.status(200).json({ avito_booking_id: null });
+    }
+
+    if (!tokenDataRes.ok && 'error' in tokenData) {
+      return res.status(500).json({ error: tokenData.error });
     }
 
     const decryptedToken = decrypt(tokenData.access_token);
