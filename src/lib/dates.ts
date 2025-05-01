@@ -1,8 +1,8 @@
-import { addDays, format, isBefore } from 'date-fns';
+import { addDays, format, isBefore, differenceInCalendarDays } from 'date-fns';
 
-export function get30DayRange() {
-  const today = new Date();
-  const futureDate = addDays(today, 30); // Add 30 days
+export function get100DayRange(start?: Date) {
+  const today = start ?? new Date();
+  const futureDate = addDays(today, 100); // Add 100 days
 
   // Format as YYYY-MM-DD
   return {
@@ -30,9 +30,16 @@ export const isBeforeByDay = (date1: Date, date2: Date) => {
 
 export function formatDateForAvito(date: string) {
   return date.slice(0, 10);
-  const parsedDate = typeof date === 'string' ? new Date(date) : date;
-  return format(parsedDate, 'yyyy-MM-dd');
 }
+
+// calculate pageindex for main page bookings gotten from useSWRInfinite
+export const getPageIndexForBooking = (checkIn: Date | string) => {
+  const checkInDate = typeof checkIn === 'string' ? new Date(checkIn) : checkIn;
+  const daysDifference = differenceInCalendarDays(checkInDate, new Date());
+
+  // Calculate the page index by dividing the difference by the range (100 days per page)
+  return Math.floor(daysDifference / 100);
+};
 
 export const dateFormats = [
   { example: '24 апреля 2025', format: 'd MMMM yyyy' },

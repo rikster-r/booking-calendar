@@ -15,6 +15,9 @@ import Whatsapp from '@/assets/whatsapp.svg';
 import { ru } from 'date-fns/locale';
 import { User } from '@supabase/supabase-js';
 import { formatPhone } from '@/lib/formatPhone';
+import { SWRInfiniteKeyedMutator } from 'swr/infinite';
+import { getPageIndexForBooking } from '@/lib/dates';
+import { toast } from 'react-toastify';
 
 type Props = {
   isOpen: boolean;
@@ -22,6 +25,7 @@ type Props = {
   onEditOpen: () => void;
   booking: Booking;
   user: User;
+  mutateBookings: SWRInfiniteKeyedMutator<Booking[][]>;
 };
 
 const BookingInfoModal = ({
@@ -30,6 +34,7 @@ const BookingInfoModal = ({
   booking,
   onEditOpen,
   user,
+  mutateBookings,
 }: Props) => {
   if (!booking) return null;
   if (!booking.client_name) return null;
@@ -43,7 +48,22 @@ const BookingInfoModal = ({
     const res = await fetch(`/api/users/${user.id}/bookings/${booking.id}`, {
       method: 'DELETE',
     });
-    if (res.ok) onClose();
+    if (res.ok) {
+      const pageIndex = getPageIndexForBooking(booking.check_in);
+      mutateBookings((data) => {
+        if (!data) return data;
+        const newData = [...data];
+        newData[pageIndex] = newData[pageIndex].filter(
+          (b) => b.id !== booking.id
+        );
+        return newData;
+      });
+      toast.success('Бронь успешно удалена');
+      onClose();
+    } else {
+      const error = await res.json();
+      toast.error(error ? error.error : 'Ошибка удаления брони');
+    }
   };
 
   let phone = booking.client_phone.trim();

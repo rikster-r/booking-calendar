@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import createClient from '@/lib/supabase/api';
 import { decrypt } from '@/lib/encrypt';
-import { formatDateForAvito, get30DayRange } from '@/lib/dates';
+import { formatDateForAvito } from '@/lib/dates';
 
 export default async function handler(
   req: NextApiRequest,
@@ -44,6 +44,8 @@ export default async function handler(
     }
 
     const avito_room_id: number = roomData.avito_id;
+    const formattedCheckIn = formatDateForAvito(check_in);
+    const formattedCheckOut = formatDateForAvito(check_out);
     // POST to avito
     const avitoCreateRes = await fetch(
       `https://api.avito.ru/core/v1/accounts/${tokenData.avito_user_id}/items/${avito_room_id}/bookings`,
@@ -57,8 +59,8 @@ export default async function handler(
           bookings: [
             {
               comment: additional_info,
-              date_start: formatDateForAvito(check_in),
-              date_end: formatDateForAvito(check_out),
+              date_start: formattedCheckIn,
+              date_end: formattedCheckOut,
               type: 'booking',
             },
           ],
@@ -78,9 +80,8 @@ export default async function handler(
       return res.status(500).json({ error: avitoCreateData });
     }
 
-    const dayRange = get30DayRange();
     const avitoBookingsRes = await fetch(
-      `https://api.avito.ru/realty/v1/accounts/${tokenData.avito_user_id}/items/${avito_room_id}/bookings?date_start=${dayRange.start}&date_end=${dayRange.end}&with_unpaid=true`,
+      `https://api.avito.ru/realty/v1/accounts/${tokenData.avito_user_id}/items/${avito_room_id}/bookings?date_start=${formattedCheckIn}&date_end=${formattedCheckOut}&with_unpaid=true`,
       {
         headers: {
           Authorization: `Bearer ${decryptedToken}`,
@@ -100,73 +101,6 @@ export default async function handler(
     )?.avito_booking_id;
 
     return res.status(200).json({ avito_booking_id: avito_booking_id ?? null });
-  }
-
-  if (req.method === 'GET') {
-    const { user_id } = req.query;
-
-    // Get the user token
-    const tokenDataRes = await fetch(
-      `${process.env.NEXT_PUBLIC_URL}/api/avito/accessToken?user_id=${user_id}`
-    );
-    const tokenData: AvitoTokenData = await tokenDataRes.json();
-
-    if (!tokenDataRes.ok) {
-      return res.status(500).json({ error: tokenData });
-    }
-
-    const decryptedToken = decrypt(tokenData.access_token);
-
-    // Get bookings in the database
-    const { data: dbRooms, error } = await supabase
-      .from('rooms')
-      .select('*')
-      .neq('avito_link', null)
-      .neq('avito_link', '')
-      .eq('user_id', user_id);
-
-    if (error) {
-      return res
-        .status(500)
-        .json({ error: 'Не удалось получить брони с датабазы' });
-    }
-
-    // Get bookings in Avito for each room
-    const avitoBookingsByRoom: Record<number, AvitoBooking[]> = {};
-
-    const dayRange = get30DayRange();
-    try {
-      const bookingsPromises = dbRooms.map(async (room: Room) => {
-        const avitoRes = await fetch(
-          `https://api.avito.ru/realty/v1/accounts/${tokenData.avito_user_id}/items/${room.avito_id}/bookings?date_start=${dayRange.start}&date_end=${dayRange.end}&with_unpaid=true`,
-          {
-            method: 'GET',
-            headers: {
-              Authorization: `Bearer ${decryptedToken}`,
-            },
-          }
-        );
-
-        if (!avitoRes.ok) {
-          throw new Error(
-            `Не удалось получить брони с Авито для комнаты ${room.name}`
-          );
-        }
-
-        const avitoData = await avitoRes.json();
-        avitoBookingsByRoom[room.id] = avitoData.bookings || [];
-      });
-
-      await Promise.all(bookingsPromises);
-    } catch (error: unknown) {
-      return res.status(500).json({
-        error:
-          error instanceof Error
-            ? error.message
-            : 'Произошла неизвестная ошибка',
-      });
-    }
-    return res.status(201).json(avitoBookingsByRoom);
   }
 
   return res.status(405).json({ error: 'Данный метод API не существует.' });

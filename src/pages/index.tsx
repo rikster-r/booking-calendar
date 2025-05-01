@@ -10,7 +10,7 @@ import {
   BuildingOfficeIcon,
   KeyIcon,
 } from '@heroicons/react/24/solid';
-import { get30DayRange } from '@/lib/dates';
+import { get100DayRange } from '@/lib/dates';
 import Head from 'next/head';
 import type { User } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/server-props';
@@ -20,8 +20,10 @@ import { fetcher } from '@/lib/fetcher';
 import { toast } from 'react-toastify';
 import Layout from '@/components/Layout';
 import CleaningObjects from '@/components/CleaningObjects';
+import useSWRInfinite from 'swr/infinite';
+import { format, addDays } from 'date-fns';
 
-const dateRange = get30DayRange();
+const dateRange = get100DayRange();
 
 export const getServerSideProps: GetServerSideProps = async (
   context: GetServerSidePropsContext
@@ -68,7 +70,7 @@ export const getServerSideProps: GetServerSideProps = async (
       fallback: {
         [`/api/users/${roomsOwner}/rooms`]: initialRooms,
         [`/api/users/${userRes.data.user.id}/bookings/?start=${dateRange.start}&end=${dateRange.end}`]:
-          initialBookings,
+          [initialBookings],
       },
       tokenData: tokenRes.ok ? tokenData : {},
     },
@@ -82,15 +84,28 @@ type Props = {
 };
 
 export default function Home({ user, tokenData }: Props) {
+  const getKey = (pageIndex: number, previousPageData: Booking[] | null) => {
+    if (previousPageData && previousPageData.length === 0) return null; // reached end
+
+    const start = addDays(new Date(), pageIndex * 100);
+    const end = addDays(start, 100);
+
+    return `/api/users/${user.id}/bookings/?start=${format(
+      start,
+      'yyyy-MM-dd'
+    )}&end=${format(end, 'yyyy-MM-dd')}`;
+  };
   const roomsOwner = user.user_metadata.related_to ?? user.id;
   const { data: rooms, mutate: mutateRooms } = useSWR<Room[]>(
     `/api/users/${roomsOwner}/rooms`,
     fetcher
   );
-  const { data: bookings, mutate: mutateBookings } = useSWR<Booking[]>(
-    `/api/users/${user.id}/bookings/?start=${dateRange.start}&end=${dateRange.end}`,
-    fetcher
-  );
+  const {
+    data,
+    setSize,
+    mutate: mutateBookings,
+  } = useSWRInfinite<Booking[]>(getKey, fetcher, { parallel: true });
+  const bookings = data ? data.flat() : [];
   const { data: comments, mutate: mutateComments } = useSWR<RoomComment[]>(
     `/api/users/${roomsOwner}/comments`,
     fetcher
@@ -167,6 +182,7 @@ export default function Home({ user, tokenData }: Props) {
                   rooms={rooms}
                   bookings={bookings}
                   toggleModal={toggleModal}
+                  setBookingsSize={setSize}
                 />
               ) : (
                 <EmptyBookingsCalendar toggleModal={toggleModal} />
@@ -224,7 +240,6 @@ export default function Home({ user, tokenData }: Props) {
             isOpen={modals.addBooking}
             onClose={() => {
               toggleModal('addBooking');
-              mutateBookings();
             }}
             rooms={rooms}
             bookingData={
@@ -235,6 +250,7 @@ export default function Home({ user, tokenData }: Props) {
                     roomId: number;
                   }
             }
+            mutateBookings={mutateBookings}
             user={user}
           />
         )}
@@ -255,7 +271,6 @@ export default function Home({ user, tokenData }: Props) {
             isOpen={modals.bookingInfo}
             onClose={() => {
               toggleModal('bookingInfo');
-              mutateBookings();
             }}
             onEditOpen={() => {
               toggleModal('bookingInfo');
@@ -263,6 +278,7 @@ export default function Home({ user, tokenData }: Props) {
             }}
             booking={modalData as Booking}
             user={user}
+            mutateBookings={mutateBookings}
           />
         )}
         {modals.roomInfo && (

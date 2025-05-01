@@ -132,7 +132,7 @@ export default async function handler(
 
     return res
       .status(200)
-      .json({ message: 'Бронь успешно обновлена.', booking: data });
+      .json({ booking: data[0] });
   }
 
   return res.status(405).json({ error: 'Данный метод API не существует.' });

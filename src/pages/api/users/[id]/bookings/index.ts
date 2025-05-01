@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import createClient from '@/lib/supabase/api';
-import { get30DayRange } from '@/lib/dates';
+import { get100DayRange } from '@/lib/dates';
 
 export default async function handler(
   req: NextApiRequest,
@@ -128,32 +128,33 @@ export default async function handler(
     const avito_booking_id = avitoCreateData.avito_booking_id;
 
     // Insert new booking
-    const { data, error } = await supabase.from('bookings').insert([
-      {
-        room_id,
-        user_id,
-        avito_id: avito_booking_id,
-        client_name,
-        client_phone,
-        client_email,
-        adults_count,
-        children_count,
-        check_in,
-        check_out,
-        door_code,
-        additional_info,
-        daily_price,
-        paid,
-      },
-    ]);
+    const { data, error } = await supabase
+      .from('bookings')
+      .insert([
+        {
+          room_id,
+          user_id,
+          avito_id: avito_booking_id,
+          client_name,
+          client_phone,
+          client_email,
+          adults_count,
+          children_count,
+          check_in,
+          check_out,
+          door_code,
+          additional_info,
+          daily_price,
+          paid,
+        },
+      ])
+      .select()
 
     if (error) {
       return res.status(500).json({ error: error.message });
     }
 
-    return res
-      .status(201)
-      .json({ message: 'Успешно создана бронь.', booking: data });
+    return res.status(201).json({ booking: data[0] });
   }
 
   if (req.method === 'GET') {
@@ -161,7 +162,7 @@ export default async function handler(
     let { start, end, id: user_id } = req.query;
 
     // Validate and set default values
-    const { start: today, end: in30Days } = get30DayRange();
+    const { start: today, end: in30Days } = get100DayRange();
 
     if (!start || typeof start !== 'string') start = today;
     if (!end || typeof end !== 'string') end = in30Days;
@@ -180,6 +181,6 @@ export default async function handler(
 
     return res.status(200).json(data);
   }
-  
+
   return res.status(405).json({ error: 'Данный метод API не существует.' });
 }

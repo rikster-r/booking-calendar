@@ -1,7 +1,7 @@
 import Modal from '@/components/Modal';
 import { useEffect, useState } from 'react';
 import { PhoneIcon, EnvelopeIcon, XMarkIcon } from '@heroicons/react/24/solid';
-import { getNextDay, isBeforeByDay } from '@/lib/dates';
+import { getNextDay, getPageIndexForBooking, isBeforeByDay } from '@/lib/dates';
 import {
   format,
   differenceInCalendarDays,
@@ -13,6 +13,7 @@ import DateTimePicker from '@/components/DateTimePicker';
 import { toast } from 'react-toastify';
 import { User } from '@supabase/supabase-js';
 import { formatPhone, unformatPhone } from '@/lib/formatPhone';
+import { SWRInfiniteKeyedMutator } from 'swr/infinite';
 
 type Props = {
   isOpen: boolean;
@@ -25,10 +26,18 @@ type Props = {
         roomId: number;
       };
   user: User;
+  mutateBookings: SWRInfiniteKeyedMutator<Booking[][]>;
 };
 
 // this component is used for both updates and creations of booking
-const BookingModal = ({ isOpen, onClose, rooms, bookingData, user }: Props) => {
+const BookingModal = ({
+  isOpen,
+  onClose,
+  rooms,
+  bookingData,
+  user,
+  mutateBookings,
+}: Props) => {
   // workaround for typescript reasons
   function hasId(booking: unknown): booking is { id: unknown } {
     return !!booking && typeof booking === 'object' && 'id' in booking;
@@ -117,6 +126,25 @@ const BookingModal = ({ isOpen, onClose, rooms, bookingData, user }: Props) => {
       toast.success(
         hasId(bookingData) ? 'Бронь обновлена.' : 'Бронь добавлена.'
       );
+      const newBooking = (await res.json()).booking as Booking;
+      const pageIndex = getPageIndexForBooking(newBooking.check_in);
+
+      mutateBookings((data) => {
+        if (!data) return data;
+        const newData = [...data];
+        if (hasId(bookingData)) {
+          const index = data[pageIndex].findIndex(
+            (b) => b.id === bookingData.id
+          );
+          if (index === -1) return data;
+          newData[pageIndex][index] = newBooking;
+          return newData;
+        } else {
+          newData[pageIndex].push(newBooking);
+          return newData;
+        }
+      });
+
       onClose();
     } else {
       const errorData = await res.json();

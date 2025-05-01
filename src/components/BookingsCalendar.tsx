@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import RoomStatusBadge from './RoomStatusBadge';
 import useWindowWidth from '@/hooks/useWindowWidth';
+import { addDays } from 'date-fns';
+import { useState } from 'react';
 
 const LOCALE = 'ru-RU';
 
@@ -11,24 +13,65 @@ type Props = {
     modal: 'addBooking' | 'addRoom' | 'bookingInfo' | 'roomInfo',
     data?: Record<string, unknown> | undefined
   ) => void;
+  setBookingsSize: (
+    size: number | ((_size: number) => number)
+  ) => Promise<Booking[][] | undefined>;
 };
 
-const BookingsCalendar = ({ rooms, bookings, toggleModal }: Props) => {
+const BookingsCalendar = ({
+  rooms,
+  bookings,
+  toggleModal,
+  setBookingsSize,
+}: Props) => {
   const today = new Date();
   const currentYear = today.toLocaleDateString(LOCALE, { year: 'numeric' });
   const windowWidth = useWindowWidth();
   const bigScreen = windowWidth > 1024;
   const maxNameLength = bigScreen ? 20 : 10;
 
-  const daysList = Array.from({ length: 30 }, (_, i) => {
-    const year = today.getFullYear();
-    const month = today.getMonth();
-    const date = today.getDate();
-
-    return new Date(year, month, date + i);
+  const [daysList, setDaysList] = useState<Date[]>(() => {
+    // Today starts at current time, other dates are at 00:00 for convenience
+    const today = new Date();
+    const startOfDay = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate()
+    );
+    return [
+      today,
+      ...Array.from({ length: 99 }, (_, i) => addDays(startOfDay, i + 1)),
+    ];
   });
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-  const seenMonths = new Set();
+  const loadMoreDays = async () => {
+    setDaysList((prev) => {
+      const lastDate = prev[prev.length - 1];
+      const newDays = Array.from({ length: 100 }, (_, i) =>
+        addDays(lastDate, i + 1)
+      );
+      return [...prev, ...newDays];
+    });
+  };
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!scrollRef.current) return;
+      const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
+      const nearEnd = scrollLeft + clientWidth >= scrollWidth - 2000;
+
+      if (nearEnd) {
+        loadMoreDays();
+        setBookingsSize((size) => size + 3);
+      }
+    };
+
+    const ref = scrollRef.current;
+    if (!ref) return;
+    ref.addEventListener('scroll', handleScroll);
+    return () => ref.removeEventListener('scroll', handleScroll);
+  }, []);
 
   return (
     <div className="lg:px-8 h-full">
@@ -55,30 +98,37 @@ const BookingsCalendar = ({ rooms, bookings, toggleModal }: Props) => {
             </button>
           ))}
         </div>
-        <div className="grid grid-cols-[repeat(30,38px)] lg:grid-cols-[repeat(30,45px)] overflow-x-auto relative content-start gap-y-1">
-          {daysList.map((day) => {
+        <div
+          ref={scrollRef}
+          className="grid overflow-x-auto relative content-start gap-y-1"
+          style={{
+            gridTemplateColumns: `repeat(${daysList.length}, ${
+              bigScreen ? '45px' : '38px'
+            })`,
+          }}
+        >
+          {daysList.map((day, index) => {
             const month = day.toLocaleDateString(LOCALE, { month: 'long' });
-            if (seenMonths.has(month))
-              return (
-                <div
-                  className="w-full h-[20px] lg:h-[25px]"
-                  key={day.getTime()}
-                ></div>
-              );
-            seenMonths.add(month);
-            return (
+            const isFirstOfMonth =
+              index === 0 || day.getMonth() !== daysList[index - 1].getMonth();
+            return isFirstOfMonth ? (
               <div
                 className="text-sm lg:text-base font-medium capitalize h-[20px] lg:h-[25px] text-gray-700"
                 key={day.getTime()}
               >
                 {month}
               </div>
+            ) : (
+              <div
+                className="w-full h-[20px] lg:h-[25px]"
+                key={day.getTime()}
+              ></div>
             );
           })}
           {daysList.map((day) => (
             <div
               className="bg-gray-200 p-2 border border-gray-300 rounded-lg flex flex-col items-center justify-center h-[60px] lg:h-[70px] w-full my-1"
-              key={day.toISOString()}
+              key={day.getTime()}
             >
               <p className="text-sm lg:text-base font-semibold text-gray-900">
                 {day.toLocaleDateString(LOCALE, { day: 'numeric' })}
@@ -89,18 +139,20 @@ const BookingsCalendar = ({ rooms, bookings, toggleModal }: Props) => {
             </div>
           ))}
           {rooms.map((room) =>
-            daysList.map((day, dayIndex) => (
-              <button
-                className="border border-gray-300 p-2 h-[38px] lg:h-[45px] w-full flex items-center justify-center bg-white hover:bg-gray-100 transition"
-                onClick={() =>
-                  toggleModal('addBooking', {
-                    checkIn: day,
-                    roomId: room.id,
-                  })
-                }
-                key={`${room.id}-${dayIndex}`}
-              ></button>
-            ))
+            daysList.map((day) => {
+              return (
+                <button
+                  className="border border-gray-300 p-2 h-[38px] lg:h-[45px] w-full flex items-center justify-center bg-white hover:bg-gray-100 transition"
+                  onClick={() =>
+                    toggleModal('addBooking', {
+                      checkIn: day,
+                      roomId: room.id,
+                    })
+                  }
+                  key={`${room.id}-${day.getTime()}`}
+                ></button>
+              );
+            })
           )}
           {bookings?.map((booking) => {
             const roomIndex = rooms.findIndex(
