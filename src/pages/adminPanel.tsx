@@ -1,6 +1,5 @@
 import { GetServerSideProps, GetServerSidePropsContext } from 'next';
 import { fetcher } from '@/lib/fetcher';
-import Sidebar from '@/components/Sidebar';
 import { createClient } from '@/lib/supabase/server-props';
 import { User } from '@supabase/supabase-js';
 import useSWR from 'swr';
@@ -13,12 +12,13 @@ import {
 import UserRoleBadge from '@/components/UserRoleBadge';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
-import { useState, useContext, useEffect } from 'react';
+import { useState, useContext, useEffect, useRef, useMemo } from 'react';
 import Head from 'next/head';
 import { toast } from 'react-toastify';
 import AddUserModal from '@/components/AddUserModal';
 import { OnlineUsersContext } from '@/context/OnlineUsersContext';
 import Layout from '@/components/Layout';
+import Pagination from '@/components/Pagination';
 
 export const getServerSideProps: GetServerSideProps = async (
   context: GetServerSidePropsContext
@@ -47,64 +47,70 @@ type Props = {
   fallback?: Record<string, unknown>;
 };
 
+type UsersData = {
+  total: number;
+  users: PublicUser[];
+};
+
 const AdminPanel = ({ user }: Props) => {
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(50);
+  const [searchQuery, setSearchQuery] = useState('');
   const {
-    data: users,
+    data,
     mutate: mutateUsers,
     isLoading,
-  } = useSWR<User[]>(`/api/users`, fetcher);
-  const [selectedUsers, setSelectedUsers] = useState<User[]>([]);
+  } = useSWR<UsersData>(
+    searchQuery
+      ? `/api/users?search=${encodeURIComponent(
+          searchQuery
+        )}&page=${page}&pageSize=${pageSize}`
+      : `/api/users?page=${page}&pageSize=${pageSize}`,
+    fetcher,
+    {
+      keepPreviousData: true,
+    }
+  );
+  const users = useMemo(() => (data ? data.users : []), [data]);
+  const userCount = useMemo(() => (data ? data.total : 0), [data]);
+  const [selectedUsers, setSelectedUsers] = useState<PublicUser[]>([]);
   const [deleteHovered, setDeleteHovered] = useState(false);
   const [addUserModalOpen, setAddUserModalOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [filteredUsers, setFilteredUsers] = useState<User[]>(users || []);
+  const tableRef = useRef<HTMLTableElement>(null);
   const onlineUserIds = useContext(OnlineUsersContext);
 
   useEffect(() => {
-    if (!searchQuery) {
-      setFilteredUsers(users || []);
-    }
-  }, [users, searchQuery]);
-
-  useEffect(() => {
+    if (!users) return;
     setSelectedUsers((prevSelected) =>
-      prevSelected.filter((user) =>
-        filteredUsers.some((filtered) => filtered.id === user.id)
-      )
+      prevSelected.filter((user) => users.some((u) => u.id === user.id))
     );
-  }, [filteredUsers]);
+  }, [users]);
 
-  if (isLoading)
+  if (isLoading && searchQuery.trim() === '') {
     return (
       <>
         <Head>
           <title>Панель администратора</title>
           <meta name="description" content="Календарь брони" />
         </Head>
-        <div className="flex h-screen bg-gray-100">
-          <main className="flex-1 w-full lg:w-[calc(100%-320px)] lg:ml-80 lg:px-8 flex flex-col">
-            <div className="flex items-center">
-              <Sidebar user={user} buttonClassName="text-black" />
-              <div className="w-full max-w-[1600px] mx-auto">
-                <h1 className="text-xl font-bold pb-4 lg:pb-6 pt-4 lg:pl-8 text-left lg:mt-4">
-                  Панель администратора
-                </h1>
-              </div>
-            </div>
-            <div className="mt-4 rounded-xl animate-pulse max-w-[1600px] px-4 py-6 bg-white rounded-t-xl gap-2 lg:gap-4 overflow-hidden lg:p-8 w-full mx-auto h-full">
+        <Layout
+          user={user}
+          title="Панель администратора"
+          titleClassName="max-w-[1600px]"
+        >
+          <div className="lg:px-8 h-full">
+            <div className="rounded-xl animate-pulse max-w-[1600px] px-4 py-6 bg-white rounded-t-xl gap-2 lg:gap-4 overflow-hidden lg:p-8 w-full mx-auto h-full">
               <div className="flex justify-between items-center mb-4">
                 <div className="flex items-center gap-4">
                   <div className="h-4 w-32 bg-gray-200 rounded" />
                   <div className="h-4 w-24 bg-gray-200 rounded" />
                 </div>
               </div>
-
               <div className="mb-4 flex">
                 <div className="h-9 w-40 bg-gray-200 rounded" />
                 <div className="h-9 w-10 bg-gray-200 rounded ml-auto" />
               </div>
-
-              <div className="overflow-auto rounded-lg">
+              <div className="overflow-auto rounded-lg no-scrollbar">
                 <table className="min-w-full text-sm text-left">
                   <thead className="bg-gray-50 text-gray-700">
                     <tr className="uppercase">
@@ -155,28 +161,25 @@ const AdminPanel = ({ user }: Props) => {
                 </table>
               </div>
             </div>
-          </main>
-        </div>
+          </div>
+        </Layout>
       </>
     );
+  }
 
-  if (!users || users.length === 0) {
+  if (users.length === 0 && searchQuery.trim() === '') {
     return (
       <>
         <Head>
           <title>Панель администратора</title>
           <meta name="description" content="Календарь брони" />
         </Head>
-        <div className="flex min-h-screen">
-          <main className="flex-1 w-full lg:w-[calc(100%-320px)] lg:ml-80 lg:px-8 flex flex-col bg-gray-100">
-            <div className="flex items-center">
-              <Sidebar user={user} buttonClassName="text-black" />
-              <div className="w-full max-w-[1600px] mx-auto">
-                <h1 className="text-xl font-bold py-4 lg:py-6 lg:pl-8 text-left">
-                  Панель администратора
-                </h1>
-              </div>
-            </div>
+        <Layout
+          user={user}
+          title="Панель администратора"
+          titleClassName="max-w-[1600px]"
+        >
+          <div className="lg:px-8 h-full">
             <div className="p-4 bg-white rounded-t-xl flex justify-center items-center w-full max-w-[1600px] mx-auto h-full flex-col text-center">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -198,8 +201,8 @@ const AdminPanel = ({ user }: Props) => {
                 Добавить пользователя
               </button>
             </div>
-          </main>
-        </div>
+          </div>
+        </Layout>
         <AddUserModal
           isOpen={addUserModalOpen}
           onClose={() => {
@@ -211,7 +214,7 @@ const AdminPanel = ({ user }: Props) => {
     );
   }
 
-  const toggleSelectedUser = (user: User) => {
+  const toggleSelectedUser = (user: PublicUser) => {
     setSelectedUsers((prev) => {
       const isSelected = prev.some((u) => u.id === user.id);
       if (isSelected) {
@@ -255,11 +258,13 @@ const AdminPanel = ({ user }: Props) => {
     // Optimistic update: change the role locally before sending the request
     mutateUsers(
       (currentData) => {
-        return (currentData ?? []).map((user) =>
-          user.id === userId
-            ? { ...user, user_metadata: { ...user.user_metadata, role } }
-            : user
-        );
+        if (!currentData) return currentData;
+        return {
+          ...currentData,
+          users: currentData.users.map((user) =>
+            user.id === userId ? { ...user, role } : user
+          ),
+        };
       },
       false // Avoid revalidation
     );
@@ -280,44 +285,26 @@ const AdminPanel = ({ user }: Props) => {
     mutateUsers();
   };
 
-  const handleSearch = async (query: string) => {
-    setSearchQuery(query);
-
-    if (!query.trim()) {
-      setFilteredUsers(users || []);
-      return;
-    }
-
-    setFilteredUsers((prev) =>
-      prev.filter((user) => {
-        const email = user.email?.toLowerCase() || '';
-        const firstName = user.user_metadata?.first_name?.toLowerCase() || '';
-        const lastName = user.user_metadata?.last_name?.toLowerCase() || '';
-        const q = query.toLowerCase();
-
-        return (
-          email.includes(q) || firstName.includes(q) || lastName.includes(q)
-        );
-      })
-    );
-  };
-
   return (
     <>
       <Head>
         <title>Панель администратора</title>
         <meta name="description" content="Календарь брони" />
       </Head>
-      <Layout user={user} title="Панель администратора">
+      <Layout
+        user={user}
+        title="Панель администратора"
+        titleClassName="max-w-[1600px]"
+      >
         <div className="lg:px-8 h-full">
           <div className="px-4 py-6 bg-white rounded-t-xl gap-2 lg:gap-4 overflow-hidden lg:p-8 w-full max-w-[1600px] mx-auto h-full">
             <div className="flex justify-between items-center mb-4 text-sm lg:text-base">
               <div className="flex items-center gap-4">
                 <p>
                   <span className="text-gray-500">Все пользователи: </span>
-                  {filteredUsers.length}
+                  {userCount}
                 </p>
-                {filteredUsers.length === users.length && (
+                {!searchQuery.trim() && (
                   <p>
                     <span className="text-gray-500">
                       Пользователей онлайн:{' '}
@@ -341,7 +328,7 @@ const AdminPanel = ({ user }: Props) => {
                   className="block w-full pr-4 pl-10 h-full text-sm text-gray-900 border border-gray-300 bg-gray-50 focus:ring-blue-500 focus:border-blue-500 rounded-md"
                   placeholder="Поиск пользователей"
                   value={searchQuery}
-                  onChange={(e) => handleSearch(e.target.value)}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                   required
                 />
               </div>
@@ -360,100 +347,111 @@ const AdminPanel = ({ user }: Props) => {
                 <TrashIcon className="w-5 h-5 group-hover:stroke-red-500" />
               </button>
             </div>
-            {filteredUsers.length ? (
-              <div className="overflow-auto rounded-lg text-xs lg:text-sm h-full">
-                <table className="min-w-full text-left text-nowrap">
-                  <thead className="bg-gray-50 text-gray-700">
-                    <tr className="uppercase">
-                      <th className="px-4 py-3">
-                        <input
-                          type="checkbox"
-                          checked={selectedUsers.length === users.length}
-                          onChange={toggleAllSelectedUsers}
-                        />
-                      </th>
-                      <th className="px-4 py-4">Пользователь</th>
-                      <th className="px-4 py-4">Роль</th>
-                      <th className="px-4 py-4">Статус</th>
-                      <th className="px-4 py-4">Последний заход</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-50 bg-white">
-                    {/* Sample Row */}
-                    {filteredUsers.map((filteredUser) => (
-                      <tr
-                        key={filteredUser.id}
-                        className={`${
-                          deleteHovered &&
-                          selectedUsers.some((u) => u.id === filteredUser.id)
-                            ? 'bg-red-400'
-                            : ''
-                        } relative w-full`}
-                      >
-                        <td className="px-4 py-3">
+            {users.length ? (
+              <div className="rounded-lg text-xs lg:text-sm h-full">
+                <div className="w-full overflow-x-auto no-scrollbar">
+                  <table
+                    className="w-full text-left text-nowrap mb-4"
+                    ref={tableRef}
+                  >
+                    <thead className="bg-gray-50 text-gray-700">
+                      <tr className="uppercase">
+                        <th className="px-4 py-3">
                           <input
                             type="checkbox"
-                            checked={selectedUsers.includes(filteredUser)}
-                            onChange={() => toggleSelectedUser(filteredUser)}
+                            checked={selectedUsers.length === users.length}
+                            onChange={toggleAllSelectedUsers}
                           />
-                        </td>
-                        <td className="px-4 py-3 flex items-center gap-2">
-                          <div className="flex items-center gap-2">
-                            {/* todo */}
-                            <div>
-                              <UserCircleIcon className="w-7 h-7" />
-                            </div>
-                            <div>
-                              <p className="text-xs lg:text-sm">
-                                <strong className="block font-medium">
-                                  {filteredUser.user_metadata.first_name}{' '}
-                                  {filteredUser.user_metadata.last_name}
-                                </strong>
-                                <span className="text-gray-600">
-                                  {filteredUser.user_metadata.email ||
-                                    filteredUser.email}
-                                </span>
-                              </p>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3">
-                          <UserRoleBadge
-                            role={filteredUser.user_metadata.role}
-                            onRoleChange={(role: string) =>
-                              changeRole(filteredUser.id, role)
-                            }
-                          />
-                        </td>
-                        <td className="px-4 py-3">
-                          {onlineUserIds.includes(filteredUser.id) ? (
-                            <span className="text-green-500 font-medium">
-                              ● В сети
-                            </span>
-                          ) : (
-                            <span className="text-gray-400 font-medium">
-                              ● Не в сети
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-4 py-3">
-                          {filteredUser.last_sign_in_at
-                            ? `${format(
-                                filteredUser.last_sign_in_at,
-                                user.user_metadata.preferred_date_format ??
-                                  'd MMMM yyyy',
-                                { locale: ru }
-                              )}, ${format(
-                                filteredUser.last_sign_in_at,
-                                user.user_metadata.preferred_time_format ??
-                                  'HH:mm'
-                              )}`
-                            : '-'}
-                        </td>
+                        </th>
+                        <th className="px-4 py-4">Пользователь</th>
+                        <th className="px-4 py-4">Роль</th>
+                        <th className="px-4 py-4">Статус</th>
+                        <th className="px-4 py-4">Последний заход</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50 bg-white">
+                      {/* Sample Row */}
+                      {users.map((filteredUser) => (
+                        <tr
+                          key={filteredUser.id}
+                          className={`${
+                            deleteHovered &&
+                            selectedUsers.some((u) => u.id === filteredUser.id)
+                              ? 'bg-red-400'
+                              : ''
+                          } relative w-full`}
+                        >
+                          <td className="px-4 py-3">
+                            <input
+                              type="checkbox"
+                              checked={selectedUsers.includes(filteredUser)}
+                              onChange={() => toggleSelectedUser(filteredUser)}
+                            />
+                          </td>
+                          <td className="px-4 py-3 flex items-center gap-2">
+                            <div className="flex items-center gap-2">
+                              {/* todo */}
+                              <div>
+                                <UserCircleIcon className="w-7 h-7" />
+                              </div>
+                              <div>
+                                <p className="text-xs lg:text-sm">
+                                  <strong className="block font-medium">
+                                    {filteredUser.first_name}{' '}
+                                    {filteredUser.last_name}
+                                  </strong>
+                                  <span className="text-gray-600">
+                                    {filteredUser.email || filteredUser.email}
+                                  </span>
+                                </p>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3">
+                            <UserRoleBadge
+                              role={filteredUser.role}
+                              wrapper={tableRef.current}
+                              onRoleChange={(role: string) =>
+                                changeRole(filteredUser.id, role)
+                              }
+                            />
+                          </td>
+                          <td className="px-4 py-3">
+                            {onlineUserIds.includes(filteredUser.id) ? (
+                              <span className="text-green-500 font-medium">
+                                ● В сети
+                              </span>
+                            ) : (
+                              <span className="text-gray-400 font-medium">
+                                ● Не в сети
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3">
+                            {filteredUser.last_sign_in_at
+                              ? `${format(
+                                  filteredUser.last_sign_in_at,
+                                  user.user_metadata.preferred_date_format ??
+                                    'd MMMM yyyy',
+                                  { locale: ru }
+                                )}, ${format(
+                                  filteredUser.last_sign_in_at,
+                                  user.user_metadata.preferred_time_format ??
+                                    'HH:mm'
+                                )}`
+                              : '-'}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <Pagination
+                  currentPage={page}
+                  setPage={setPage}
+                  itemsPerPage={pageSize}
+                  totalItems={userCount ? userCount : 0}
+                />
               </div>
             ) : (
               <h2 className="text-base text-gray-500 mt-6">

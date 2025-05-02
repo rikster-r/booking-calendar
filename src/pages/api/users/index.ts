@@ -21,13 +21,45 @@ export default async function handler(
       return res.status(403).json({ error: 'Недостаточно прав доступа' });
     }
 
-    const { data, error } = await supabase.auth.admin.listUsers();
+    const { page = 1, pageSize = 50, search = '' } = req.query;
+
+    const query = supabase
+      .from('users')
+      .select('*', { count: 'exact' })
+      .neq('id', user.id);
+
+    if (search) {
+      const searchTerms = (search as string)
+        .split(' ')
+        .map((term) => `%${term}%`);
+      query.or(
+        searchTerms
+          .map((term) =>
+            ['email', 'first_name', 'last_name']
+              .map((field) => `${field}.ilike.${term}`)
+              .join(',')
+          )
+          .join(',')
+      );
+    }
+
+    const {
+      data: users,
+      error,
+      count,
+    } = await query.range(
+      (Number(page) - 1) * Number(pageSize),
+      Number(page) * Number(pageSize) - 1
+    );
+
     if (error) {
       return res.status(500).json({ error: error.message });
     }
 
-    const users = data.users.filter((x) => x.id !== user.id);
-    return res.status(200).json(users);
+    return res.status(200).json({
+      users,
+      total: count,
+    });
   }
 
   if (req.method === 'DELETE') {

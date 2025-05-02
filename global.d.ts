@@ -111,6 +111,10 @@ type PublicUser = {
   role: string;
   related_to: string | null;
   updated_at: string;
+  last_sign_in_at: string | null;
+  preferred_date_format: string | null;
+  preferred_time_format: string | null;
+  confirmItemDelete: boolean | null;
 };
 
 type AvitoTokenData = {
