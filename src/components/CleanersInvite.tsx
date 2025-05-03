@@ -31,7 +31,7 @@ const CleanersInvite = ({ cleaners, addCleaner }: Props) => {
         <input
           type="email"
           placeholder="Введите электронную почту"
-          className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-full h-full"
+          className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 w-full h-full"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           onKeyDown={(e) => {

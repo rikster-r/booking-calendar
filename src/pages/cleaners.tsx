@@ -67,16 +67,37 @@ const Cleaners = ({ user }: Props) => {
   if (!cleaners || !rooms) return <></>;
 
   const addCleaner = async (email: string) => {
-    const res = await fetch(`/api/users/${user.id}/cleaners`, {
+    if (cleaners.some((cleaner) => cleaner.email === email)) {
+      toast.error('Пользователь с данной почтой уже добавлен к вам.');
+      return;
+    }
+
+    if (email === user.email) {
+      toast.error('Вы не можете добавить себя.');
+      return;
+    }
+
+    const res = await fetch(`${process.env.NEXT_PUBLIC_URL}/api/userInvite`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email }),
+      body: JSON.stringify({ email, related_to: user.id }),
     });
-
     if (res.ok) {
+      if (res.status === 201) {
+        toast.success(
+          'Приглашение отправлено. Уборщик получит его на указанную почту.'
+        );
+      } else {
+        toast.success('Уборщик успешно добавлен.');
+      }
       mutateCleaners();
     } else {
-      toast.error('Не удалось добавить уборщика');
+      const errorData = await res.json();
+      if (errorData.error.startsWith('Unable to validate email address')) {
+        toast.error('Введите корректный адрес электронной почты.');
+      } else {
+        toast.error(errorData.error || 'Не удалось добавить уборщика.');
+      }
     }
   };
 
