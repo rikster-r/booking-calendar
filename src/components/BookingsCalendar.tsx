@@ -2,6 +2,7 @@ import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import RoomStatusBadge from './RoomStatusBadge';
 import useWindowWidth from '@/hooks/useWindowWidth';
 import { addDays, isBefore, startOfDay } from 'date-fns';
+import CalendarDatePicker from './CalendarDatePicker';
 
 const LOCALE = 'ru-RU';
 const PAST_DAYS = 100;
@@ -29,7 +30,7 @@ const BookingsCalendar = ({
   currentBookings,
   toggleModal,
   increaseSize,
-  setSelectedDate
+  setSelectedDate,
 }: Props) => {
   const today = startOfDay(new Date());
   const [dateInView, setDateInView] = useState(new Date());
@@ -60,8 +61,8 @@ const BookingsCalendar = ({
     container.scrollLeft = PAST_DAYS * cellWidth;
   };
 
-  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newDate = startOfDay(new Date(e.target.value));
+  const handleDateChange = (date: Date) => {
+    const newDate = startOfDay(date);
     setSelectedDate(newDate);
 
     // Rebuild daysList centered around the selected date
@@ -149,209 +150,221 @@ const BookingsCalendar = ({
 
   return (
     <div className="lg:px-8 h-full">
-      <div className="py-4 bg-white rounded-t-xl flex gap-2 lg:gap-4 overflow-hidden pl-2 lg:p-8 w-full max-w-max mx-auto h-full text-sm">
-        <div className="flex flex-col gap-y-1">
-          <div className="text-sm lg:text-base font-semibold h-[20px] lg:h-[25px] text-gray-800">
-            {dateInView.toLocaleDateString(LOCALE, {
-              month: 'long',
-              year: 'numeric',
-            })}
-          </div>
-          <div className="h-[60px] lg:h-[70px] my-1">
-            <input
-              type="date"
-              value={addDays(dateInView, 1).toISOString().split('T')[0]}
-              onChange={handleDateChange}
-              className="p-2 border rounded-lg w-full text-sm"
-            />
-          </div>
-          {rooms.map((room) => (
-            <button
-              key={room.id}
-              onClick={() => toggleModal('roomInfo', room)}
-              style={{ backgroundColor: room.color }}
-              className="text-white p-2 lg:p-3 rounded-lg text-center h-[38px] lg:h-[45px] flex items-center justify-center shadow-md text-[10px] lg:text-xs gap-1 w-[120px] lg:w-[180px]"
-            >
-              <span className="font-semibold text-nowrap">
-                {room.name.length > maxNameLength
-                  ? `${room.name.slice(0, maxNameLength)}...`
-                  : room.name}
-              </span>
-              <RoomStatusBadge room={room} />
-            </button>
-          ))}
+      <div className="py-4 bg-white rounded-t-xl gap-2 lg:gap-4 overflow-hidden pl-2 lg:p-8 w-full max-w-max mx-auto h-full text-sm">
+        <div className="flex ml-auto w-max gap-x-2 mr-2 mb-2 sm:mb-0">
+          <button
+            className="rounded-full bg-gray-100 px-4 py-2 cursor-pointer text-black text-sm text-center"
+            onClick={() => handleDateChange(today)}
+          >
+            <span className="mr-2">Сегодня</span>
+          </button>
+          <CalendarDatePicker
+            selectedDate={dateInView}
+            onDateChange={handleDateChange}
+            startDate={dateInView}
+          />
         </div>
 
-        <div
-          ref={scrollRef}
-          className="grid overflow-x-auto relative content-start gap-y-1 no-scrollbar"
-          style={{
-            gridTemplateColumns: `repeat(${daysList.length}, ${cellWidth}px)`,
-          }}
-        >
-          {daysList.map((day, index) => {
-            const prev = daysList[index - 1];
-            const isNewMonth = !prev || day.getMonth() !== prev.getMonth();
-            return (
-              <div
-                key={day.getTime()}
-                className={`h-[20px] lg:h-[25px] ${
-                  isNewMonth
-                    ? 'text-sm lg:text-base font-medium capitalize text-gray-700'
-                    : ''
-                }`}
-              >
-                {isNewMonth &&
-                  day.toLocaleDateString(LOCALE, { month: 'long' })}
-              </div>
-            );
-          })}
+        <div className="flex gap-2 lg:gap-4 oveflow-hidden">
+          <div className="flex-col gap-y-1 flex">
+            <div className="text-sm lg:text-base font-semibold h-[20px] lg:h-[25px] text-gray-800 hidden lg:block">
+              {dateInView.toLocaleDateString(LOCALE, {
+                month: 'long',
+                year: 'numeric',
+              })}
+            </div>
 
-          {daysList.map((day) => {
-            const past = isPastDay(day);
-            return (
-              <div
-                key={day.getTime()}
-                className={`p-2 border rounded-lg flex flex-col items-center justify-center h-[60px] lg:h-[70px] w-full my-1 ${
-                  past
-                    ? 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed'
-                    : 'bg-gray-200 border-gray-300 text-gray-900'
-                }`}
+            <div className="h-[60px] lg:h-[70px] my-1 font-semibold">
+              <p className=""></p>
+              {!bigScreen &&
+                dateInView
+                  .toLocaleDateString(LOCALE, {
+                    month: 'long',
+                    year: 'numeric',
+                  })
+                  .slice(0, 1)
+                  .toUpperCase() +
+                  dateInView
+                    .toLocaleDateString(LOCALE, {
+                      month: 'long',
+                      year: 'numeric',
+                    })
+                    .slice(1)}
+            </div>
+            {rooms.map((room) => (
+              <button
+                key={room.id}
+                onClick={() => toggleModal('roomInfo', room)}
+                style={{ backgroundColor: room.color }}
+                className="text-white p-2 lg:p-3 rounded-lg text-center h-[38px] lg:h-[45px] flex items-center justify-center shadow-md text-[10px] lg:text-xs gap-1 w-[120px] lg:w-[180px]"
               >
-                <p className="text-sm lg:text-base font-semibold">
-                  {day.toLocaleDateString(LOCALE, { day: 'numeric' })}
-                </p>
-                <p className="text-[10px] lg:text-xs">
-                  {day.toLocaleDateString(LOCALE, { weekday: 'short' })}
-                </p>
-              </div>
-            );
-          })}
-
-          {rooms.map((room) =>
-            daysList.map((day) => {
+                <span className="font-semibold text-nowrap">
+                  {room.name.length > maxNameLength
+                    ? `${room.name.slice(0, maxNameLength)}...`
+                    : room.name}
+                </span>
+                <RoomStatusBadge room={room} />
+              </button>
+            ))}
+          </div>
+          <div
+            ref={scrollRef}
+            className="grid overflow-x-auto relative content-start gap-y-1 no-scrollbar"
+            style={{
+              gridTemplateColumns: `repeat(${daysList.length}, ${cellWidth}px)`,
+            }}
+          >
+            {daysList.map((day, index) => {
+              const prev = daysList[index - 1];
+              const isNewMonth = !prev || day.getMonth() !== prev.getMonth();
+              return (
+                <div
+                  key={day.getTime()}
+                  className={`h-[20px] lg:h-[25px] hidden lg:block ${
+                    isNewMonth
+                      ? 'text-sm lg:text-base font-medium capitalize text-gray-700'
+                      : ''
+                  }`}
+                >
+                  {isNewMonth &&
+                    day.toLocaleDateString(LOCALE, { month: 'long' })}
+                </div>
+              );
+            })}
+            {daysList.map((day) => {
               const past = isPastDay(day);
               return (
-                <button
-                  key={`${room.id}-${day.getTime()}`}
-                  className={`border p-2 h-[38px] lg:h-[45px] w-full flex items-center justify-center transition ${
+                <div
+                  key={day.getTime()}
+                  className={`p-2 border rounded-lg flex flex-col items-center justify-center h-[60px] lg:h-[70px] w-full my-1 ${
                     past
-                      ? 'bg-gray-100 border-gray-200 text-gray-400 opacity-90 cursor-not-allowed'
-                      : 'bg-white border-gray-300 hover:bg-gray-100'
+                      ? 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed'
+                      : 'bg-gray-200 border-gray-300 text-gray-900'
                   }`}
-                  onClick={() =>
-                    !past &&
-                    toggleModal('addBooking', { checkIn: day, roomId: room.id })
-                  }
-                  disabled={past}
-                />
+                >
+                  <p className="text-sm lg:text-base font-semibold">
+                    {day.toLocaleDateString(LOCALE, { day: 'numeric' })}
+                  </p>
+                  <p className="text-[10px] lg:text-xs">
+                    {day.toLocaleDateString(LOCALE, { weekday: 'short' })}
+                  </p>
+                </div>
               );
-            })
-          )}
-
-          {/* Bookings */}
-          {oldBookings?.map((booking) => {
-            const roomIndex = rooms.findIndex(
-              (room) => room.id === booking.room_id
-            );
-            if (roomIndex === -1) return null;
-
-            const checkIn = new Date(booking.check_in);
-            const checkOut = new Date(booking.check_out);
-            const first = daysList[0];
-            const last = daysList[daysList.length - 1];
-
-            const hourPixel = cellWidth / 24;
-            const hoursOffset = (checkIn.getTime() - first.getTime()) / 36e5;
-            const x = Math.max(0, hoursOffset * hourPixel);
-
-            let duration = (checkOut.getTime() - checkIn.getTime()) / 36e5;
-            if (checkIn < first) {
-              duration = (checkOut.getTime() - first.getTime()) / 36e5;
-            }
-            if (checkOut > last) duration += 24;
-
-            const width = duration * hourPixel;
-
-            const y =
-              (bigScreen ? 25 + 8 + 70 + 8 : 20 + 8 + 60 + 8) +
-              roomIndex * (cellWidth + 4);
-
-            const borderRadius = [
-              checkIn <= first ? '0' : '1rem',
-              checkOut >= last ? '0' : '1rem',
-              checkOut >= last ? '0' : '1rem',
-              checkIn <= first ? '0' : '1rem',
-            ].join(' ');
-
-            return (
-              <div
-                key={booking.id}
-                className={`absolute truncate shadow-lg rounded-lg text-xs lg:text-sm text-white p-2 h-[38px] lg:h-[45px] flex items-center justify-center ${
-                  booking.paid ? 'bg-blue-500' : 'bg-red-500'
-                }`}
-                style={{
-                  top: `${y}px`,
-                  left: `${x}px`,
-                  width: `${width}px`,
-                  borderRadius,
-                }}
-                onClick={() => toggleModal('bookingInfo', booking)}
-              >
-                {booking.client_name}
-              </div>
-            );
-          })}
-          {currentBookings?.map((booking) => {
-            const roomIndex = rooms.findIndex(
-              (room) => room.id === booking.room_id
-            );
-            if (roomIndex === -1) return null;
-
-            const checkIn = new Date(booking.check_in);
-            const checkOut = new Date(booking.check_out);
-            const first = daysList[0];
-            const last = daysList[daysList.length - 1];
-
-            const hourPixel = cellWidth / 24;
-            const hoursOffset = (checkIn.getTime() - first.getTime()) / 36e5;
-            const x = Math.max(0, hoursOffset * hourPixel);
-
-            let duration = (checkOut.getTime() - checkIn.getTime()) / 36e5;
-            if (checkIn < first)
-              duration = (checkOut.getTime() - first.getTime()) / 36e5;
-            if (checkOut > last) duration += 24;
-
-            const width = duration * hourPixel;
-            const y =
-              (bigScreen ? 25 + 8 + 70 + 8 : 20 + 8 + 60 + 8) +
-              roomIndex * (cellWidth + 4);
-
-            const borderRadius = [
-              checkIn <= first ? '0' : '1rem',
-              checkOut >= last ? '0' : '1rem',
-              checkOut >= last ? '0' : '1rem',
-              checkIn <= first ? '0' : '1rem',
-            ].join(' ');
-
-            return (
-              <div
-                key={booking.id}
-                className={`absolute truncate shadow-lg rounded-lg text-xs lg:text-sm text-white p-2 h-[38px] lg:h-[45px] flex items-center justify-center ${
-                  booking.paid ? 'bg-blue-500' : 'bg-red-500'
-                }`}
-                style={{
-                  top: `${y}px`,
-                  left: `${x}px`,
-                  width: `${width}px`,
-                  borderRadius,
-                }}
-                onClick={() => toggleModal('bookingInfo', booking)}
-              >
-                {booking.client_name}
-              </div>
-            );
-          })}
+            })}
+            {rooms.map((room) =>
+              daysList.map((day) => {
+                const past = isPastDay(day);
+                return (
+                  <button
+                    key={`${room.id}-${day.getTime()}`}
+                    className={`border p-2 h-[38px] lg:h-[45px] w-full flex items-center justify-center transition ${
+                      past
+                        ? 'bg-gray-100 border-gray-200 text-gray-400 opacity-90 cursor-not-allowed'
+                        : 'bg-white border-gray-300 hover:bg-gray-100'
+                    }`}
+                    onClick={() =>
+                      !past &&
+                      toggleModal('addBooking', {
+                        checkIn: day,
+                        roomId: room.id,
+                      })
+                    }
+                    disabled={past}
+                  />
+                );
+              })
+            )}
+            {/* Bookings */}
+            {oldBookings?.map((booking) => {
+              const roomIndex = rooms.findIndex(
+                (room) => room.id === booking.room_id
+              );
+              if (roomIndex === -1) return null;
+              const checkIn = new Date(booking.check_in);
+              const checkOut = new Date(booking.check_out);
+              const first = daysList[0];
+              const last = daysList[daysList.length - 1];
+              const hourPixel = cellWidth / 24;
+              const hoursOffset = (checkIn.getTime() - first.getTime()) / 36e5;
+              const x = Math.max(0, hoursOffset * hourPixel);
+              let duration = (checkOut.getTime() - checkIn.getTime()) / 36e5;
+              if (checkIn < first) {
+                duration = (checkOut.getTime() - first.getTime()) / 36e5;
+              }
+              if (checkOut > last) duration += 24;
+              const width = duration * hourPixel;
+              const y =
+                (bigScreen ? 25 + 8 + 70 + 8 : 4 + 60 + 8) +
+                roomIndex * (cellWidth + 4);
+              const borderRadius = [
+                checkIn <= first ? '0' : '1rem',
+                checkOut >= last ? '0' : '1rem',
+                checkOut >= last ? '0' : '1rem',
+                checkIn <= first ? '0' : '1rem',
+              ].join(' ');
+              return (
+                <div
+                  key={booking.id}
+                  className={`absolute truncate shadow-lg rounded-lg text-xs lg:text-sm text-white p-2 h-[38px] lg:h-[45px] flex items-center justify-center ${
+                    booking.paid ? 'bg-blue-500' : 'bg-red-500'
+                  }`}
+                  style={{
+                    top: `${y}px`,
+                    left: `${x}px`,
+                    width: `${width}px`,
+                    borderRadius,
+                  }}
+                  onClick={() => toggleModal('bookingInfo', booking)}
+                >
+                  {booking.client_name}
+                </div>
+              );
+            })}
+            {currentBookings?.map((booking) => {
+              const roomIndex = rooms.findIndex(
+                (room) => room.id === booking.room_id
+              );
+              if (roomIndex === -1) return null;
+              const checkIn = new Date(booking.check_in);
+              const checkOut = new Date(booking.check_out);
+              const first = daysList[0];
+              const last = daysList[daysList.length - 1];
+              const hourPixel = cellWidth / 24;
+              const hoursOffset = (checkIn.getTime() - first.getTime()) / 36e5;
+              const x = Math.max(0, hoursOffset * hourPixel);
+              let duration = (checkOut.getTime() - checkIn.getTime()) / 36e5;
+              if (checkIn < first)
+                duration = (checkOut.getTime() - first.getTime()) / 36e5;
+              if (checkOut > last) duration += 24;
+              const width = duration * hourPixel;
+              const y =
+                (bigScreen ? 25 + 8 + 70 + 8 : 4 + 60 + 8) +
+                roomIndex * (cellWidth + 4);
+              const borderRadius = [
+                checkIn <= first ? '0' : '1rem',
+                checkOut >= last ? '0' : '1rem',
+                checkOut >= last ? '0' : '1rem',
+                checkIn <= first ? '0' : '1rem',
+              ].join(' ');
+              return (
+                <div
+                  key={booking.id}
+                  className={`absolute truncate shadow-lg rounded-lg text-xs lg:text-sm text-white p-2 h-[38px] lg:h-[45px] flex items-center justify-center ${
+                    booking.paid ? 'bg-blue-500' : 'bg-red-500'
+                  }`}
+                  style={{
+                    top: `${y}px`,
+                    left: `${x}px`,
+                    width: `${width}px`,
+                    borderRadius,
+                  }}
+                  onClick={() => toggleModal('bookingInfo', booking)}
+                >
+                  {booking.client_name}
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
     </div>
