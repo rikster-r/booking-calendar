@@ -21,7 +21,7 @@ import { toast } from 'react-toastify';
 import Layout from '@/components/Layout';
 import CleaningObjects from '@/components/CleaningObjects';
 import useSWRInfinite from 'swr/infinite';
-import { format, addDays } from 'date-fns';
+import { format, addDays, startOfDay } from 'date-fns';
 
 const dateRange = get100DayRange();
 
@@ -84,14 +84,17 @@ type Props = {
 };
 
 export default function Home({ user, tokenData }: Props) {
+
   // current bookings are bookings from today and in the future
   // old bookings are bookings from the past
   // we use swr infinite to fetch bookings in pages of 100 days
+  const [selectedDate, setSelectedDate] = useState(startOfDay(new Date()));
+
   const getCurrentBookingsKey = useCallback(
     (pageIndex: number, previousPageData: Booking[] | null) => {
       if (previousPageData && previousPageData.length === 0) return null; // reached end
 
-      const start = addDays(new Date(), pageIndex * 100);
+      const start = addDays(selectedDate, pageIndex * 100);
       const end = addDays(start, 100);
 
       return `/api/users/${user.id}/bookings/?start=${format(
@@ -99,13 +102,14 @@ export default function Home({ user, tokenData }: Props) {
         'yyyy-MM-dd'
       )}&end=${format(end, 'yyyy-MM-dd')}`;
     },
-    [user.id]
+    [user.id, selectedDate]
   );
+
   const getOldBookingsKey = useCallback(
     (pageIndex: number, previousPageData: Booking[] | null) => {
       if (previousPageData && previousPageData.length === 0) return null; // reached end
 
-      const end = addDays(new Date(), -pageIndex * 100);
+      const end = addDays(selectedDate, -pageIndex * 100);
       const start = addDays(end, -100);
 
       return `/api/users/${user.id}/bookings/?start=${format(
@@ -113,7 +117,7 @@ export default function Home({ user, tokenData }: Props) {
         'yyyy-MM-dd'
       )}&end=${format(end, 'yyyy-MM-dd')}`;
     },
-    [user.id]
+    [user.id, selectedDate]
   );
   const {
     data: currentBookingsData,
@@ -234,6 +238,8 @@ export default function Home({ user, tokenData }: Props) {
                   oldBookings={oldBookings}
                   toggleModal={toggleModal}
                   increaseSize={increaseSize}
+                  selectedDate={selectedDate}
+                  setSelectedDate={setSelectedDate}
                 />
               ) : (
                 <EmptyBookingsCalendar toggleModal={toggleModal} />

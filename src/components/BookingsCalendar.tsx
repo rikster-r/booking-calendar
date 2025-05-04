@@ -19,6 +19,8 @@ type Props = {
     sizeIncrement: number,
     bookings: 'current' | 'old'
   ) => Promise<void>;
+  selectedDate: Date;
+  setSelectedDate: React.Dispatch<React.SetStateAction<Date>>;
 };
 
 const BookingsCalendar = ({
@@ -27,8 +29,10 @@ const BookingsCalendar = ({
   currentBookings,
   toggleModal,
   increaseSize,
+  setSelectedDate
 }: Props) => {
   const today = startOfDay(new Date());
+  const [dateInView, setDateInView] = useState(new Date());
   const windowWidth = useWindowWidth();
   const bigScreen = windowWidth > 1024;
   const cellWidth = bigScreen ? 45 : 38;
@@ -40,7 +44,6 @@ const BookingsCalendar = ({
     oldScrollLeft: number;
   } | null>(null);
 
-  const [dateInView, setDateInView] = useState(today);
   const [daysList, setDaysList] = useState(() => {
     const past = Array.from({ length: PAST_DAYS }, (_, i) =>
       addDays(today, -(PAST_DAYS - i))
@@ -57,7 +60,28 @@ const BookingsCalendar = ({
     container.scrollLeft = PAST_DAYS * cellWidth;
   };
 
-  useLayoutEffect(scrollToToday, [cellWidth]);
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newDate = startOfDay(new Date(e.target.value));
+    setSelectedDate(newDate);
+
+    // Rebuild daysList centered around the selected date
+    const past = Array.from({ length: PAST_DAYS }, (_, i) =>
+      addDays(newDate, -(PAST_DAYS - i))
+    );
+    const future = Array.from({ length: FUTURE_DAYS }, (_, i) =>
+      addDays(newDate, i + 1)
+    );
+    const newDaysList = [...past, newDate, ...future];
+    setDaysList(newDaysList);
+    setDateInView(newDate);
+
+    // Scroll to the selected date
+    setTimeout(() => scrollToToday(), 0);
+  };
+
+  useLayoutEffect(() => {
+    scrollToToday();
+  }, [cellWidth]);
 
   const loadMoreDaysToRight = () =>
     setDaysList((prev) => {
@@ -120,6 +144,7 @@ const BookingsCalendar = ({
     container.addEventListener('scroll', onScroll);
     return () => container.removeEventListener('scroll', onScroll);
   }, [daysList, cellWidth, increaseSize]);
+
   const isPastDay = (day: Date) => isBefore(day, today);
 
   return (
@@ -132,7 +157,14 @@ const BookingsCalendar = ({
               year: 'numeric',
             })}
           </div>
-          <div className="h-[60px] lg:h-[70px] my-1" />
+          <div className="h-[60px] lg:h-[70px] my-1">
+            <input
+              type="date"
+              value={addDays(dateInView, 1).toISOString().split('T')[0]}
+              onChange={handleDateChange}
+              className="p-2 border rounded-lg w-full text-sm"
+            />
+          </div>
           {rooms.map((room) => (
             <button
               key={room.id}
@@ -226,8 +258,8 @@ const BookingsCalendar = ({
 
             const checkIn = new Date(booking.check_in);
             const checkOut = new Date(booking.check_out);
-            const first = daysList[0]; // Start of the visible date range
-            const last = daysList[daysList.length - 1]; // End of the visible date range
+            const first = daysList[0];
+            const last = daysList[daysList.length - 1];
 
             const hourPixel = cellWidth / 24;
             const hoursOffset = (checkIn.getTime() - first.getTime()) / 36e5;
@@ -241,12 +273,10 @@ const BookingsCalendar = ({
 
             const width = duration * hourPixel;
 
-            // Adjust Y positioning for past bookings (old bookings are rendered in the same space as current bookings)
             const y =
               (bigScreen ? 25 + 8 + 70 + 8 : 20 + 8 + 60 + 8) +
               roomIndex * (cellWidth + 4);
 
-            // Border radius for past bookings, like in current bookings
             const borderRadius = [
               checkIn <= first ? '0' : '1rem',
               checkOut >= last ? '0' : '1rem',
