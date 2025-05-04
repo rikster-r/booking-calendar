@@ -65,7 +65,7 @@ const BookingModal = ({
         clientEmail: '',
         adultsCount: 1,
         childrenCount: 0,
-        doorCode: 0,
+        doorCode: null,
         additionalInfo: '',
         dailyPrice: 0,
         paid: false,
@@ -86,6 +86,19 @@ const BookingModal = ({
   const handleChange: React.ChangeEventHandler<
     HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
   > = (e) => {
+    if (
+      e.target.name === 'dailyPrice' ||
+      e.target.name === 'adultsCount' ||
+      e.target.name === 'childrenCount'
+    ) {
+      // remove leading zeros
+      const value = e.target.value.replace(/^0+/, '');
+      setFormData((prev) => ({
+        ...prev,
+        [e.target.name]: value === '' ? 0 : value,
+      }));
+      return;
+    }
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
@@ -104,6 +117,100 @@ const BookingModal = ({
       .slice(0, 16);
     return localISO;
   };
+
+  const setPaidStatus: React.ChangeEventHandler<HTMLSelectElement> = (e) => {
+    setFormData((prev) => ({ ...prev, paid: e.target.value === 'true' }));
+  };
+
+  const isTimeSlotFree = async (checkIn: Date, checkOut: Date) => {
+    try {
+      const res = await fetch(
+        `/api/users/${user.id}/bookings/validateTimeslot`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            id: hasId(bookingData) ? bookingData.id : undefined,
+            room_id: formData.roomId,
+            check_in: formatDateTimeLocal(checkIn),
+            check_out: formatDateTimeLocal(checkOut),
+          }),
+        }
+      );
+
+      return res.ok;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (e) {
+      return false;
+    }
+  };
+
+  const setCheckInDate = async (date: Date) => {
+    if (date > formData.checkOut) {
+      const duration = differenceInDays(formData.checkOut, formData.checkIn);
+      setFormData((prev) => ({
+        ...prev,
+        checkIn: date,
+        checkOut: addDays(date, duration),
+      }));
+      return;
+    }
+    if (isBeforeByDay(date, new Date())) {
+      toast.error('Нельзя добавить бронь для уже прошедших дней.');
+      return;
+    }
+    if (isEqual(date, formData.checkOut)) {
+      toast.error('Нельзя поставить заезд на то же время, что и выезд');
+      return;
+    }
+    const slotFree = await isTimeSlotFree(date, formData.checkOut);
+    if (!slotFree) {
+      toast.error('Временной слот уже занят другой бронью.');
+      return;
+    }
+
+    setFormData((prev) => ({ ...prev, checkIn: date }));
+  };
+
+  const setCheckOutDate = async (date: Date) => {
+    if (date < formData.checkIn) {
+      toast.error('Нельзя установить выезд раньше заезда.');
+      return;
+    }
+    if (isEqual(date, formData.checkIn)) {
+      toast.error('Нельзя поставить выезд на то же время, что и заезд');
+      return;
+    }
+    const slotFree = await isTimeSlotFree(formData.checkIn, date);
+    if (!slotFree) {
+      toast.error('Временной слот уже занят другой бронью.');
+      return;
+    }
+
+    setFormData((prev) => ({ ...prev, checkOut: date }));
+  };
+
+  const changeDaysBooked: React.ChangeEventHandler<HTMLInputElement> = (e) => {
+    const num = parseInt(e.target.value, 10);
+    if (isNaN(num)) return;
+
+    setCheckOutDate(addDays(formData.checkIn, num));
+  };
+
+  const setTime: (
+    field: 'checkIn' | 'checkOut'
+  ) => React.ChangeEventHandler<HTMLInputElement> = (field) => (e) => {
+    if (e.target.value === '' || !e.target.value) return;
+    const [hours, minutes] = e.target.value.split(':').map(Number);
+    setFormData((prev) => {
+      const copy = new Date(prev[field]);
+      copy.setHours(hours, minutes, 0, 0);
+      return { ...prev, [field]: copy };
+    });
+  };
+
+  const setCheckInTime = setTime('checkIn');
+  const setCheckOutTime = setTime('checkOut');
 
   const saveBooking = async (data: BookingInput) => {
     const method = hasId(bookingData) ? 'PUT' : 'POST';
@@ -166,100 +273,6 @@ const BookingModal = ({
     setIsSubmitting(false);
   };
 
-  const setPaidStatus: React.ChangeEventHandler<HTMLSelectElement> = (e) => {
-    setFormData((prev) => ({ ...prev, paid: e.target.value === 'true' }));
-  };
-
-  const isTimeSlotFree = async (checkIn: Date, checkOut: Date) => {
-    try {
-      const res = await fetch(
-        `/api/users/${user.id}/bookings/validateTimeslot`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            id: hasId(bookingData) ? bookingData.id : undefined,
-            room_id: formData.roomId,
-            check_in: formatDateTimeLocal(checkIn),
-            check_out: formatDateTimeLocal(checkOut),
-          }),
-        }
-      );
-
-      return res.ok;
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (e) {
-      return false;
-    }
-  };
-
-  const setCheckIn = async (date: Date) => {
-    if (date > formData.checkOut) {
-      const duration = differenceInDays(formData.checkOut, formData.checkIn);
-      setFormData((prev) => ({
-        ...prev,
-        checkIn: date,
-        checkOut: addDays(date, duration),
-      }));
-      return;
-    }
-    if (isBeforeByDay(date, new Date())) {
-      toast.error('Нельзя добавить бронь для уже прошедших дней.');
-      return;
-    }
-    if (isEqual(date, formData.checkOut)) {
-      toast.error('Нельзя поставить заезд на то же время, что и выезд');
-      return;
-    }
-    const slotFree = await isTimeSlotFree(date, formData.checkOut);
-    if (!slotFree) {
-      toast.error('Временной слот уже занят другой бронью.');
-      return;
-    }
-
-    setFormData((prev) => ({ ...prev, checkIn: date }));
-  };
-
-  const setCheckOut = async (date: Date) => {
-    if (date < formData.checkIn) {
-      toast.error('Нельзя установить выезд раньше заезда.');
-      return;
-    }
-    if (isEqual(date, formData.checkIn)) {
-      toast.error('Нельзя поставить выезд на то же время, что и заезд');
-      return;
-    }
-    const slotFree = await isTimeSlotFree(formData.checkIn, date);
-    if (!slotFree) {
-      toast.error('Временной слот уже занят другой бронью.');
-      return;
-    }
-
-    setFormData((prev) => ({ ...prev, checkOut: date }));
-  };
-
-  const changeDaysBooked: React.ChangeEventHandler<HTMLInputElement> = (e) => {
-    const num = parseInt(e.target.value, 10);
-    if (isNaN(num)) return;
-
-    setCheckOut(addDays(formData.checkIn, num));
-  };
-
-  const setTime: (
-    field: 'checkIn' | 'checkOut'
-  ) => React.ChangeEventHandler<HTMLInputElement> = (field) => (e) => {
-    if (e.target.value === '' || !e.target.value) return;
-    const [hours, minutes] = e.target.value.split(':').map(Number);
-    setFormData((prev) => {
-      const copy = new Date(prev[field]);
-      copy.setHours(hours, minutes, 0, 0);
-      return { ...prev, [field]: copy };
-    });
-  };
-
-  const setCheckInTime = setTime('checkIn');
-  const setCheckOutTime = setTime('checkOut');
-
   return (
     <Modal isOpen={isOpen} onClose={onClose} className="max-w-lg">
       <form
@@ -307,7 +320,7 @@ const BookingModal = ({
           </label>
           <DateTimePicker
             inputName="checkIn"
-            onDateChange={setCheckIn}
+            onDateChange={setCheckInDate}
             selectedDate={formData.checkIn}
             startDate={formData.checkIn}
             timeValue={format(formData.checkIn, 'HH:mm')}
@@ -322,7 +335,7 @@ const BookingModal = ({
           </label>
           <DateTimePicker
             inputName="checkOut"
-            onDateChange={setCheckOut}
+            onDateChange={setCheckOutDate}
             selectedDate={formData.checkOut}
             startDate={formData.checkIn}
             timeValue={format(formData.checkOut, 'HH:mm')}
@@ -373,7 +386,6 @@ const BookingModal = ({
             value={formData.doorCode ?? ''}
             onChange={handleChange}
             className="flex items-center w-full border rounded-md px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500 h-[40px] border-gray-500 mt-1"
-            required
           />
         </div>
 
