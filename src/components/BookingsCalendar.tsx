@@ -1,96 +1,126 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import RoomStatusBadge from './RoomStatusBadge';
 import useWindowWidth from '@/hooks/useWindowWidth';
-import { addDays } from 'date-fns';
-import { useState } from 'react';
+import { addDays, isBefore, startOfDay } from 'date-fns';
 
 const LOCALE = 'ru-RU';
+const PAST_DAYS = 100;
+const FUTURE_DAYS = 100;
 
 type Props = {
   rooms: Room[];
-  bookings: Booking[];
+  currentBookings: Booking[];
+  oldBookings: Booking[];
   toggleModal: (
     modal: 'addBooking' | 'addRoom' | 'bookingInfo' | 'roomInfo',
-    data?: Record<string, unknown> | undefined
+    data?: Record<string, unknown>
   ) => void;
-  setBookingsSize: (
-    size: number | ((_size: number) => number)
-  ) => Promise<Booking[][] | undefined>;
+  increaseSize: (
+    sizeIncrement: number,
+    bookings: 'current' | 'old'
+  ) => Promise<void>;
 };
 
 const BookingsCalendar = ({
   rooms,
-  bookings,
+  oldBookings,
+  currentBookings,
   toggleModal,
-  setBookingsSize,
+  increaseSize,
 }: Props) => {
-  const today = new Date();
-  const [dateInView, setDateInView] = useState(today);
+  const today = startOfDay(new Date());
   const windowWidth = useWindowWidth();
   const bigScreen = windowWidth > 1024;
+  const cellWidth = bigScreen ? 45 : 38;
   const maxNameLength = bigScreen ? 20 : 10;
 
-  const [daysList, setDaysList] = useState<Date[]>(() => {
-    // Today starts at current time, other dates are at 00:00 for convenience
-    const today = new Date();
-    const startOfDay = new Date(
-      today.getFullYear(),
-      today.getMonth(),
-      today.getDate()
-    );
-    return [
-      today,
-      ...Array.from({ length: 99 }, (_, i) => addDays(startOfDay, i + 1)),
-    ];
-  });
   const scrollRef = useRef<HTMLDivElement>(null);
+  const pendingPrepend = useRef<{
+    oldScrollWidth: number;
+    oldScrollLeft: number;
+  } | null>(null);
 
-  const loadMoreDays = async () => {
-    setDaysList((prev) => {
-      const lastDate = prev[prev.length - 1];
-      const newDays = Array.from({ length: 100 }, (_, i) =>
-        addDays(lastDate, i + 1)
-      );
-      return [...prev, ...newDays];
-    });
+  const [dateInView, setDateInView] = useState(today);
+  const [daysList, setDaysList] = useState(() => {
+    const past = Array.from({ length: PAST_DAYS }, (_, i) =>
+      addDays(today, -(PAST_DAYS - i))
+    );
+    const future = Array.from({ length: FUTURE_DAYS }, (_, i) =>
+      addDays(today, i + 1)
+    );
+    return [...past, today, ...future];
+  });
+
+  const scrollToToday = () => {
+    const container = scrollRef.current;
+    if (!container) return;
+    container.scrollLeft = PAST_DAYS * cellWidth;
   };
 
-  useEffect(() => {
-    const handleScroll = () => {
-      if (!scrollRef.current) return;
-      const { scrollLeft, scrollWidth, clientWidth } = scrollRef.current;
-      const nearEnd = scrollLeft + clientWidth >= scrollWidth - 2000;
+  useLayoutEffect(scrollToToday, [cellWidth]);
 
-      if (nearEnd) {
-        loadMoreDays();
-        setBookingsSize((size) => size + 3);
+  const loadMoreDaysToRight = () =>
+    setDaysList((prev) => {
+      const last = prev[prev.length - 1];
+      const more = Array.from({ length: FUTURE_DAYS }, (_, i) =>
+        addDays(last, i + 1)
+      );
+      return [...prev, ...more];
+    });
+
+  const loadMoreDaysToLeft = () =>
+    setDaysList((prev) => {
+      const container = scrollRef.current;
+      if (!container) return prev;
+
+      pendingPrepend.current = {
+        oldScrollWidth: container.scrollWidth,
+        oldScrollLeft: container.scrollLeft,
+      };
+
+      const first = prev[0];
+      const more = Array.from({ length: PAST_DAYS }, (_, i) =>
+        addDays(first, -(PAST_DAYS - i))
+      );
+
+      return [...more, ...prev];
+    });
+
+  useLayoutEffect(() => {
+    const container = scrollRef.current;
+    if (!container || !pendingPrepend.current) return;
+
+    const { oldScrollWidth, oldScrollLeft } = pendingPrepend.current;
+    container.scrollLeft =
+      oldScrollLeft + (container.scrollWidth - oldScrollWidth);
+
+    pendingPrepend.current = null;
+  }, [daysList]);
+
+  useEffect(() => {
+    const container = scrollRef.current;
+    if (!container) return;
+
+    const onScroll = () => {
+      const { scrollLeft, scrollWidth, clientWidth } = container;
+      if (scrollLeft < 2000) {
+        loadMoreDaysToLeft();
+        increaseSize(3, 'old');
       }
+      if (scrollLeft + clientWidth >= scrollWidth - 2000) {
+        loadMoreDaysToRight();
+        increaseSize(3, 'current');
+      }
+
+      const index = Math.floor(scrollLeft / cellWidth);
+      const visibleDate = daysList[index];
+      if (visibleDate) setDateInView(visibleDate);
     };
 
-    const ref = scrollRef.current;
-    if (!ref) return;
-    ref.addEventListener('scroll', handleScroll);
-    return () => ref.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  useEffect(() => {
-    const calculateLeftMostCellMonth = () => {
-      if (scrollRef.current) {
-        const { scrollLeft } = scrollRef.current;
-        const cellWidth = bigScreen ? 45 : 38;
-        const leftMostCellIndex = Math.floor(scrollLeft / cellWidth);
-        const leftMostCellDate = daysList[leftMostCellIndex];
-        if (leftMostCellDate) {
-          setDateInView(leftMostCellDate);
-        }
-      }
-    };
-
-    const ref = scrollRef.current;
-    if (!ref) return;
-    ref.addEventListener('scroll', calculateLeftMostCellMonth);
-    return () => ref.removeEventListener('scroll', calculateLeftMostCellMonth);
-  }, [daysList, bigScreen]);
+    container.addEventListener('scroll', onScroll);
+    return () => container.removeEventListener('scroll', onScroll);
+  }, [daysList, cellWidth, increaseSize]);
+  const isPastDay = (day: Date) => isBefore(day, today);
 
   return (
     <div className="lg:px-8 h-full">
@@ -102,117 +132,184 @@ const BookingsCalendar = ({
               year: 'numeric',
             })}
           </div>
-          <div className="h-[60px] lg:h-[70px] my-1"></div>
+          <div className="h-[60px] lg:h-[70px] my-1" />
           {rooms.map((room) => (
             <button
+              key={room.id}
+              onClick={() => toggleModal('roomInfo', room)}
               style={{ backgroundColor: room.color }}
               className="text-white p-2 lg:p-3 rounded-lg text-center h-[38px] lg:h-[45px] flex items-center justify-center shadow-md text-[10px] lg:text-xs gap-1 w-[120px] lg:w-[180px]"
-              onClick={() => toggleModal('roomInfo', room)}
-              key={room.id}
             >
               <span className="font-semibold text-nowrap">
-                {room.name.slice(0, maxNameLength)}
-                {room.name.length > maxNameLength && '...'}
+                {room.name.length > maxNameLength
+                  ? `${room.name.slice(0, maxNameLength)}...`
+                  : room.name}
               </span>
-              <span>
-                <RoomStatusBadge room={room} />
-              </span>
+              <RoomStatusBadge room={room} />
             </button>
           ))}
         </div>
+
         <div
           ref={scrollRef}
-          className="grid overflow-x-auto relative content-start gap-y-1"
+          className="grid overflow-x-auto relative content-start gap-y-1 no-scrollbar"
           style={{
-            gridTemplateColumns: `repeat(${daysList.length}, ${
-              bigScreen ? '45px' : '38px'
-            })`,
+            gridTemplateColumns: `repeat(${daysList.length}, ${cellWidth}px)`,
           }}
         >
           {daysList.map((day, index) => {
-            const month = day.toLocaleDateString(LOCALE, { month: 'long' });
-            const isFirstOfMonth =
-              index === 0 || day.getMonth() !== daysList[index - 1].getMonth();
-            return isFirstOfMonth ? (
+            const prev = daysList[index - 1];
+            const isNewMonth = !prev || day.getMonth() !== prev.getMonth();
+            return (
               <div
-                className="text-sm lg:text-base font-medium capitalize h-[20px] lg:h-[25px] text-gray-700"
                 key={day.getTime()}
+                className={`h-[20px] lg:h-[25px] ${
+                  isNewMonth
+                    ? 'text-sm lg:text-base font-medium capitalize text-gray-700'
+                    : ''
+                }`}
               >
-                {month}
+                {isNewMonth &&
+                  day.toLocaleDateString(LOCALE, { month: 'long' })}
               </div>
-            ) : (
-              <div
-                className="w-full h-[20px] lg:h-[25px]"
-                key={day.getTime()}
-              ></div>
             );
           })}
-          {daysList.map((day) => (
-            <div
-              className="bg-gray-200 p-2 border border-gray-300 rounded-lg flex flex-col items-center justify-center h-[60px] lg:h-[70px] w-full my-1"
-              key={day.getTime()}
-            >
-              <p className="text-sm lg:text-base font-semibold text-gray-900">
-                {day.toLocaleDateString(LOCALE, { day: 'numeric' })}
-              </p>
-              <p className="text-[10px] lg:text-xs text-gray-500">
-                {day.toLocaleDateString(LOCALE, { weekday: 'short' })}
-              </p>
-            </div>
-          ))}
+
+          {daysList.map((day) => {
+            const past = isPastDay(day);
+            return (
+              <div
+                key={day.getTime()}
+                className={`p-2 border rounded-lg flex flex-col items-center justify-center h-[60px] lg:h-[70px] w-full my-1 ${
+                  past
+                    ? 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed'
+                    : 'bg-gray-200 border-gray-300 text-gray-900'
+                }`}
+              >
+                <p className="text-sm lg:text-base font-semibold">
+                  {day.toLocaleDateString(LOCALE, { day: 'numeric' })}
+                </p>
+                <p className="text-[10px] lg:text-xs">
+                  {day.toLocaleDateString(LOCALE, { weekday: 'short' })}
+                </p>
+              </div>
+            );
+          })}
+
           {rooms.map((room) =>
             daysList.map((day) => {
+              const past = isPastDay(day);
               return (
                 <button
-                  className="border border-gray-300 p-2 h-[38px] lg:h-[45px] w-full flex items-center justify-center bg-white hover:bg-gray-100 transition"
-                  onClick={() =>
-                    toggleModal('addBooking', {
-                      checkIn: day,
-                      roomId: room.id,
-                    })
-                  }
                   key={`${room.id}-${day.getTime()}`}
-                ></button>
+                  className={`border p-2 h-[38px] lg:h-[45px] w-full flex items-center justify-center transition ${
+                    past
+                      ? 'bg-gray-100 border-gray-200 text-gray-400 opacity-90 cursor-not-allowed'
+                      : 'bg-white border-gray-300 hover:bg-gray-100'
+                  }`}
+                  onClick={() =>
+                    !past &&
+                    toggleModal('addBooking', { checkIn: day, roomId: room.id })
+                  }
+                  disabled={past}
+                />
               );
             })
           )}
-          {bookings?.map((booking) => {
+
+          {/* Bookings */}
+          {oldBookings?.map((booking) => {
             const roomIndex = rooms.findIndex(
               (room) => room.id === booking.room_id
             );
             if (roomIndex === -1) return null;
-            const checkInDate = new Date(booking.check_in);
-            const checkOutDate = new Date(booking.check_out);
-            const yesterday = new Date();
-            yesterday.setDate(yesterday.getDate() - 1);
-            yesterday.setHours(23, 59, 0, 0);
-            const lastDay = daysList[daysList.length - 1];
-            const hourPixelRate = bigScreen ? 45 / 24 : 38 / 24;
-            const hoursOffset = Math.max(
-              0,
-              (checkInDate.getTime() - yesterday.getTime()) / 36e5
-            );
-            const x = hoursOffset * hourPixelRate;
-            let hours = (checkOutDate.getTime() - checkInDate.getTime()) / 36e5;
-            if (checkInDate < yesterday) {
-              hours = (checkOutDate.getTime() - yesterday.getTime()) / 36e5;
-            } else if (checkOutDate > lastDay) {
-              hours = (lastDay.getTime() - checkInDate.getTime()) / 36e5 + 24;
+
+            const checkIn = new Date(booking.check_in);
+            const checkOut = new Date(booking.check_out);
+            const first = daysList[0]; // Start of the visible date range
+            const last = daysList[daysList.length - 1]; // End of the visible date range
+
+            const hourPixel = cellWidth / 24;
+            const hoursOffset = (checkIn.getTime() - first.getTime()) / 36e5;
+            const x = Math.max(0, hoursOffset * hourPixel);
+
+            let duration = (checkOut.getTime() - checkIn.getTime()) / 36e5;
+            if (checkIn < first) {
+              duration = (checkOut.getTime() - first.getTime()) / 36e5;
             }
-            const width = hours * hourPixelRate;
-            const y = bigScreen
-              ? 25 + 8 + 70 + 8 + roomIndex * (45 + 4)
-              : 20 + 8 + 60 + 8 + roomIndex * (38 + 4);
-            const borderRadius = `${checkInDate <= yesterday ? '0' : '1rem'}
-              ${checkOutDate >= lastDay ? '0' : '1rem'}
-              ${checkOutDate >= lastDay ? '0' : '1rem'}
-              ${checkInDate <= yesterday ? '0' : '1rem'}`;
+            if (checkOut > last) duration += 24;
+
+            const width = duration * hourPixel;
+
+            // Adjust Y positioning for past bookings (old bookings are rendered in the same space as current bookings)
+            const y =
+              (bigScreen ? 25 + 8 + 70 + 8 : 20 + 8 + 60 + 8) +
+              roomIndex * (cellWidth + 4);
+
+            // Border radius for past bookings, like in current bookings
+            const borderRadius = [
+              checkIn <= first ? '0' : '1rem',
+              checkOut >= last ? '0' : '1rem',
+              checkOut >= last ? '0' : '1rem',
+              checkIn <= first ? '0' : '1rem',
+            ].join(' ');
+
             return (
               <div
                 key={booking.id}
-                className={`${
+                className={`absolute truncate shadow-lg rounded-lg text-xs lg:text-sm text-white p-2 h-[38px] lg:h-[45px] flex items-center justify-center ${
                   booking.paid ? 'bg-blue-500' : 'bg-red-500'
-                } text-white p-2 h-[38px] lg:h-[45px] flex items-center justify-center absolute truncate shadow-lg rounded-lg text-xs lg:text-sm`}
+                }`}
+                style={{
+                  top: `${y}px`,
+                  left: `${x}px`,
+                  width: `${width}px`,
+                  borderRadius,
+                }}
+                onClick={() => toggleModal('bookingInfo', booking)}
+              >
+                {booking.client_name}
+              </div>
+            );
+          })}
+          {currentBookings?.map((booking) => {
+            const roomIndex = rooms.findIndex(
+              (room) => room.id === booking.room_id
+            );
+            if (roomIndex === -1) return null;
+
+            const checkIn = new Date(booking.check_in);
+            const checkOut = new Date(booking.check_out);
+            const first = daysList[0];
+            const last = daysList[daysList.length - 1];
+
+            const hourPixel = cellWidth / 24;
+            const hoursOffset = (checkIn.getTime() - first.getTime()) / 36e5;
+            const x = Math.max(0, hoursOffset * hourPixel);
+
+            let duration = (checkOut.getTime() - checkIn.getTime()) / 36e5;
+            if (checkIn < first)
+              duration = (checkOut.getTime() - first.getTime()) / 36e5;
+            if (checkOut > last) duration += 24;
+
+            const width = duration * hourPixel;
+            const y =
+              (bigScreen ? 25 + 8 + 70 + 8 : 20 + 8 + 60 + 8) +
+              roomIndex * (cellWidth + 4);
+
+            const borderRadius = [
+              checkIn <= first ? '0' : '1rem',
+              checkOut >= last ? '0' : '1rem',
+              checkOut >= last ? '0' : '1rem',
+              checkIn <= first ? '0' : '1rem',
+            ].join(' ');
+
+            return (
+              <div
+                key={booking.id}
+                className={`absolute truncate shadow-lg rounded-lg text-xs lg:text-sm text-white p-2 h-[38px] lg:h-[45px] flex items-center justify-center ${
+                  booking.paid ? 'bg-blue-500' : 'bg-red-500'
+                }`}
                 style={{
                   top: `${y}px`,
                   left: `${x}px`,

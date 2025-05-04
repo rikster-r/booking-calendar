@@ -4,7 +4,7 @@ import BookingModal from '@/components/BookingModal';
 import RoomModal from '@/components/RoomModal';
 import BookingInfoModal from '@/components/BookingInfoModal';
 import RoomInfoModal from '@/components/RoomInfoModal';
-import { useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
   EllipsisHorizontalIcon,
   BuildingOfficeIcon,
@@ -84,28 +84,74 @@ type Props = {
 };
 
 export default function Home({ user, tokenData }: Props) {
-  const getKey = (pageIndex: number, previousPageData: Booking[] | null) => {
-    if (previousPageData && previousPageData.length === 0) return null; // reached end
+  // current bookings are bookings from today and in the future
+  // old bookings are bookings from the past
+  // we use swr infinite to fetch bookings in pages of 100 days
+  const getCurrentBookingsKey = useCallback(
+    (pageIndex: number, previousPageData: Booking[] | null) => {
+      if (previousPageData && previousPageData.length === 0) return null; // reached end
 
-    const start = addDays(new Date(), pageIndex * 100);
-    const end = addDays(start, 100);
+      const start = addDays(new Date(), pageIndex * 100);
+      const end = addDays(start, 100);
 
-    return `/api/users/${user.id}/bookings/?start=${format(
-      start,
-      'yyyy-MM-dd'
-    )}&end=${format(end, 'yyyy-MM-dd')}`;
+      return `/api/users/${user.id}/bookings/?start=${format(
+        start,
+        'yyyy-MM-dd'
+      )}&end=${format(end, 'yyyy-MM-dd')}`;
+    },
+    [user.id]
+  );
+  const getOldBookingsKey = useCallback(
+    (pageIndex: number, previousPageData: Booking[] | null) => {
+      if (previousPageData && previousPageData.length === 0) return null; // reached end
+
+      const end = addDays(new Date(), -pageIndex * 100);
+      const start = addDays(end, -100);
+
+      return `/api/users/${user.id}/bookings/?start=${format(
+        start,
+        'yyyy-MM-dd'
+      )}&end=${format(end, 'yyyy-MM-dd')}`;
+    },
+    [user.id]
+  );
+  const {
+    data: currentBookingsData,
+    setSize: setCurrentBookingsSize,
+    mutate: mutateBookings,
+  } = useSWRInfinite<Booking[]>(getCurrentBookingsKey, fetcher, {
+    parallel: true,
+  });
+  const { data: oldBookingsData, setSize: setOldBookingsSize } = useSWRInfinite<
+    Booking[]
+  >(getOldBookingsKey, fetcher, { parallel: true });
+
+  const currentBookings = useMemo(
+    () => (currentBookingsData ? currentBookingsData.flat() : []),
+    [currentBookingsData]
+  );
+  const oldBookings = useMemo(
+    () => (oldBookingsData ? oldBookingsData.flat() : []),
+    [oldBookingsData]
+  );
+
+  const increaseSize = async (
+    sizeIncrement: number,
+    bookings: 'current' | 'old'
+  ) => {
+    if (bookings === 'current') {
+      setCurrentBookingsSize((prev) => prev + sizeIncrement);
+    } else if (bookings === 'old') {
+      setOldBookingsSize((prev) => prev + sizeIncrement);
+    }
   };
+
   const roomsOwner = user.user_metadata.related_to ?? user.id;
   const { data: rooms, mutate: mutateRooms } = useSWR<Room[]>(
     `/api/users/${roomsOwner}/rooms`,
     fetcher
   );
-  const {
-    data,
-    setSize,
-    mutate: mutateBookings,
-  } = useSWRInfinite<Booking[]>(getKey, fetcher, { parallel: true });
-  const bookings = data ? data.flat() : [];
+
   const { data: comments, mutate: mutateComments } = useSWR<RoomComment[]>(
     `/api/users/${roomsOwner}/comments`,
     fetcher
@@ -131,7 +177,7 @@ export default function Home({ user, tokenData }: Props) {
     setModalData(data);
   };
 
-  if (!rooms || !bookings) return <div>Loading...</div>;
+  if (!rooms || !currentBookings) return <div>Loading...</div>;
 
   return (
     <>
@@ -184,9 +230,10 @@ export default function Home({ user, tokenData }: Props) {
               {rooms.length > 0 ? (
                 <BookingsCalendar
                   rooms={rooms}
-                  bookings={bookings}
+                  currentBookings={currentBookings}
+                  oldBookings={oldBookings}
                   toggleModal={toggleModal}
-                  setBookingsSize={setSize}
+                  increaseSize={increaseSize}
                 />
               ) : (
                 <EmptyBookingsCalendar toggleModal={toggleModal} />
