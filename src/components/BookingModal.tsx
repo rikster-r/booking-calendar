@@ -73,6 +73,10 @@ const BookingModal = ({
         checkOut: getNextDay(bookingData.checkIn),
       };
   const [formData, setFormData] = useState(initial);
+  // state for input field, not used in the db
+  const [days, setDays] = useState<string>(
+    String(differenceInCalendarDays(formData.checkOut, formData.checkIn))
+  );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -191,10 +195,12 @@ const BookingModal = ({
   };
 
   const changeDaysBooked: React.ChangeEventHandler<HTMLInputElement> = (e) => {
-    const num = parseInt(e.target.value, 10);
-    if (isNaN(num)) return;
-
-    setCheckOutDate(addDays(formData.checkIn, num));
+    const num = parseInt(e.target.value.replace(/\D/g, ''), 10) || 0;
+    setDays(String(num));
+    setFormData((prev) => ({
+      ...prev,
+      checkOut: num > 0 ? addDays(prev.checkIn, num) : prev.checkIn,
+    }));
   };
 
   const setTime: (
@@ -213,6 +219,11 @@ const BookingModal = ({
   const setCheckOutTime = setTime('checkOut');
 
   const saveBooking = async (data: BookingInput) => {
+    if (isEqual(data.checkIn, data.checkOut)) {
+      toast.error('Нельзя установить выезд на то же время, что и заезд');
+      return;
+    }
+
     const method = hasId(bookingData) ? 'PUT' : 'POST';
     const url = hasId(bookingData)
       ? `/api/users/${user.id}/bookings/${bookingData.id}`
@@ -432,13 +443,10 @@ const BookingModal = ({
               Количество дней
             </label>
             <input
-              type="number"
+              type="text"
               id="daysBooked"
               className="w-full border rounded-md px-3 py-2 outline-none focus:ring-2 focus:ring-blue-500 border-gray-500 mt-1"
-              value={differenceInCalendarDays(
-                formData.checkOut,
-                formData.checkIn
-              )}
+              value={days}
               onChange={changeDaysBooked}
             />
           </div>
@@ -465,10 +473,12 @@ const BookingModal = ({
           <div className="mt-3">
             <label className="text-gray-700 font-semibold">
               Итого за пребывание -{' '}
-              {(
-                Number(formData.dailyPrice) *
-                differenceInCalendarDays(formData.checkOut, formData.checkIn)
-              ).toLocaleString('ru', { minimumFractionDigits: 2 })}{' '}
+              {(Number(formData.dailyPrice) * Number(days)).toLocaleString(
+                'ru',
+                {
+                  minimumFractionDigits: 2,
+                }
+              )}{' '}
               руб.
             </label>
           </div>
