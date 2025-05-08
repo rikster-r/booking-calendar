@@ -12,7 +12,7 @@ import {
 import UserRoleBadge from '@/components/UserRoleBadge';
 import { format } from 'date-fns';
 import { ru } from 'date-fns/locale';
-import { useState, useContext, useEffect, useRef, useMemo } from 'react';
+import { useState, useContext, useEffect, useMemo } from 'react';
 import Head from 'next/head';
 import { toast } from 'react-toastify';
 import AddUserModal from '@/components/AddUserModal';
@@ -76,7 +76,7 @@ const AdminPanel = ({ user }: Props) => {
   const [selectedUsers, setSelectedUsers] = useState<PublicUser[]>([]);
   const [deleteHovered, setDeleteHovered] = useState(false);
   const [addUserModalOpen, setAddUserModalOpen] = useState(false);
-  const tableRef = useRef<HTMLTableElement>(null);
+
   const onlineUserIds = useContext(OnlineUsersContext);
 
   useEffect(() => {
@@ -349,11 +349,8 @@ const AdminPanel = ({ user }: Props) => {
             </div>
             {users.length ? (
               <div className="rounded-lg text-xs lg:text-sm h-full">
-                <div className="w-full overflow-x-auto no-scrollbar">
-                  <table
-                    className="w-full text-left text-nowrap mb-4"
-                    ref={tableRef}
-                  >
+                <div className={`w-full overflow-x-auto no-scrollbar`}>
+                  <table className="w-full text-left text-nowrap mb-4">
                     <thead className="bg-gray-50 text-gray-700">
                       <tr className="uppercase">
                         <th className="px-4 py-3">
@@ -410,7 +407,6 @@ const AdminPanel = ({ user }: Props) => {
                           <td className="px-4 py-3">
                             <UserRoleBadge
                               role={filteredUser.role}
-                              wrapper={tableRef.current}
                               onRoleChange={(role: string) =>
                                 changeRole(filteredUser.id, role)
                               }

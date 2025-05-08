@@ -1,20 +1,38 @@
-import { useEffect, useRef, useState } from 'react';
 import { Popover, PopoverButton, PopoverPanel } from '@headlessui/react';
 import { ChevronDownIcon } from '@heroicons/react/24/solid';
+import {
+  useFloating,
+  flip,
+  shift,
+  autoUpdate,
+  offset,
+  FloatingPortal,
+} from '@floating-ui/react';
 
 type Props = {
   role: string | undefined;
-  wrapper?: HTMLElement | null;
   onRoleChange: (role: string) => Promise<void>;
 };
 
 type roleType = 'admin' | 'client' | 'cleaner';
 
-const UserRoleBadge = ({ role, onRoleChange, wrapper }: Props) => {
+const UserRoleBadge = ({ role, onRoleChange }: Props) => {
+  const { refs, floatingStyles } = useFloating({
+    whileElementsMounted: autoUpdate,
+    strategy: 'absolute',
+    placement: 'bottom-start',
+    middleware: [shift(), flip(), offset(8)],
+  });
   const roleStyles = {
     admin: 'bg-blue-100 text-blue-700',
     client: 'bg-green-100 text-green-700',
     cleaner: 'bg-purple-100 text-purple-700',
+  };
+
+  const activeRoleStyles = {
+    admin: 'bg-blue-200 text-blue-800 ring-1 ring-blue-800',
+    client: 'bg-green-200 text-green-800 ring-1 ring-green-800',
+    cleaner: 'bg-purple-200 text-purple-800 ring-1 ring-purple-800',
   };
 
   const roleTitles = {
@@ -29,31 +47,16 @@ const UserRoleBadge = ({ role, onRoleChange, wrapper }: Props) => {
     cleaner: 'Назначить уборщиком',
   };
 
-  const buttonRef = useRef<HTMLButtonElement>(null);
-  const [placeAbove, setPlaceAbove] = useState(false);
-
-  useEffect(() => {
-    const handlePosition = () => {
-      if (buttonRef.current && wrapper) {
-        const { bottom } = buttonRef.current.getBoundingClientRect();
-        const { top, height } = wrapper.getBoundingClientRect();
-        setPlaceAbove(height - (bottom - top) < 50);
-      }
-    };
-
-    handlePosition(); // check on mount
-    window.addEventListener('resize', handlePosition);
-    return () => window.removeEventListener('resize', handlePosition);
-  }, [wrapper]);
-
   return (
     <Popover className="relative">
       {({ open }) => (
         <>
           <PopoverButton
-            ref={buttonRef}
+            ref={refs.setReference}
             className={`${
-              roleStyles[role as roleType]
+              open
+                ? activeRoleStyles[role as roleType]
+                : roleStyles[role as roleType]
             } px-2 py-1 rounded text-xs font-medium w-max flex items-center hover:cursor-pointer focus:outline-none`}
           >
             {roleTitles[role as roleType]}
@@ -63,24 +66,27 @@ const UserRoleBadge = ({ role, onRoleChange, wrapper }: Props) => {
               }`}
             />
           </PopoverButton>
-
-          <PopoverPanel
-            className={`absolute z-20 ${
-              placeAbove ? 'bottom-full mb-2' : 'top-full mt-2'
-            } w-max rounded-lg shadow-lg bg-white ring-1 ring-gray-200 text-sm p-2`}
-          >
-            {['admin', 'client', 'cleaner']
-              .filter((r) => r !== role)
-              .map((r) => (
-                <button
-                  key={r}
-                  className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left rounded-md hover:cursor-pointer"
-                  onClick={() => onRoleChange(r)}
-                >
-                  {roleActions[r as roleType]}
-                </button>
-              ))}
-          </PopoverPanel>
+          {open && (
+            <FloatingPortal>
+              <PopoverPanel
+                className={`absolute z-20  w-max rounded-lg shadow-lg bg-white ring-1 ring-gray-200 text-sm p-2`}
+                ref={refs.setFloating}
+                style={floatingStyles}
+              >
+                {['admin', 'client', 'cleaner']
+                  .filter((r) => r !== role)
+                  .map((r) => (
+                    <button
+                      key={r}
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 w-full text-left rounded-md hover:cursor-pointer"
+                      onClick={() => onRoleChange(r)}
+                    >
+                      {roleActions[r as roleType]}
+                    </button>
+                  ))}
+              </PopoverPanel>
+            </FloatingPortal>
+          )}
         </>
       )}
     </Popover>

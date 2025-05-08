@@ -7,6 +7,7 @@ type Props = {
   setPage: React.Dispatch<React.SetStateAction<number>>;
   itemsPerPage: number;
   totalItems: number;
+
 };
 
 export default function Pagination({
@@ -76,7 +77,7 @@ export default function Pagination({
             <button
               onClick={handlePreviousPage}
               disabled={currentPage === 1}
-              className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-gray-300 ring-inset hover:bg-gray-50 focus:z-20 focus:outline-offset-0 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-gray-300 ring-inset hover:bg-gray-50 focus:outline-offset-0 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <span className="sr-only">Previous</span>
               <ChevronLeftIcon className="w-4 h-4" />
@@ -94,7 +95,7 @@ export default function Pagination({
                     onClick={() => setPage(page)}
                     className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold ${
                       currentPage === page
-                        ? 'z-10 bg-blue-600 text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600'
+                        ? 'bg-blue-600 text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600'
                         : 'text-gray-900 ring-1 ring-gray-300 ring-inset hover:bg-gray-50'
                     }`}
                   >
