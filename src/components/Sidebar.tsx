@@ -147,7 +147,7 @@ export const SidebarContent = ({ user }: Props) => {
           </div>
 
           <div>
-            <p className="text-xs lg:text-sm">
+            <p className="text-sm">
               <strong className="block font-medium">
                 {user.user_metadata.first_name} {user.user_metadata.last_name}
               </strong>

@@ -178,10 +178,12 @@ const BookingInfoModal = ({
             </span>
           </div>
 
-          <div className="flex items-center gap-2 text-gray-700">
-            <KeyIcon className="w-5 h-5" />
-            <span>Код двери: {booking.door_code}</span>
-          </div>
+          {booking.door_code !== null && (
+            <div className="flex items-center gap-2 text-gray-700">
+              <KeyIcon className="w-5 h-5" />
+              <span>Код двери: {booking.door_code}</span>
+            </div>
+          )}
 
           <div className="flex gap-2 text-gray-700 items-start">
             <CreditCardIcon className="w-5 h-5" />
