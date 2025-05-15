@@ -372,6 +372,7 @@ const BookingModal = ({
               id="adultsCount"
               value={formData.adultsCount}
               onChange={handleChange}
+              onFocus={(e) => e.target.select()}
               className="flex items-center w-full border rounded-md px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500 h-[40px] border-gray-500 mt-1"
               required
             />
@@ -386,6 +387,7 @@ const BookingModal = ({
               id="childrenCount"
               value={formData.childrenCount}
               onChange={handleChange}
+              onFocus={(e) => e.target.select()}
               className="flex items-center w-full border rounded-md px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500 h-[40px] border-gray-500 mt-1"
             />
           </div>
