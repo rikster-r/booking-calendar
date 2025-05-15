@@ -85,6 +85,12 @@ const BookingModal = ({
     }
   }, [initial]);
 
+  useEffect(() => {
+    setDays(
+      String(differenceInCalendarDays(formData.checkOut, formData.checkIn))
+    );
+  }, [formData.checkIn, formData.checkOut]);
+
   if (!bookingData) return;
 
   const handleChange: React.ChangeEventHandler<
