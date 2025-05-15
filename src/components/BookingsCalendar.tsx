@@ -274,6 +274,19 @@ const BookingsCalendar = ({
                 );
               })
             )}
+            {
+              <div
+                className="absolute bg-indigo-700 h-full w-[2px]"
+                style={{
+                  top: `${bigScreen ? 25 + 8 + 70 + 8 : 4 + 60 + 8}px`,
+                  left: `${
+                    ((today.getTime() - daysList[0].getTime()) / 36e5) *
+                      (cellWidth / 24) +
+                    cellWidth / 2
+                  }px`,
+                }}
+              ></div>
+            }
             {/* Bookings */}
             {oldBookings?.map((booking) => {
               const roomIndex = rooms.findIndex(
@@ -296,23 +309,17 @@ const BookingsCalendar = ({
               const y =
                 (bigScreen ? 25 + 8 + 70 + 8 : 4 + 60 + 8) +
                 roomIndex * (cellWidth + 4);
-              const borderRadius = [
-                checkIn <= first ? '0' : '1rem',
-                checkOut >= last ? '0' : '1rem',
-                checkOut >= last ? '0' : '1rem',
-                checkIn <= first ? '0' : '1rem',
-              ].join(' ');
               return (
                 <div
                   key={booking.id}
                   className={`absolute truncate shadow-lg rounded-lg text-xs lg:text-sm text-white p-2 h-[38px] lg:h-[45px] flex items-center justify-center ${
-                    booking.paid ? 'bg-blue-500' : 'bg-red-500'
+                    booking.paid ? 'bg-blue-400' : 'bg-red-400'
                   }`}
                   style={{
                     top: `${y}px`,
                     left: `${x}px`,
                     width: `${width}px`,
-                    borderRadius,
+                    borderRadius: '4rem',
                   }}
                   onClick={() => toggleModal('bookingInfo', booking)}
                 >
@@ -340,12 +347,6 @@ const BookingsCalendar = ({
               const y =
                 (bigScreen ? 25 + 8 + 70 + 8 : 4 + 60 + 8) +
                 roomIndex * (cellWidth + 4);
-              const borderRadius = [
-                checkIn <= first ? '0' : '1rem',
-                checkOut >= last ? '0' : '1rem',
-                checkOut >= last ? '0' : '1rem',
-                checkIn <= first ? '0' : '1rem',
-              ].join(' ');
               return (
                 <div
                   key={booking.id}
@@ -356,7 +357,7 @@ const BookingsCalendar = ({
                     top: `${y}px`,
                     left: `${x}px`,
                     width: `${width}px`,
-                    borderRadius,
+                    borderRadius: '4rem',
                   }}
                   onClick={() => toggleModal('bookingInfo', booking)}
                 >
