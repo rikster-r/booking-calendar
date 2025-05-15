@@ -38,6 +38,9 @@ const BookingsCalendar = ({
   const bigScreen = windowWidth > 1024;
   const cellWidth = bigScreen ? 45 : 38;
   const maxNameLength = bigScreen ? 20 : 10;
+  // includes the months, the day cells and gap between
+  const topOffset = bigScreen ? 25 + 8 + 70 + 8 : 4 + 60 + 8;
+  const hourPixel = cellWidth / 24;
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const pendingPrepend = useRef<{
@@ -274,16 +277,18 @@ const BookingsCalendar = ({
                 );
               })
             )}
+            {/* Current day line */}
             {
               <div
-                className="absolute bg-indigo-700 h-full w-[2px]"
+                className="absolute bg-indigo-700 w-[2px]"
                 style={{
-                  top: `${bigScreen ? 25 + 8 + 70 + 8 : 4 + 60 + 8}px`,
+                  top: `${topOffset}px`,
                   left: `${
                     ((today.getTime() - daysList[0].getTime()) / 36e5) *
                       (cellWidth / 24) +
                     cellWidth / 2
                   }px`,
+                  height: `calc(100% - ${topOffset}px)`,
                 }}
               ></div>
             }
@@ -297,7 +302,6 @@ const BookingsCalendar = ({
               const checkOut = new Date(booking.check_out);
               const first = daysList[0];
               const last = daysList[daysList.length - 1];
-              const hourPixel = cellWidth / 24;
               const hoursOffset = (checkIn.getTime() - first.getTime()) / 36e5;
               const x = Math.max(0, hoursOffset * hourPixel);
               let duration = (checkOut.getTime() - checkIn.getTime()) / 36e5;
@@ -306,9 +310,7 @@ const BookingsCalendar = ({
               }
               if (checkOut > last) duration += 24;
               const width = duration * hourPixel;
-              const y =
-                (bigScreen ? 25 + 8 + 70 + 8 : 4 + 60 + 8) +
-                roomIndex * (cellWidth + 4);
+              const y = topOffset + roomIndex * (cellWidth + 4);
               return (
                 <div
                   key={booking.id}
@@ -336,7 +338,6 @@ const BookingsCalendar = ({
               const checkOut = new Date(booking.check_out);
               const first = daysList[0];
               const last = daysList[daysList.length - 1];
-              const hourPixel = cellWidth / 24;
               const hoursOffset = (checkIn.getTime() - first.getTime()) / 36e5;
               const x = Math.max(0, hoursOffset * hourPixel);
               let duration = (checkOut.getTime() - checkIn.getTime()) / 36e5;
@@ -344,9 +345,7 @@ const BookingsCalendar = ({
                 duration = (checkOut.getTime() - first.getTime()) / 36e5;
               if (checkOut > last) duration += 24;
               const width = duration * hourPixel;
-              const y =
-                (bigScreen ? 25 + 8 + 70 + 8 : 4 + 60 + 8) +
-                roomIndex * (cellWidth + 4);
+              const y = topOffset + roomIndex * (cellWidth + 4);
               return (
                 <div
                   key={booking.id}

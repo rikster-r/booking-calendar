@@ -50,7 +50,6 @@ export default async function handler(
       !adults_count ||
       !check_in ||
       !check_out ||
-      door_code === null ||
       daily_price === null ||
       daily_price === '' ||
       paid === null
