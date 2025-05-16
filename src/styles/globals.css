@@ -93,3 +93,18 @@ input[type='number'] {
 .react-datepicker__day--today {
   @apply border-2 border-blue-600/50;
 }
+
+/* Progress bar */
+#nprogress {
+  pointer-events: none;
+}
+
+#nprogress .bar {
+  background: oklch(0.623 0.214 259.815);
+  position: fixed;
+  z-index: 1031;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+}
