@@ -1,5 +1,5 @@
 import Modal from '@/components/Modal';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { PhoneIcon, EnvelopeIcon, XMarkIcon } from '@heroicons/react/24/solid';
 import { getNextDay, getPageIndexForBooking, isBeforeByDay } from '@/lib/dates';
 import {
@@ -43,39 +43,46 @@ const BookingModal = ({
     return !!booking && typeof booking === 'object' && 'id' in booking;
   }
 
-  const initial: BookingInput = hasId(bookingData)
-    ? {
-        roomId: bookingData.room_id,
-        clientName: bookingData.client_name,
-        clientPhone: formatPhone(bookingData.client_phone),
-        clientEmail: bookingData.client_email,
-        adultsCount: bookingData.adults_count,
-        childrenCount: bookingData.children_count,
-        doorCode: bookingData.door_code,
-        additionalInfo: bookingData.additional_info,
-        dailyPrice: bookingData.daily_price,
-        paid: bookingData.paid,
-        checkIn: new Date(bookingData.check_in),
-        checkOut: new Date(bookingData.check_out),
-      }
-    : {
-        roomId: bookingData.roomId,
-        clientName: '',
-        clientPhone: '+7 ',
-        clientEmail: '',
-        adultsCount: 1,
-        childrenCount: 0,
-        doorCode: null,
-        additionalInfo: '',
-        dailyPrice: 0,
-        paid: false,
-        checkIn: bookingData.checkIn,
-        checkOut: getNextDay(bookingData.checkIn),
-      };
+  const initial: BookingInput = useMemo(
+    () =>
+      hasId(bookingData)
+        ? {
+            roomId: bookingData.room_id,
+            clientName: bookingData.client_name,
+            clientPhone: formatPhone(bookingData.client_phone),
+            clientEmail: bookingData.client_email,
+            adultsCount: bookingData.adults_count,
+            childrenCount: bookingData.children_count,
+            doorCode: bookingData.door_code,
+            additionalInfo: bookingData.additional_info,
+            dailyPrice: bookingData.daily_price,
+            paid: bookingData.paid,
+            checkIn: new Date(bookingData.check_in),
+            checkOut: new Date(bookingData.check_out),
+          }
+        : {
+            roomId: bookingData.roomId,
+            clientName: '',
+            clientPhone: '+7 ',
+            clientEmail: '',
+            adultsCount: 1,
+            childrenCount: 0,
+            doorCode: null,
+            additionalInfo: '',
+            dailyPrice: 0,
+            paid: false,
+            checkIn: bookingData.checkIn,
+            checkOut: getNextDay(bookingData.checkIn),
+          },
+    [bookingData]
+  );
   const [formData, setFormData] = useState(initial);
-  // state for input field, not used in the db
+  // states for input fields, not used in the db
   const [days, setDays] = useState<string>(
     String(differenceInCalendarDays(formData.checkOut, formData.checkIn))
+  );
+  const [totalPrice, setTotalPrice] = useState<string>(
+    String(Math.trunc(Number(formData.dailyPrice) * Number(days)))
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -83,11 +90,16 @@ const BookingModal = ({
     if (!isOpen) {
       setFormData(initial);
     }
-  }, [initial]);
+  }, [initial, isOpen]);
 
   useEffect(() => {
-    setDays(
-      String(differenceInCalendarDays(formData.checkOut, formData.checkIn))
+    const newDays = differenceInCalendarDays(
+      formData.checkOut,
+      formData.checkIn
+    );
+    setDays(String(newDays));
+    setTotalPrice(
+      String(Math.trunc(Number(formData.dailyPrice) * Number(newDays)))
     );
   }, [formData.checkIn, formData.checkOut]);
 
@@ -102,11 +114,15 @@ const BookingModal = ({
       e.target.name === 'childrenCount'
     ) {
       // remove leading zeros
-      const value = e.target.value.replace(/^0+/, '');
+      const parsed = e.target.value.replace(/^0+/, '');
+      const value = parsed === '' ? 0 : parsed;
       setFormData((prev) => ({
         ...prev,
-        [e.target.name]: value === '' ? 0 : value,
+        [e.target.name]: value,
       }));
+      if (e.target.name === 'dailyPrice') {
+        setTotalPrice(String(Math.trunc(Number(value) * Number(days))));
+      }
       return;
     }
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -203,9 +219,20 @@ const BookingModal = ({
   const changeDaysBooked: React.ChangeEventHandler<HTMLInputElement> = (e) => {
     const num = parseInt(e.target.value.replace(/\D/g, ''), 10) || 0;
     setDays(String(num));
+    setTotalPrice(String(Math.trunc(Number(formData.dailyPrice) * num)));
     setFormData((prev) => ({
       ...prev,
       checkOut: num > 0 ? addDays(prev.checkIn, num) : prev.checkIn,
+    }));
+  };
+
+  const changeTotalPrice: React.ChangeEventHandler<HTMLInputElement> = (e) => {
+    const total = parseInt(e.target.value, 10) || 0;
+    setTotalPrice(String(total));
+    setFormData((prev) => ({
+      ...prev,
+      dailyPrice:
+        total >= 0 ? Math.trunc(total / Number(days)) : prev.dailyPrice,
     }));
   };
 
@@ -459,7 +486,7 @@ const BookingModal = ({
             />
           </div>
 
-          <div className="mt-3">
+          <div className="w-full mt-3">
             <label htmlFor="paid" className="text-gray-700 font-medium">
               Статус оплаты
             </label>
@@ -478,17 +505,20 @@ const BookingModal = ({
             </select>
           </div>
 
-          <div className="mt-3">
-            <label className="text-gray-700 font-semibold">
-              Итого за пребывание -{' '}
-              {(Number(formData.dailyPrice) * Number(days)).toLocaleString(
-                'ru',
-                {
-                  minimumFractionDigits: 2,
-                }
-              )}{' '}
-              руб.
+          <div className="w-full mt-3">
+            <label htmlFor="totalPrice" className="text-gray-700">
+              За пребывание
             </label>
+            <div className="flex items-center w-full border rounded-md px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500 border-gray-500 mt-1">
+              <input
+                type="number"
+                id="totalPrice"
+                className="w-full outline-none bg-transparent"
+                value={totalPrice}
+                onChange={changeTotalPrice}
+              />
+              <span className="ml-2 text-gray-500">RUB</span>
+            </div>
           </div>
         </div>
 
