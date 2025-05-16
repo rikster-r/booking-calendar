@@ -37,7 +37,7 @@ export default function Login() {
         <meta name="description" content="Вход в аккаунт" />
       </Head>
       <div className="bg-gray-100 flex justify-center items-center min-h-[100dvh] flex-col ">
-        <div className="w-full bg-white rounded-lg shadow md:mt-0 sm:max-w-md xl:p-0">
+        <div className="w-full bg-white rounded-lg shadow md:mt-0 xl:p-0 max-w-md">
           <div className="p-6 space-y-4 md:space-y-6 sm:p-8">
             <h1 className="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl text-center">
               Войти в аккаунт
