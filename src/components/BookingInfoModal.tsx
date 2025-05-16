@@ -107,6 +107,13 @@ const BookingInfoModal = ({
             <span>{formatPhone(booking.client_phone)}</span>
           </div>
 
+          {booking.client_email && (
+            <div className="flex items-center gap-2 text-gray-700">
+              <EnvelopeIcon className="w-5 h-5" />
+              <span>{booking.client_email}</span>
+            </div>
+          )}
+
           <div className="flex items-center gap-2 text-gray-700">
             <Image src={Telegram} alt="" className="w-6 h-6" />
             <a href={telegramLink} className="text-blue-500 hover:underline">
@@ -122,13 +129,6 @@ const BookingInfoModal = ({
           </div>
 
           <hr className="my-5 text-gray-400" />
-
-          {booking.client_email && (
-            <div className="flex items-center gap-2 text-gray-700">
-              <EnvelopeIcon className="w-5 h-5" />
-              <span>{booking.client_email}</span>
-            </div>
-          )}
 
           <div className="flex items-start gap-2 text-gray-700">
             <CalendarDaysIcon className="w-5 h-5" />
