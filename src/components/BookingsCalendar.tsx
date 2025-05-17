@@ -154,7 +154,7 @@ const BookingsCalendar = ({
   return (
     <div className="lg:px-8 h-full">
       <div className="py-4 bg-white rounded-t-xl gap-2 lg:gap-4 overflow-hidden pl-2 lg:p-8 w-full max-w-max mx-auto h-full text-sm">
-        <div className="flex ml-auto w-max gap-x-2 mr-2 mb-2 sm:mb-0">
+        <div className="flex ml-auto w-max gap-x-2 mr-2 mb-2">
           <button
             className="rounded-full bg-gray-100 px-4 py-2 cursor-pointer text-black text-sm text-center"
             onClick={() => handleDateChange(today)}
