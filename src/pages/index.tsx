@@ -10,7 +10,6 @@ import {
   BuildingOfficeIcon,
   KeyIcon,
 } from '@heroicons/react/24/solid';
-import { get100DayRange } from '@/lib/dates';
 import Head from 'next/head';
 import type { User } from '@supabase/supabase-js';
 import { createClient } from '@/lib/supabase/server-props';
@@ -22,8 +21,6 @@ import Layout from '@/components/Layout';
 import CleaningObjects from '@/components/CleaningObjects';
 import useSWRInfinite from 'swr/infinite';
 import { format, addDays, startOfDay } from 'date-fns';
-
-const dateRange = get100DayRange();
 
 export const getServerSideProps: GetServerSideProps = async (
   context: GetServerSidePropsContext
@@ -48,29 +45,23 @@ export const getServerSideProps: GetServerSideProps = async (
   const roomsOwner =
     userRes.data.user.user_metadata.related_to ?? userRes.data.user.id;
 
-  const [roomsRes, bookingsRes, tokenRes] = await Promise.all([
+  const [roomsRes, tokenRes] = await Promise.all([
     fetch(`${process.env.NEXT_PUBLIC_URL}/api/users/${roomsOwner}/rooms`),
-    fetch(
-      `${process.env.NEXT_PUBLIC_URL}/api/users/${roomsOwner}/bookings/?start=${dateRange.start}&end=${dateRange.end}`
-    ),
     fetch(
       `${process.env.NEXT_PUBLIC_URL}/api/avito/accessToken?user_id=${userRes.data.user.id}`
     ),
   ]);
 
-  const [initialRooms, initialBookings, tokenData]: [
+  const [initialRooms, tokenData]: [
     Room[],
-    Booking[],
     AvitoTokenData
-  ] = await Promise.all([roomsRes.json(), bookingsRes.json(), tokenRes.json()]);
+  ] = await Promise.all([roomsRes.json(), tokenRes.json()]);
 
   return {
     props: {
       user: userRes.data.user,
       fallback: {
-        [`/api/users/${roomsOwner}/rooms`]: initialRooms,
-        [`/api/users/${userRes.data.user.id}/bookings/?start=${dateRange.start}&end=${dateRange.end}`]:
-          [initialBookings],
+        [`/api/users/${roomsOwner}/rooms`]: initialRooms
       },
       tokenData: tokenRes.ok ? tokenData : {},
     },
@@ -84,7 +75,6 @@ type Props = {
 };
 
 export default function Home({ user, tokenData }: Props) {
-
   // current bookings are bookings from today and in the future
   // old bookings are bookings from the past
   // we use swr infinite to fetch bookings in pages of 100 days

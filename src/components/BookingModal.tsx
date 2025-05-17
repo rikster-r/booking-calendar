@@ -278,7 +278,7 @@ const BookingModal = ({
         hasId(bookingData) ? 'Бронь обновлена.' : 'Бронь добавлена.'
       );
       const newBooking = (await res.json()).booking as Booking;
-      const pageIndex = getPageIndexForBooking(newBooking.check_in);
+      const pageIndex = getPageIndexForBooking(newBooking.check_out);
 
       mutateBookings((data) => {
         if (!data) return data;

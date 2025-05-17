@@ -33,8 +33,8 @@ export function formatDateForAvito(date: string) {
 }
 
 // calculate pageindex for main page bookings gotten from useSWRInfinite
-export const getPageIndexForBooking = (checkIn: Date | string) => {
-  const checkInDate = typeof checkIn === 'string' ? new Date(checkIn) : checkIn;
+export const getPageIndexForBooking = (checkOut: Date | string) => {
+  const checkInDate = typeof checkOut === 'string' ? new Date(checkOut) : checkOut;
   const daysDifference = differenceInCalendarDays(checkInDate, new Date());
 
   // Calculate the page index by dividing the difference by the range (100 days per page)

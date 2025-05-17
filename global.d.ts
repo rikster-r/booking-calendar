@@ -50,7 +50,7 @@ type Booking = {
   client_email: string;
   adults_count: number;
   children_count: number;
-  door_code: number | null;
+  door_code: string | null;
   additional_info: string;
   daily_price: number;
   paid: boolean;
@@ -69,7 +69,7 @@ type BookingToInsert = {
   client_email: string;
   adults_count: number;
   children_count: number;
-  door_code: number | null;
+  door_code: string | null;
   additional_info: string;
   daily_price: number;
   paid: boolean;
