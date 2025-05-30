@@ -52,16 +52,15 @@ export const getServerSideProps: GetServerSideProps = async (
     ),
   ]);
 
-  const [initialRooms, tokenData]: [
-    Room[],
-    AvitoTokenData
-  ] = await Promise.all([roomsRes.json(), tokenRes.json()]);
+  const [initialRooms, tokenData]: [Room[], AvitoTokenData] = await Promise.all(
+    [roomsRes.json(), tokenRes.json()]
+  );
 
   return {
     props: {
       user: userRes.data.user,
       fallback: {
-        [`/api/users/${roomsOwner}/rooms`]: initialRooms
+        [`/api/users/${roomsOwner}/rooms`]: initialRooms,
       },
       tokenData: tokenRes.ok ? tokenData : {},
     },

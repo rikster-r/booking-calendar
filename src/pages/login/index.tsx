@@ -4,6 +4,24 @@ import { EyeIcon, EyeSlashIcon } from '@heroicons/react/24/solid';
 import { useRouter } from 'next/router';
 import { toast } from 'react-toastify';
 import Head from 'next/head';
+import { GetServerSideProps, GetServerSidePropsContext } from 'next';
+import { createClient } from '@/lib/supabase/server-props';
+
+export const getServerSideProps: GetServerSideProps = async (
+  context: GetServerSidePropsContext
+) => {
+  const supabase = createClient(context);
+
+  const userRes = await supabase.auth.getUser();
+
+  if (userRes.data) {
+    return { redirect: { destination: '/', permanent: false } };
+  }
+
+  return {
+    props: {},
+  };
+};
 
 export default function Login() {
   const [passwordVisible, setPasswordVisible] = useState(false);
