@@ -1,7 +1,7 @@
 import Modal from '@/components/Modal';
 import { useEffect, useMemo, useState } from 'react';
 import { PhoneIcon, EnvelopeIcon, XMarkIcon } from '@heroicons/react/24/solid';
-import { getNextDay, getPageIndexForBooking, isBeforeByDay } from '@/lib/dates';
+import { getNextDay, getPageIndexForBooking } from '@/lib/dates';
 import {
   format,
   differenceInCalendarDays,
@@ -148,7 +148,10 @@ const BookingModal = ({
     setFormData((prev) => ({ ...prev, paid: e.target.value === 'true' }));
   };
 
-  const isTimeSlotFree = async (checkIn: Date, checkOut: Date) => {
+  const getExistingBookings = async (
+    checkIn: Date,
+    checkOut: Date
+  ): Promise<Booking[]> => {
     try {
       const res = await fetch(
         `/api/users/${user.id}/bookings/validateTimeslot`,
@@ -164,10 +167,15 @@ const BookingModal = ({
         }
       );
 
-      return res.ok;
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      if (res.ok) {
+        return [];
+      } else {
+        const data = await res.json();
+        return data.existingBookings;
+      }
     } catch (e) {
-      return false;
+      console.error(e);
+      return [];
     }
   };
 
@@ -181,17 +189,17 @@ const BookingModal = ({
       }));
       return;
     }
-    if (isBeforeByDay(date, new Date())) {
-      toast.error('Нельзя добавить бронь для уже прошедших дней.');
-      return;
-    }
     if (isEqual(date, formData.checkOut)) {
       toast.error('Нельзя поставить заезд на то же время, что и выезд');
       return;
     }
-    const slotFree = await isTimeSlotFree(date, formData.checkOut);
-    if (!slotFree) {
-      toast.error('Временной слот уже занят другой бронью.');
+    const existingBookings = await getExistingBookings(date, formData.checkOut);
+    if (existingBookings.length) {
+      toast.error(
+        `Временной слот уже занят бронями: ${existingBookings
+          .map((booking) => booking.client_name)
+          .join(', ')}.`
+      );
       return;
     }
 
@@ -207,9 +215,13 @@ const BookingModal = ({
       toast.error('Нельзя поставить выезд на то же время, что и заезд');
       return;
     }
-    const slotFree = await isTimeSlotFree(formData.checkIn, date);
-    if (!slotFree) {
-      toast.error('Временной слот уже занят другой бронью.');
+    const existingBookings = await getExistingBookings(formData.checkIn, date);
+    if (existingBookings.length) {
+      toast.error(
+        `Временной слот уже занят бронями: ${existingBookings
+          .map((booking) => booking.client_name)
+          .join(', ')}.`
+      );
       return;
     }
 

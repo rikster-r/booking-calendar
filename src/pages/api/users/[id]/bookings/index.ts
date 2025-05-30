@@ -71,7 +71,7 @@ export default async function handler(
       await supabase
         .from('bookings')
         .select('*')
-        .or(`and(check_in.lte.${check_out}, check_out.gte.${check_in})`)
+        .or(`and(check_in.lt.${check_out}, check_out.gt.${check_in})`)
         .eq('room_id', room_id)
         .eq('user_id', user_id);
 
@@ -171,8 +171,8 @@ export default async function handler(
       .from('bookings')
       .select('*')
       .eq('user_id', user_id)
-      .lte('check_in', end)
-      .gte('check_out', start)
+      .lt('check_in', end)
+      .gt('check_out', start)
       .order('check_in', { ascending: true });
 
     if (error) {

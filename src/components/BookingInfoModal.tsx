@@ -1,5 +1,5 @@
 import Modal from '@/components/Modal';
-import { differenceInCalendarDays, format, isAfter } from 'date-fns';
+import { differenceInCalendarDays, format } from 'date-fns';
 import {
   UserIcon,
   CreditCardIcon,
@@ -210,22 +210,20 @@ const BookingInfoModal = ({
             </div>
           )}
         </div>
-        {isAfter(checkOut, new Date()) && (
-          <div className="mt-6 flex gap-2 justify-end">
-            <button
-              className="focus:outline-none text-red-500  hover:text-red-700 focus-visible:ring-4 focus-visible:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 hover:cursor-pointer"
-              onClick={deleteBooking}
-            >
-              Удалить
-            </button>
-            <button
-              className="focus:outline-none text-white bg-orange-400 hover:bg-orange-500 focus-visible:ring-4 focus-visible:ring-orange-300 font-medium rounded-lg text-sm px-5 py-2.5 hover:cursor-pointer"
-              onClick={onEditOpen}
-            >
-              Редактировать
-            </button>
-          </div>
-        )}
+        <div className="mt-6 flex gap-2 justify-end">
+          <button
+            className="focus:outline-none text-red-500  hover:text-red-700 focus-visible:ring-4 focus-visible:ring-red-300 font-medium rounded-lg text-sm px-5 py-2.5 hover:cursor-pointer"
+            onClick={deleteBooking}
+          >
+            Удалить
+          </button>
+          <button
+            className="focus:outline-none text-white bg-orange-400 hover:bg-orange-500 focus-visible:ring-4 focus-visible:ring-orange-300 font-medium rounded-lg text-sm px-5 py-2.5 hover:cursor-pointer"
+            onClick={onEditOpen}
+          >
+            Редактировать
+          </button>
+        </div>
       </div>
     </Modal>
   );

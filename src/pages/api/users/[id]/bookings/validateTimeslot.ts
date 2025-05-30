@@ -20,9 +20,9 @@ export default async function handler(
     let query = supabase
       .from('bookings')
       .select('*')
-      .or(`and(check_in.lte.${check_out}, check_out.gte.${check_in})`)
+      .or(`and(check_in.lt.${check_out}, check_out.gt.${check_in})`)
       .eq('room_id', room_id)
-      .eq('user_id', user_id)
+      .eq('user_id', user_id);
 
     if (id) {
       query = query.neq('id', id);
@@ -36,9 +36,10 @@ export default async function handler(
     }
 
     if (existingBookings && existingBookings.length > 0) {
-      return res
-        .status(409)
-        .json({ error: 'Временной слот уже занят другой бронью.' });
+      return res.status(409).json({
+        error: 'Временной слот уже занят другой бронью.',
+        existingBookings,
+      });
     }
 
     return res.status(200).json({ message: 'Слот доступен' });
