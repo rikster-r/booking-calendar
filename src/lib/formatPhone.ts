@@ -1,4 +1,5 @@
 export const formatPhone = (value: string): string => {
+  return value;
   const cleaned = ('' + value).replace(/\D/g, '');
 
   if (!cleaned) {

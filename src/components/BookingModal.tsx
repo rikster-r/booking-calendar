@@ -63,7 +63,7 @@ const BookingModal = ({
         : {
             roomId: bookingData.roomId,
             clientName: '',
-            clientPhone: '+7 ',
+            clientPhone: '',
             clientEmail: '',
             adultsCount: 1,
             childrenCount: 0,
