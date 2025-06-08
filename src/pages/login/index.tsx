@@ -14,7 +14,7 @@ export const getServerSideProps: GetServerSideProps = async (
 
   const userRes = await supabase.auth.getUser();
 
-  if (userRes.data) {
+  if (userRes.data.user) {
     return { redirect: { destination: '/', permanent: false } };
   }
 
