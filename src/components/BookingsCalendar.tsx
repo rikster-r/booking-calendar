@@ -133,11 +133,11 @@ const BookingsCalendar = ({
       const { scrollLeft, scrollWidth, clientWidth } = container;
       if (scrollLeft < 2000) {
         loadMoreDaysToLeft();
-        increaseSize(3, 'old');
+        increaseSize(1, 'old');
       }
       if (scrollLeft + clientWidth >= scrollWidth - 2000) {
         loadMoreDaysToRight();
-        increaseSize(3, 'current');
+        increaseSize(1, 'current');
       }
 
       const index = Math.floor(scrollLeft / cellWidth);
