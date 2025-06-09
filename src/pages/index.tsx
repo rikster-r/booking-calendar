@@ -4,7 +4,7 @@ import BookingModal from '@/components/BookingModal';
 import RoomModal from '@/components/RoomModal';
 import BookingInfoModal from '@/components/BookingInfoModal';
 import RoomInfoModal from '@/components/RoomInfoModal';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   EllipsisHorizontalIcon,
   BuildingOfficeIcon,
@@ -112,12 +112,15 @@ export default function Home({ user, tokenData }: Props) {
     data: currentBookingsData,
     setSize: setCurrentBookingsSize,
     mutate: mutateBookings,
+    error: currentBookingsError,
   } = useSWRInfinite<Booking[]>(getCurrentBookingsKey, fetcher, {
     parallel: true,
   });
-  const { data: oldBookingsData, setSize: setOldBookingsSize } = useSWRInfinite<
-    Booking[]
-  >(getOldBookingsKey, fetcher, { parallel: true });
+  const {
+    data: oldBookingsData,
+    setSize: setOldBookingsSize,
+    error: oldBookingsError,
+  } = useSWRInfinite<Booking[]>(getOldBookingsKey, fetcher, { parallel: true });
 
   const currentBookings = useMemo(
     () => (currentBookingsData ? currentBookingsData.flat() : []),
@@ -127,6 +130,15 @@ export default function Home({ user, tokenData }: Props) {
     () => (oldBookingsData ? oldBookingsData.flat() : []),
     [oldBookingsData]
   );
+
+  useEffect(() => {
+    if (currentBookingsError) {
+      toast.error(currentBookingsError);
+    }
+    if (oldBookingsError) {
+      toast.error(oldBookingsError);
+    }
+  }, [currentBookingsError, oldBookingsError]);
 
   const increaseSize = async (
     sizeIncrement: number,
