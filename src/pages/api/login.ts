@@ -16,13 +16,20 @@ export default async function handler(
         .json({ error: 'Не все обязательные поля заполнены' });
     }
 
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    if (error) return res.status(500).json({ error: error.message });
-
-    return res.status(200).json(data);
+      if (error) {
+        console.error(error);
+        throw new Error(error.message);
+      }
+      return res.status(200).json(data);
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ error: (error as Error).message });
+    }
   }
 }
