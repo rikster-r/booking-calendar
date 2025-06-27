@@ -16,6 +16,8 @@ import { ru } from 'date-fns/locale';
 import { User } from '@supabase/supabase-js';
 import { formatPhone } from '@/lib/formatPhone';
 import { SWRInfiniteKeyedMutator } from 'swr/infinite';
+import { toast } from 'react-toastify';
+import { getPageIndexForBooking } from '@/lib/dates';
 
 type Props = {
   isOpen: boolean;
@@ -23,6 +25,7 @@ type Props = {
   onEditOpen: () => void;
   onDeleteConfirmOpen: () => void;
   booking: Booking;
+  setBooking: (booking: Booking) => void;
   user: User;
   mutateBookings: SWRInfiniteKeyedMutator<Booking[][]>;
 };
@@ -31,12 +34,41 @@ const BookingInfoModal = ({
   isOpen,
   onClose,
   booking,
+  setBooking,
   onEditOpen,
   onDeleteConfirmOpen,
   user,
+  mutateBookings,
 }: Props) => {
   if (!booking) return null;
   if (!booking.client_name) return null;
+
+  const togglePaidStatus = async () => {
+    const res = await fetch(`/api/users/${user.id}/bookings/${booking.id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ paid: !booking.paid }),
+    });
+
+    if (res.ok) {
+      const updatedBooking = (await res.json()).booking as Booking;
+
+      setBooking(updatedBooking);
+      mutateBookings((data) => {
+        if (!data) return data;
+        const pageIndex = getPageIndexForBooking(updatedBooking.check_out);
+        const newData = [...data];
+        const index = newData[pageIndex].findIndex((b) => b.id === booking.id);
+        if (index === -1) return data;
+        newData[pageIndex][index] = updatedBooking;
+        return newData;
+      });
+    } else {
+      const errorData = await res.json();
+      console.log(errorData);
+      toast.error(errorData.error || 'Ошибка при обновлении статуса оплаты');
+    }
+  };
 
   const checkIn = new Date(booking.check_in);
   const checkOut = new Date(booking.check_out);
@@ -62,15 +94,16 @@ const BookingInfoModal = ({
                 {booking.client_name.slice(0, 20)}
                 {booking.client_name.length > 20 && '...'}
               </h2>
-              <span
-                className={`px-3 py-1 rounded-full text-sm text-nowrap w-max ${
+              <button
+                className={`cursor-pointer px-3 py-1 rounded-full text-sm text-nowrap w-max ${
                   booking.paid
                     ? 'bg-green-100 text-green-700'
                     : 'bg-red-100 text-red-700'
                 }`}
+                onClick={togglePaidStatus}
               >
                 {booking.paid ? 'Оплачено' : 'Не оплачено'}
-              </span>
+              </button>
             </div>
             <button className="hover:cursor-pointer ml-auto" onClick={onClose}>
               <XMarkIcon className="w-6 sm:w-7 h-6 sm:h-7" />

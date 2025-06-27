@@ -19,7 +19,9 @@ export default async function handler(
       .eq('id', booking_id);
 
     if (error) return res.status(500).json({ error: error.message });
-    return res.status(200).json({ message: `Успешно удалена бронь ${booking_id}` });
+    return res
+      .status(200)
+      .json({ message: `Успешно удалена бронь ${booking_id}` });
   }
 
   if (req.method === 'PUT') {
@@ -29,99 +31,93 @@ export default async function handler(
     }
 
     const {
-      roomId: room_id,
-      clientName: client_name,
-      clientPhone: client_phone,
-      clientEmail: client_email,
-      adultsCount: adults_count,
-      childrenCount: children_count,
-      checkIn: check_in,
-      checkOut: check_out,
-      doorCode: door_code,
-      additionalInfo: additional_info,
-      dailyPrice: daily_price,
+      roomId,
+      clientName,
+      clientPhone,
+      clientEmail,
+      adultsCount,
+      childrenCount,
+      checkIn,
+      checkOut,
+      doorCode,
+      additionalInfo,
+      dailyPrice,
       paid,
-    }: BookingInput = req.body;
+    }: Partial<BookingInput> = req.body;
 
-    if (
-      !room_id ||
-      !client_name ||
-      !client_phone ||
-      !adults_count ||
-      !check_in ||
-      !check_out ||
-      daily_price === null ||
-      daily_price === '' ||
-      paid === null
-    ) {
-      return res.status(400).json({ error: 'Не все поля заполнены.' });
+    // Validate phone if provided
+    if (clientPhone) {
+      if (!clientPhone.startsWith('+7') && !clientPhone.startsWith('8')) {
+        return res.status(400).json({ error: 'Некорректный номер телефона.' });
+      }
+      if (
+        (clientPhone.startsWith('+7') && clientPhone.length !== 12) ||
+        (clientPhone.startsWith('8') && clientPhone.length !== 11)
+      ) {
+        return res.status(400).json({ error: 'Некорректный номер телефона.' });
+      }
     }
 
-    if (!client_phone.startsWith('+7') && !client_phone.startsWith('8')) {
-      return res.status(400).json({ error: 'Некорректный номер телефона.' });
-    }
-    if (
-      (client_phone.startsWith('+7') && client_phone.length !== 12) ||
-      (client_phone.startsWith('8') && client_phone.length !== 11)
-    ) {
-      return res.status(400).json({ error: 'Некорректный номер телефона.' });
-    }
+    // Overlap and room status checks if enough info is present
+    if (roomId && checkIn && checkOut) {
+      const [existingBookingsResult, roomResult] = await Promise.all([
+        supabase
+          .from('bookings')
+          .select('*')
+          .or(`and(check_in.lt.${checkOut}, check_out.gt.${checkIn})`)
+          .eq('room_id', roomId)
+          .eq('user_id', user_id)
+          .neq('id', booking_id),
+        supabase
+          .from('rooms')
+          .select('status')
+          .eq('id', roomId)
+          .single(),
+      ]);
 
-    // Check if the booking slot is available
-    const { data: existingBookings, error: existingBookingsError } =
-      await supabase
-        .from('bookings')
-        .select('*')
-        .or(`and(check_in.lt.${check_out}, check_out.gt.${check_in})`)
-        .eq('room_id', room_id)
-        .eq('user_id', user_id)
-        .neq('id', booking_id); // Exclude current booking
+      const { data: existingBookings, error: existingBookingsError } = existingBookingsResult;
+      const { data: room, error: roomError } = roomResult;
 
-    if (existingBookingsError) {
-      return res.status(500).json({ error: existingBookingsError.message });
-    }
+      if (existingBookingsError) {
+        return res.status(500).json({ error: existingBookingsError.message });
+      }
 
-    if (existingBookings && existingBookings.length > 0) {
-      return res
-        .status(409)
-        .json({ error: 'Временной слот уже занят другой бронью.' });
-    }
+      if (existingBookings && existingBookings.length > 0) {
+        return res
+          .status(409)
+          .json({ error: 'Временной слот уже занят другой бронью.' });
+      }
 
-    // Check if the room is ready
-    const { data: room, error: roomError } = await supabase
-      .from('rooms')
-      .select('status')
-      .eq('id', room_id)
-      .single();
+      if (roomError) {
+        return res.status(500).json({ error: roomError.message });
+      }
 
-    if (roomError) {
-      return res.status(500).json({ error: roomError.message });
-    }
-
-    if (room.status === 'not ready') {
-      return res
-        .status(400)
-        .json({ error: 'Комната не готова для бронирования.' });
+      if (room.status === 'not ready') {
+        return res
+          .status(400)
+          .json({ error: 'Комната не готова для бронирования.' });
+      }
     }
 
-    // Update the booking
+    // Build dynamic update payload
+    const payload = {
+      ...(roomId !== undefined && { room_id: roomId }),
+      ...(clientName !== undefined && { client_name: clientName }),
+      ...(clientPhone !== undefined && { client_phone: clientPhone }),
+      ...(clientEmail !== undefined && { client_email: clientEmail }),
+      ...(adultsCount !== undefined && { adults_count: adultsCount }),
+      ...(childrenCount !== undefined && { children_count: childrenCount }),
+      ...(checkIn !== undefined && { check_in: checkIn }),
+      ...(checkOut !== undefined && { check_out: checkOut }),
+      ...(doorCode !== undefined && { door_code: doorCode }),
+      ...(additionalInfo !== undefined && { additional_info: additionalInfo }),
+      ...(dailyPrice !== undefined && { daily_price: dailyPrice }),
+      ...(paid !== undefined && { paid }),
+    };
+
     const { data, error } = await supabase
       .from('bookings')
-      .update({
-        room_id,
-        user_id,
-        client_name,
-        client_phone,
-        client_email,
-        adults_count,
-        children_count,
-        check_in,
-        check_out,
-        door_code,
-        additional_info,
-        daily_price,
-        paid,
-      })
+      .update(payload)
       .eq('id', booking_id)
       .select();
 
@@ -129,9 +125,7 @@ export default async function handler(
       return res.status(500).json({ error: error.message });
     }
 
-    return res
-      .status(200)
-      .json({ booking: data[0] });
+    return res.status(200).json({ booking: data[0] });
   }
 
   return res.status(405).json({ error: 'Данный метод API не существует.' });

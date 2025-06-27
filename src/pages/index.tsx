@@ -370,6 +370,7 @@ export default function Home({ user, tokenData }: Props) {
               toggleModal('deleteConfirmation', modalData);
             }}
             booking={modalData as Booking}
+            setBooking={setModalData}
             user={user}
             mutateBookings={mutateBookings}
           />
