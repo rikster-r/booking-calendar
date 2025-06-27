@@ -21,6 +21,8 @@ import Layout from '@/components/Layout';
 import CleaningObjects from '@/components/CleaningObjects';
 import useSWRInfinite from 'swr/infinite';
 import { format, addDays, startOfDay } from 'date-fns';
+import DeleteConfirmModal from '@/components/DeleteConfirmModal';
+import { getPageIndexForBooking } from '@/lib/dates';
 
 export const getServerSideProps: GetServerSideProps = async (
   context: GetServerSidePropsContext
@@ -168,6 +170,7 @@ export default function Home({ user, tokenData }: Props) {
     addRoom: false,
     bookingInfo: false,
     roomInfo: false,
+    deleteConfirmation: false,
   });
   const [modalData, setModalData] = useState<
     Record<string, unknown> | undefined
@@ -180,6 +183,33 @@ export default function Home({ user, tokenData }: Props) {
   ) => {
     setModals((prev) => ({ ...prev, [modal]: !prev[modal] }));
     setModalData(data);
+  };
+
+  const deleteBooking = async (booking: Booking) => {
+    const res = await fetch(`/api/users/${user.id}/bookings/${booking.id}`, {
+      method: 'DELETE',
+    });
+    if (res.ok) {
+      const pageIndex = getPageIndexForBooking(booking.check_in);
+      mutateBookings((data) => {
+        if (!data) return data;
+        const newData = [...data];
+        newData[pageIndex] = newData[pageIndex].filter(
+          (b) => b.id !== booking.id
+        );
+        return newData;
+      });
+      toast.success('Бронь успешно удалена');
+    } else {
+      const error = await res.json();
+      toast.error(error ? error.error : 'Ошибка удаления брони');
+    }
+  };
+
+  const deleteRoom = async (room: Room) => {
+    await fetch(`/api/users/${user.id}/rooms/${room.id}`, {
+      method: 'DELETE',
+    });
   };
 
   if (!rooms || !currentBookings) return <div>Loading...</div>;
@@ -334,6 +364,11 @@ export default function Home({ user, tokenData }: Props) {
               toggleModal('bookingInfo');
               toggleModal('addBooking', modalData as Booking);
             }}
+            onDeleteConfirmOpen={() => {
+              // keep the data
+              toggleModal('bookingInfo', modalData);
+              toggleModal('deleteConfirmation', modalData);
+            }}
             booking={modalData as Booking}
             user={user}
             mutateBookings={mutateBookings}
@@ -351,10 +386,43 @@ export default function Home({ user, tokenData }: Props) {
               toggleModal('roomInfo');
               toggleModal('addRoom', modalData as Room);
             }}
+            onDeleteConfirmOpen={() => {
+              // keep the data
+              toggleModal('roomInfo', modalData);
+              toggleModal('deleteConfirmation', modalData);
+            }}
             room={modalData as Room}
             user={user}
             comments={comments ?? []}
             mutateComments={mutateComments}
+          />
+        )}
+        {modals.deleteConfirmation && (
+          <DeleteConfirmModal
+            isOpen={modals.deleteConfirmation}
+            onClose={() => {
+              toggleModal('deleteConfirmation', modalData);
+              if (modalData?.client_name) {
+                toggleModal('bookingInfo', modalData);
+              } else if (modalData?.color) {
+                toggleModal('roomInfo', modalData);
+              }
+            }}
+            onConfirm={() => {
+              if (modalData?.client_name) {
+                deleteBooking(modalData as Booking);
+                mutateBookings();
+              } else if (modalData?.color) {
+                deleteRoom(modalData as Room);
+                mutateRooms();
+              }
+              toggleModal('deleteConfirmation');
+            }}
+            message={
+              modalData?.clientName
+                ? 'Вы уверены, что хотите удалить данную бронь? Это действие нельзя будет отменить.'
+                : 'Вы уверены, что хотите удалить данное помещение? Это действие нельзя будет отменить.'
+            }
           />
         )}
       </div>
