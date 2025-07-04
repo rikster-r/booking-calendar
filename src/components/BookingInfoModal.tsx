@@ -14,20 +14,20 @@ import Telegram from '@/assets/telegram.svg';
 import Whatsapp from '@/assets/whatsapp.svg';
 import { ru } from 'date-fns/locale';
 import { User } from '@supabase/supabase-js';
-import { formatPhone } from '@/lib/formatPhone';
-import { SWRInfiniteKeyedMutator } from 'swr/infinite';
+import { type BookingPaidStatusPayload } from '@/hooks/useBookings';
 import { toast } from 'react-toastify';
-import { getPageIndexForBooking } from '@/lib/dates';
 
 type Props = {
   isOpen: boolean;
   onClose: () => void;
   onEditOpen: () => void;
   onDeleteConfirmOpen: () => void;
-  booking: Booking;
-  setBooking: (booking: Booking) => void;
+  booking: Booking; // booking currently opened in modal
+  setBooking: (booking: Booking) => void; // set booking currently opened in modal
   user: User;
-  mutateBookings: SWRInfiniteKeyedMutator<Booking[][]>;
+  updateBooking: (
+    booking: BookingInput | BookingPaidStatusPayload
+  ) => Promise<Booking>; // update booking in db and swr
 };
 
 const BookingInfoModal = ({
@@ -38,35 +38,24 @@ const BookingInfoModal = ({
   onEditOpen,
   onDeleteConfirmOpen,
   user,
-  mutateBookings,
+  updateBooking,
 }: Props) => {
   if (!booking) return null;
   if (!booking.client_name) return null;
 
   const togglePaidStatus = async () => {
-    const res = await fetch(`/api/users/${user.id}/bookings/${booking.id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ paid: !booking.paid }),
-    });
-
-    if (res.ok) {
-      const updatedBooking = (await res.json()).booking as Booking;
-
-      setBooking(updatedBooking);
-      mutateBookings((data) => {
-        if (!data) return data;
-        const pageIndex = getPageIndexForBooking(updatedBooking.check_out);
-        const newData = [...data];
-        const index = newData[pageIndex].findIndex((b) => b.id === booking.id);
-        if (index === -1) return data;
-        newData[pageIndex][index] = updatedBooking;
-        return newData;
+    try {
+      const updatedBooking = await updateBooking({
+        id: booking.id,
+        paid: !booking.paid,
       });
-    } else {
-      const errorData = await res.json();
-      console.log(errorData);
-      toast.error(errorData.error || 'Ошибка при обновлении статуса оплаты');
+      setBooking(updatedBooking);
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : 'Ошибка при обновлении статуса оплаты'
+      );
     }
   };
 
@@ -115,7 +104,7 @@ const BookingInfoModal = ({
           <div className="space-y-3">
             <div className="flex items-center gap-2 text-gray-700">
               <PhoneIcon className="w-5 h-5" />
-              <span>{formatPhone(booking.client_phone)}</span>
+              <span>{booking.client_phone}</span>
             </div>
 
             {booking.client_email && (

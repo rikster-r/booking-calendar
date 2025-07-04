@@ -4,7 +4,7 @@ import BookingModal from '@/components/BookingModal';
 import RoomModal from '@/components/RoomModal';
 import BookingInfoModal from '@/components/BookingInfoModal';
 import RoomInfoModal from '@/components/RoomInfoModal';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useState } from 'react';
 import {
   EllipsisHorizontalIcon,
   BuildingOfficeIcon,
@@ -19,10 +19,9 @@ import { fetcher } from '@/lib/fetcher';
 import { toast } from 'react-toastify';
 import Layout from '@/components/Layout';
 import CleaningObjects from '@/components/CleaningObjects';
-import useSWRInfinite from 'swr/infinite';
-import { format, addDays, startOfDay } from 'date-fns';
+import { startOfDay } from 'date-fns';
 import DeleteConfirmModal from '@/components/DeleteConfirmModal';
-import { getPageIndexForBooking } from '@/lib/dates';
+import { useBookings } from '@/hooks/useBookings';
 
 export const getServerSideProps: GetServerSideProps = async (
   context: GetServerSidePropsContext
@@ -76,82 +75,19 @@ type Props = {
 };
 
 export default function Home({ user, tokenData }: Props) {
-  // current bookings are bookings from today and in the future
-  // old bookings are bookings from the past
-  // we use swr infinite to fetch bookings in pages of 100 days
   const [selectedDate, setSelectedDate] = useState(startOfDay(new Date()));
 
-  const getCurrentBookingsKey = useCallback(
-    (pageIndex: number, previousPageData: Booking[] | null) => {
-      if (previousPageData && previousPageData.length === 0) return null; // reached end
-
-      const start = addDays(selectedDate, pageIndex * 100);
-      const end = addDays(start, 100);
-
-      return `/api/users/${user.id}/bookings/?start=${format(
-        start,
-        'yyyy-MM-dd'
-      )}&end=${format(end, 'yyyy-MM-dd')}`;
-    },
-    [user.id, selectedDate]
-  );
-
-  const getOldBookingsKey = useCallback(
-    (pageIndex: number, previousPageData: Booking[] | null) => {
-      if (previousPageData && previousPageData.length === 0) return null; // reached end
-
-      const end = addDays(selectedDate, -pageIndex * 100);
-      const start = addDays(end, -100);
-
-      return `/api/users/${user.id}/bookings/?start=${format(
-        start,
-        'yyyy-MM-dd'
-      )}&end=${format(end, 'yyyy-MM-dd')}`;
-    },
-    [user.id, selectedDate]
-  );
   const {
-    data: currentBookingsData,
-    setSize: setCurrentBookingsSize,
-    mutate: mutateBookings,
-    error: currentBookingsError,
-  } = useSWRInfinite<Booking[]>(getCurrentBookingsKey, fetcher, {
-    parallel: true,
+    currentBookings,
+    oldBookings,
+    increaseSize,
+    addBooking,
+    updateBooking,
+    deleteBooking,
+  } = useBookings({
+    userId: user.id,
+    selectedDate,
   });
-  const {
-    data: oldBookingsData,
-    setSize: setOldBookingsSize,
-    error: oldBookingsError,
-  } = useSWRInfinite<Booking[]>(getOldBookingsKey, fetcher, { parallel: true });
-
-  const currentBookings = useMemo(
-    () => (currentBookingsData ? currentBookingsData.flat() : []),
-    [currentBookingsData]
-  );
-  const oldBookings = useMemo(
-    () => (oldBookingsData ? oldBookingsData.flat() : []),
-    [oldBookingsData]
-  );
-
-  useEffect(() => {
-    if (currentBookingsError) {
-      toast.error(currentBookingsError);
-    }
-    if (oldBookingsError) {
-      toast.error(oldBookingsError);
-    }
-  }, [currentBookingsError, oldBookingsError]);
-
-  const increaseSize = async (
-    sizeIncrement: number,
-    bookings: 'current' | 'old'
-  ) => {
-    if (bookings === 'current') {
-      setCurrentBookingsSize((prev) => prev + sizeIncrement);
-    } else if (bookings === 'old') {
-      setOldBookingsSize((prev) => prev + sizeIncrement);
-    }
-  };
 
   const roomsOwner = user.user_metadata.related_to ?? user.id;
   const { data: rooms, mutate: mutateRooms } = useSWR<Room[]>(
@@ -185,34 +121,13 @@ export default function Home({ user, tokenData }: Props) {
     setModalData(data);
   };
 
-  const deleteBooking = async (booking: Booking) => {
-    const res = await fetch(`/api/users/${user.id}/bookings/${booking.id}`, {
-      method: 'DELETE',
-    });
-    if (res.ok) {
-      const pageIndex = getPageIndexForBooking(booking.check_in);
-      mutateBookings((data) => {
-        if (!data) return data;
-        const newData = [...data];
-        newData[pageIndex] = newData[pageIndex].filter(
-          (b) => b.id !== booking.id
-        );
-        return newData;
-      });
-      toast.success('Бронь успешно удалена');
-    } else {
-      const error = await res.json();
-      toast.error(error ? error.error : 'Ошибка удаления брони');
-    }
-  };
-
   const deleteRoom = async (room: Room) => {
     await fetch(`/api/users/${user.id}/rooms/${room.id}`, {
       method: 'DELETE',
     });
   };
 
-  if (!rooms || !currentBookings) return <div>Loading...</div>;
+  if (!rooms) return <div>Loading...</div>;
 
   return (
     <>
@@ -338,7 +253,8 @@ export default function Home({ user, tokenData }: Props) {
                     roomId: number;
                   }
             }
-            mutateBookings={mutateBookings}
+            addBooking={addBooking}
+            updateBooking={updateBooking}
             user={user}
           />
         )}
@@ -372,7 +288,7 @@ export default function Home({ user, tokenData }: Props) {
             booking={modalData as Booking}
             setBooking={setModalData}
             user={user}
-            mutateBookings={mutateBookings}
+            updateBooking={updateBooking}
           />
         )}
         {modals.roomInfo && (
@@ -380,8 +296,6 @@ export default function Home({ user, tokenData }: Props) {
             isOpen={modals.roomInfo}
             onClose={() => {
               toggleModal('roomInfo');
-              mutateRooms();
-              mutateBookings();
             }}
             onEditOpen={() => {
               toggleModal('roomInfo');
@@ -412,7 +326,6 @@ export default function Home({ user, tokenData }: Props) {
             onConfirm={() => {
               if (modalData?.client_name) {
                 deleteBooking(modalData as Booking);
-                mutateBookings();
               } else if (modalData?.color) {
                 deleteRoom(modalData as Room);
                 mutateRooms();

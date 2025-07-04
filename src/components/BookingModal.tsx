@@ -1,7 +1,7 @@
 import Modal from '@/components/Modal';
 import { useEffect, useMemo, useState } from 'react';
 import { PhoneIcon, EnvelopeIcon, XMarkIcon } from '@heroicons/react/24/solid';
-import { getNextDay, getPageIndexForBooking } from '@/lib/dates';
+import { formatDateTimeLocal, getNextDay } from '@/lib/dates';
 import {
   format,
   differenceInCalendarDays,
@@ -12,8 +12,6 @@ import {
 import DateTimePicker from '@/components/DateTimePicker';
 import { toast } from 'react-toastify';
 import { User } from '@supabase/supabase-js';
-import { formatPhone, unformatPhone } from '@/lib/formatPhone';
-import { SWRInfiniteKeyedMutator } from 'swr/infinite';
 
 type Props = {
   isOpen: boolean;
@@ -26,7 +24,8 @@ type Props = {
         roomId: number;
       };
   user: User;
-  mutateBookings: SWRInfiniteKeyedMutator<Booking[][]>;
+  addBooking: (booking: BookingInput) => Promise<Booking>;
+  updateBooking: (booking: BookingInput) => Promise<Booking>;
 };
 
 // this component is used for both updates and creations of booking
@@ -36,7 +35,8 @@ const BookingModal = ({
   rooms,
   bookingData,
   user,
-  mutateBookings,
+  addBooking,
+  updateBooking,
 }: Props) => {
   // workaround for typescript reasons
   function hasId(booking: unknown): booking is { id: unknown } {
@@ -47,9 +47,10 @@ const BookingModal = ({
     () =>
       hasId(bookingData)
         ? {
+            id: bookingData.id,
             roomId: bookingData.room_id,
             clientName: bookingData.client_name,
-            clientPhone: formatPhone(bookingData.client_phone),
+            clientPhone: bookingData.client_phone,
             clientEmail: bookingData.client_email,
             adultsCount: bookingData.adults_count,
             childrenCount: bookingData.children_count,
@@ -101,6 +102,7 @@ const BookingModal = ({
     setTotalPrice(
       String(Math.trunc(Number(formData.dailyPrice) * Number(newDays)))
     );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [formData.checkIn, formData.checkOut]);
 
   if (!bookingData) return;
@@ -131,24 +133,15 @@ const BookingModal = ({
   const handlePhoneChange: React.ChangeEventHandler<HTMLInputElement> = (e) => {
     setFormData((prev) => ({
       ...prev,
-      clientPhone: formatPhone(e.target.value),
+      clientPhone: e.target.value,
     }));
-  };
-
-  // stringify date with respect to timezone
-  const formatDateTimeLocal = (date: Date) => {
-    const offset = date.getTimezoneOffset() * 60000; // Offset in milliseconds
-    const localISO = new Date(date.getTime() - offset)
-      .toISOString()
-      .slice(0, 16);
-    return localISO;
   };
 
   const setPaidStatus: React.ChangeEventHandler<HTMLSelectElement> = (e) => {
     setFormData((prev) => ({ ...prev, paid: e.target.value === 'true' }));
   };
 
-  const getExistingBookings = async (
+  const getExistingBookingsInTimeslot = async (
     checkIn: Date,
     checkOut: Date
   ): Promise<Booking[]> => {
@@ -193,7 +186,10 @@ const BookingModal = ({
       toast.error('Нельзя поставить заезд на то же время, что и выезд');
       return;
     }
-    const existingBookings = await getExistingBookings(date, formData.checkOut);
+    const existingBookings = await getExistingBookingsInTimeslot(
+      date,
+      formData.checkOut
+    );
     if (existingBookings.length) {
       toast.error(
         `Временной слот уже занят бронями: ${existingBookings
@@ -215,7 +211,10 @@ const BookingModal = ({
       toast.error('Нельзя поставить выезд на то же время, что и заезд');
       return;
     }
-    const existingBookings = await getExistingBookings(formData.checkIn, date);
+    const existingBookings = await getExistingBookingsInTimeslot(
+      formData.checkIn,
+      date
+    );
     if (existingBookings.length) {
       toast.error(
         `Временной слот уже занят бронями: ${existingBookings
@@ -269,53 +268,23 @@ const BookingModal = ({
       return;
     }
 
-    const method = hasId(bookingData) ? 'PUT' : 'POST';
-    const url = hasId(bookingData)
-      ? `/api/users/${user.id}/bookings/${bookingData.id}`
-      : `/api/users/${user.id}/bookings`;
-
-    const res = await fetch(url, {
-      method,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        ...data,
-        clientPhone: unformatPhone(formData.clientPhone),
-        checkIn: formatDateTimeLocal(data.checkIn),
-        checkOut: formatDateTimeLocal(data.checkOut),
-      }),
-    });
-
-    if (res.ok) {
-      toast.success(
-        hasId(bookingData) ? 'Бронь обновлена.' : 'Бронь добавлена.'
-      );
-      const newBooking = (await res.json()).booking as Booking;
-      const pageIndex = getPageIndexForBooking(newBooking.check_out);
-
-      mutateBookings((data) => {
-        if (!data) return data;
-        const newData = [...data];
-        if (hasId(bookingData)) {
-          const index = data[pageIndex].findIndex(
-            (b) => b.id === bookingData.id
-          );
-          if (index === -1) return data;
-          newData[pageIndex][index] = newBooking;
-          return newData;
-        } else {
-          newData[pageIndex].push(newBooking);
-          return newData;
-        }
-      });
+    try {
+      if (hasId(bookingData)) {
+        await updateBooking(data);
+        toast.success('Бронь обновлена');
+      } else {
+        await addBooking(data);
+        toast.success('Бронь добавлена');
+      }
 
       onClose();
-    } else {
-      const errorData = await res.json();
+    } catch (error) {
       toast.error(
-        errorData.error ||
-          `Ошибка при ${
-            hasId(bookingData) ? 'обновлении' : 'добавлении'
-          } брони.`
+        error instanceof Error
+          ? error.message
+          : `Ошибка при ${
+              hasId(bookingData) ? 'обновлении' : 'добавлении'
+            } брони`
       );
     }
   };

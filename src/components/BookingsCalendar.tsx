@@ -1,7 +1,13 @@
-import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from 'react';
 import RoomStatusBadge from './RoomStatusBadge';
 import useWindowWidth from '@/hooks/useWindowWidth';
-import { addDays, isBefore, startOfDay } from 'date-fns';
+import { addDays, startOfDay } from 'date-fns';
 import CalendarDatePicker from './CalendarDatePicker';
 
 const LOCALE = 'ru-RU';
@@ -58,11 +64,11 @@ const BookingsCalendar = ({
     return [...past, today, ...future];
   });
 
-  const scrollToToday = () => {
+  const scrollToToday = useCallback(() => {
     const container = scrollRef.current;
     if (!container) return;
     container.scrollLeft = PAST_DAYS * cellWidth;
-  };
+  }, [cellWidth]);
 
   const handleDateChange = (date: Date) => {
     const newDate = startOfDay(date);
@@ -85,7 +91,7 @@ const BookingsCalendar = ({
 
   useLayoutEffect(() => {
     scrollToToday();
-  }, [cellWidth]);
+  }, [cellWidth, scrollToToday]);
 
   const loadMoreDaysToRight = () =>
     setDaysList((prev) => {
@@ -148,8 +154,6 @@ const BookingsCalendar = ({
     container.addEventListener('scroll', onScroll);
     return () => container.removeEventListener('scroll', onScroll);
   }, [daysList, cellWidth, increaseSize]);
-
-  const isPastDay = (day: Date) => isBefore(day, today);
 
   return (
     <div className="lg:px-8 h-full">
@@ -235,15 +239,10 @@ const BookingsCalendar = ({
               );
             })}
             {daysList.map((day) => {
-              const past = isPastDay(day);
               return (
                 <div
                   key={day.getTime()}
-                  className={`p-2 border rounded-lg flex flex-col items-center justify-center h-[60px] lg:h-[70px] w-full my-1 ${
-                    past
-                      ? 'bg-gray-100 border-gray-200 text-gray-400 cursor-not-allowed'
-                      : 'bg-gray-200 border-gray-300 text-gray-900'
-                  }`}
+                  className={`p-2 border rounded-lg flex flex-col items-center justify-center h-[60px] lg:h-[70px] w-full my-1 bg-gray-200 border-gray-300 text-gray-900`}
                 >
                   <p className="text-sm lg:text-base font-semibold">
                     {day.toLocaleDateString(LOCALE, { day: 'numeric' })}
@@ -256,23 +255,17 @@ const BookingsCalendar = ({
             })}
             {rooms.map((room) =>
               daysList.map((day) => {
-                const past = isPastDay(day);
                 return (
                   <button
                     key={`${room.id}-${day.getTime()}`}
-                    className={`border p-2 h-[38px] lg:h-[45px] w-full flex items-center justify-center transition ${
-                      past
-                        ? 'bg-gray-100 border-gray-200 text-gray-400 opacity-90 cursor-not-allowed'
-                        : 'bg-white border-gray-300 hover:bg-gray-100'
-                    }`}
+                    className={`border p-2 h-[38px] lg:h-[45px] w-full flex items-center justify-center transition 
+                      bg-white border-gray-300 hover:bg-gray-100`}
                     onClick={() =>
-                      !past &&
                       toggleModal('addBooking', {
                         checkIn: day,
                         roomId: room.id,
                       })
                     }
-                    disabled={past}
                   />
                 );
               })
@@ -312,10 +305,10 @@ const BookingsCalendar = ({
               const width = duration * hourPixel;
               const y = topOffset + roomIndex * (cellWidth + 4);
               return (
-                <div
+                <button
                   key={booking.id}
                   className={`absolute truncate shadow-lg rounded-lg text-xs lg:text-sm text-white p-2 h-[38px] lg:h-[45px] flex items-center justify-center ${
-                    booking.paid ? 'bg-blue-400' : 'bg-red-400'
+                    booking.paid ? 'bg-blue-500' : 'bg-red-500'
                   }`}
                   style={{
                     top: `${y}px`,
@@ -326,7 +319,7 @@ const BookingsCalendar = ({
                   onClick={() => toggleModal('bookingInfo', booking)}
                 >
                   {booking.client_name}
-                </div>
+                </button>
               );
             })}
             {currentBookings?.map((booking) => {
@@ -347,7 +340,7 @@ const BookingsCalendar = ({
               const width = duration * hourPixel;
               const y = topOffset + roomIndex * (cellWidth + 4);
               return (
-                <div
+                <button
                   key={booking.id}
                   className={`absolute truncate shadow-lg rounded-lg text-xs lg:text-sm text-white p-2 h-[38px] lg:h-[45px] flex items-center justify-center ${
                     booking.paid ? 'bg-blue-500' : 'bg-red-500'
@@ -361,7 +354,7 @@ const BookingsCalendar = ({
                   onClick={() => toggleModal('bookingInfo', booking)}
                 >
                   {booking.client_name}
-                </div>
+                </button>
               );
             })}
           </div>

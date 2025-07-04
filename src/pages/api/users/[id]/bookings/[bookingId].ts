@@ -68,14 +68,11 @@ export default async function handler(
           .eq('room_id', roomId)
           .eq('user_id', user_id)
           .neq('id', booking_id),
-        supabase
-          .from('rooms')
-          .select('status')
-          .eq('id', roomId)
-          .single(),
+        supabase.from('rooms').select('status').eq('id', roomId).single(),
       ]);
 
-      const { data: existingBookings, error: existingBookingsError } = existingBookingsResult;
+      const { data: existingBookings, error: existingBookingsError } =
+        existingBookingsResult;
       const { data: room, error: roomError } = roomResult;
 
       if (existingBookingsError) {
@@ -119,13 +116,14 @@ export default async function handler(
       .from('bookings')
       .update(payload)
       .eq('id', booking_id)
-      .select();
+      .select()
+      .single();
 
     if (error) {
       return res.status(500).json({ error: error.message });
     }
 
-    return res.status(200).json({ booking: data[0] });
+    return res.status(200).json(data);
   }
 
   return res.status(405).json({ error: 'Данный метод API не существует.' });

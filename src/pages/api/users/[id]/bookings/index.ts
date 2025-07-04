@@ -149,12 +149,13 @@ export default async function handler(
         },
       ])
       .select()
+      .single();
 
     if (error) {
       return res.status(500).json({ error: error.message });
     }
 
-    return res.status(201).json({ booking: data[0] });
+    return res.status(201).json(data);
   }
 
   if (req.method === 'GET') {

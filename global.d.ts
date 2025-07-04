@@ -81,6 +81,7 @@ type BookingToInsert = {
 };
 
 type BookingInput = {
+  id?: number;
   roomId: number;
   clientName: string;
   clientPhone: string;
