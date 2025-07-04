@@ -333,7 +333,7 @@ export default function Home({ user, tokenData }: Props) {
               toggleModal('deleteConfirmation');
             }}
             message={
-              modalData?.clientName
+              modalData?.client_name
                 ? 'Вы уверены, что хотите удалить данную бронь? Это действие нельзя будет отменить.'
                 : 'Вы уверены, что хотите удалить данное помещение? Это действие нельзя будет отменить.'
             }
