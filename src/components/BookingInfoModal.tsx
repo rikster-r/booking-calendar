@@ -8,6 +8,8 @@ import {
   CalendarDaysIcon,
   PhoneIcon,
   XMarkIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
 } from '@heroicons/react/24/solid';
 import Image from 'next/image';
 import Telegram from '@/assets/telegram.svg';
@@ -16,6 +18,32 @@ import { ru } from 'date-fns/locale';
 import { User } from '@supabase/supabase-js';
 import { type BookingPaidStatusPayload } from '@/hooks/useBookings';
 import { toast } from 'react-toastify';
+import {
+  Disclosure,
+  DisclosureButton,
+  DisclosurePanel,
+} from '@headlessui/react';
+
+type Booking = {
+  id: number;
+  room_id: number;
+  client_name: string;
+  client_phone: string;
+  additional_client_phones: string[] | null;
+  client_email: string;
+  adults_count: number;
+  children_count: number;
+  door_code: string | null;
+  additional_info: string;
+  daily_price: number;
+  paid: boolean;
+  check_in: string | Date;
+  check_out: string | Date;
+  created_at: string;
+  room?: Room;
+  avito_id: number | null;
+  user_id: string;
+};
 
 type Props = {
   isOpen: boolean;
@@ -59,15 +87,32 @@ const BookingInfoModal = ({
     }
   };
 
+  const formatPhoneNumber = (phone: string) => {
+    const cleanPhone = phone.trim();
+    return cleanPhone.startsWith('8') ? '+7' + cleanPhone.slice(1) : cleanPhone;
+  };
+
+  const getPhoneLinks = (phone: string) => {
+    const formattedPhone = formatPhoneNumber(phone);
+    const cleanPhone = formattedPhone.replace(/\D/g, '');
+    return {
+      whatsapp: `https://wa.me/${cleanPhone}`,
+      telegram: `https://t.me/${cleanPhone}`,
+    };
+  };
+
   const checkIn = new Date(booking.check_in);
   const checkOut = new Date(booking.check_out);
   const nights = differenceInCalendarDays(checkOut, checkIn);
   const totalPrice = nights * booking.daily_price;
 
-  let phone = booking.client_phone.trim();
-  if (phone.startsWith('8')) phone = '+7' + phone.slice(1);
-  const whatsappLink = `https://wa.me/${phone.replace(/\D/g, '')}`;
-  const telegramLink = `https://t.me/${phone.replace(/\D/g, '')}`;
+  const allPhones = [
+    booking.client_phone,
+    ...(booking.additional_client_phones || []),
+  ];
+  const hasAdditionalPhones =
+    booking.additional_client_phones &&
+    booking.additional_client_phones.length > 0;
 
   return (
     <>
@@ -102,10 +147,83 @@ const BookingInfoModal = ({
           <hr className="my-5 text-gray-400" />
 
           <div className="space-y-3">
-            <div className="flex items-center gap-2 text-gray-700">
-              <PhoneIcon className="w-5 h-5" />
-              <span>{booking.client_phone}</span>
-            </div>
+            {/* Phone Numbers Section */}
+            {!hasAdditionalPhones ? (
+              // Single phone - show as before with separate Telegram and WhatsApp links
+              <>
+                <div className="flex items-center gap-2 text-gray-700">
+                  <PhoneIcon className="w-5 h-5" />
+                  <span>{formatPhoneNumber(booking.client_phone)}</span>
+                </div>
+                <div className="flex items-center gap-2 text-gray-700">
+                  <Image src={Telegram} alt="" className="w-6 h-6" />
+                  <a
+                    href={getPhoneLinks(booking.client_phone).telegram}
+                    className="text-blue-500 hover:underline"
+                  >
+                    Telegram
+                  </a>
+                </div>
+                <div className="flex items-center gap-2 text-gray-700">
+                  <Image src={Whatsapp} alt="" className="w-6 h-6" />
+                  <a
+                    href={getPhoneLinks(booking.client_phone).whatsapp}
+                    className="text-green-500 hover:underline"
+                  >
+                    WhatsApp
+                  </a>
+                </div>
+              </>
+            ) : (
+              // Multiple phones - use Disclosure for each
+              <div className="space-y-2">
+                {allPhones.map((phone, index) => (
+                  <Disclosure key={index}>
+                    {({ open }) => (
+                      <div className="border border-gray-200 rounded-lg">
+                        <DisclosureButton className="cursor-pointer flex w-full justify-between items-center px-4 py-3 text-left font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus-visible:ring focus-visible:ring-gray-500 focus-visible:ring-opacity-75">
+                          <div className="flex items-center gap-2">
+                            <PhoneIcon className="w-5 h-5" />
+                            <span>{formatPhoneNumber(phone)}</span>
+                          </div>
+                          {open ? (
+                            <ChevronUpIcon className="w-5 h-5" />
+                          ) : (
+                            <ChevronDownIcon className="w-5 h-5" />
+                          )}
+                        </DisclosureButton>
+                        <DisclosurePanel className="px-4 py-2 text-base">
+                          <div className="flex gap-4">
+                            <a
+                              href={getPhoneLinks(phone).telegram}
+                              className="flex items-center gap-1 text-blue-500 hover:underline"
+                            >
+                              <Image
+                                src={Telegram}
+                                alt="Telegram"
+                                className="w-5 h-5"
+                              />
+                              <span>Telegram</span>
+                            </a>
+                            <a
+                              href={getPhoneLinks(phone).whatsapp}
+                              className="flex items-center gap-1 text-green-500 hover:underline"
+                            >
+                              <Image
+                                src={Whatsapp}
+                                alt="WhatsApp"
+                                className="w-5 h-5"
+                              />
+                              <span>WhatsApp</span>
+                            </a>
+                          </div>
+                        </DisclosurePanel>
+                      </div>
+                    )}
+                  </Disclosure>
+                ))}
+              </div>
+            )}
 
             {booking.client_email && (
               <div className="flex items-center gap-2 text-gray-700">
@@ -113,20 +231,6 @@ const BookingInfoModal = ({
                 <span>{booking.client_email}</span>
               </div>
             )}
-
-            <div className="flex items-center gap-2 text-gray-700">
-              <Image src={Telegram} alt="" className="w-6 h-6" />
-              <a href={telegramLink} className="text-blue-500 hover:underline">
-                Telegram
-              </a>
-            </div>
-
-            <div className="flex items-center gap-2 text-gray-700">
-              <Image src={Whatsapp} alt="" className="w-6 h-6" />
-              <a href={whatsappLink} className="text-green-500 hover:underline">
-                WhatsApp
-              </a>
-            </div>
 
             <hr className="my-5 text-gray-400" />
 

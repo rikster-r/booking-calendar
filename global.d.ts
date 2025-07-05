@@ -47,6 +47,7 @@ type Booking = {
   room_id: number;
   client_name: string;
   client_phone: string;
+  additional_client_phones: string[] | null;
   client_email: string;
   adults_count: number;
   children_count: number;
@@ -85,6 +86,7 @@ type BookingInput = {
   roomId: number;
   clientName: string;
   clientPhone: string;
+  additionalClientPhones: string[];
   clientEmail: string;
   adultsCount: number | string;
   childrenCount: number | string;

@@ -1,5 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import createClient from '@/lib/supabase/api';
+import { isValidPhoneNumber } from '@/lib/phoneNumbers';
 
 export default async function handler(
   req: NextApiRequest,
@@ -43,18 +44,27 @@ export default async function handler(
       additionalInfo,
       dailyPrice,
       paid,
+      additionalClientPhones,
     }: Partial<BookingInput> = req.body;
 
     // Validate phone if provided
-    if (clientPhone) {
-      if (!clientPhone.startsWith('+7') && !clientPhone.startsWith('8')) {
-        return res.status(400).json({ error: 'Некорректный номер телефона.' });
-      }
-      if (
-        (clientPhone.startsWith('+7') && clientPhone.length !== 12) ||
-        (clientPhone.startsWith('8') && clientPhone.length !== 11)
-      ) {
-        return res.status(400).json({ error: 'Некорректный номер телефона.' });
+    if (clientPhone && !isValidPhoneNumber(clientPhone)) {
+      return res
+        .status(400)
+        .json({
+          error: 'Некорректный формат одного или более номеров телефонов.',
+        });
+    }
+
+    if (additionalClientPhones) {
+      const hasInvalidPhone = additionalClientPhones.some(
+        (phone) => !isValidPhoneNumber(phone)
+      );
+
+      if (hasInvalidPhone) {
+        return res.status(400).json({
+          error: 'Некорректный формат одного или более номеров телефонов.',
+        });
       }
     }
 
@@ -110,6 +120,9 @@ export default async function handler(
       ...(additionalInfo !== undefined && { additional_info: additionalInfo }),
       ...(dailyPrice !== undefined && { daily_price: dailyPrice }),
       ...(paid !== undefined && { paid }),
+      ...(additionalClientPhones !== undefined && {
+        additional_client_phones: additionalClientPhones,
+      }),
     };
 
     const { data, error } = await supabase

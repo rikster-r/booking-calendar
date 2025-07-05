@@ -1,6 +1,11 @@
 import Modal from '@/components/Modal';
 import { useEffect, useMemo, useState } from 'react';
-import { PhoneIcon, EnvelopeIcon, XMarkIcon } from '@heroicons/react/24/solid';
+import {
+  PhoneIcon,
+  EnvelopeIcon,
+  XMarkIcon,
+  TrashIcon,
+} from '@heroicons/react/24/solid';
 import { formatDateTimeLocal, getNextDay } from '@/lib/dates';
 import {
   format,
@@ -51,6 +56,7 @@ const BookingModal = ({
             roomId: bookingData.room_id,
             clientName: bookingData.client_name,
             clientPhone: bookingData.client_phone,
+            additionalClientPhones: bookingData.additional_client_phones ?? [],
             clientEmail: bookingData.client_email,
             adultsCount: bookingData.adults_count,
             childrenCount: bookingData.children_count,
@@ -65,6 +71,7 @@ const BookingModal = ({
             roomId: bookingData.roomId,
             clientName: '',
             clientPhone: '',
+            additionalClientPhones: [],
             clientEmail: '',
             adultsCount: 1,
             childrenCount: 0,
@@ -139,6 +146,13 @@ const BookingModal = ({
 
   const setPaidStatus: React.ChangeEventHandler<HTMLSelectElement> = (e) => {
     setFormData((prev) => ({ ...prev, paid: e.target.value === 'true' }));
+  };
+
+  const addAdditionalClientPhone = () => {
+    setFormData((prev) => ({
+      ...prev,
+      additionalClientPhones: [...prev.additionalClientPhones, ''],
+    }));
   };
 
   const getExistingBookingsInTimeslot = async (
@@ -526,7 +540,7 @@ const BookingModal = ({
           </div>
           <div className="mt-3">
             <label htmlFor="clientPhone" className="text-gray-700">
-              Телефон
+              Телефоны
             </label>
             <div className="relative">
               <input
@@ -541,6 +555,51 @@ const BookingModal = ({
               <PhoneIcon className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
             </div>
           </div>
+          {formData.additionalClientPhones.length > 0 && (
+            <div className="mt-3">
+              {formData.additionalClientPhones.map((phone, index) => (
+                <div key={index} className="flex items-center mt-3">
+                  <div className="relative w-full">
+                    <input
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => {
+                        setFormData((prev) => {
+                          const newPhones = [...prev.additionalClientPhones];
+                          newPhones[index] = e.target.value;
+                          return { ...prev, additionalClientPhones: newPhones };
+                        });
+                      }}
+                      className="flex items-center w-full border rounded-md px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500 h-[40px] pl-10 border-gray-500"
+                    />
+                    <PhoneIcon className="w-5 h-5 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  </div>
+                  <button
+                    type="button"
+                    className="cursor-pointer ml-2 text-red-500 hover:text-red-700"
+                    onClick={() => {
+                      const newPhones = formData.additionalClientPhones.filter(
+                        (_, i) => i !== index
+                      );
+                      setFormData((prev) => ({
+                        ...prev,
+                        additionalClientPhones: newPhones,
+                      }));
+                    }}
+                  >
+                    <TrashIcon className="w-5 h-5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+          <button
+            type="button"
+            className="cursor-pointer mt-2 inline-block bg-blue-100 text-blue-700 px-3 py-2 rounded-full text-xs font-semibold hover:bg-blue-200 transition-colors"
+            onClick={addAdditionalClientPhone}
+          >
+            + Добавить телефон
+          </button>
           <div className="mt-3">
             <label htmlFor="clientEmail" className="text-gray-700">
               Электронный адрес

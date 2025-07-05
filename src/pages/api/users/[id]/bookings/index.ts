@@ -1,6 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import createClient from '@/lib/supabase/api';
 import { get100DayRange } from '@/lib/dates';
+import { isValidPhoneNumber } from '@/lib/phoneNumbers';
 
 export default async function handler(
   req: NextApiRequest,
@@ -24,6 +25,7 @@ export default async function handler(
       roomId: room_id,
       clientName: client_name,
       clientPhone: client_phone,
+      additionalClientPhones: additional_client_phones,
       clientEmail: client_email,
       adultsCount: adults_count,
       doorCode: door_code,
@@ -54,16 +56,21 @@ export default async function handler(
       return res.status(400).json({ error: 'Не все поля заполнены.' });
     }
 
-    if (!client_phone.startsWith('+7') && !client_phone.startsWith('8')) {
-      return res.status(400).json({ error: 'Некорректный номер телефона.' });
+    // Validate phone numbers
+    if (!isValidPhoneNumber(client_phone)) {
+      return res.status(400).json({ error: 'Некорректный формат одного или более номеров телефонов.' });
     }
 
-    if (client_phone.startsWith('+7') && client_phone.length !== 12) {
-      return res.status(400).json({ error: 'Некорректный номер телефона.' });
-    }
+    if (additional_client_phones) {
+      const hasInvalidPhone = additional_client_phones.some(
+        (phone) => !isValidPhoneNumber(phone)
+      );
 
-    if (client_phone.startsWith('8') && client_phone.length !== 11) {
-      return res.status(400).json({ error: 'Некорректный номер телефона.' });
+      if (hasInvalidPhone) {
+        return res.status(400).json({
+          error: 'Некорректный формат одного или более номеров телефонов.',
+        });
+      }
     }
 
     // Check if the booking slot is already taken
@@ -137,6 +144,7 @@ export default async function handler(
           avito_id: avito_booking_id,
           client_name,
           client_phone,
+          additional_client_phones,
           client_email,
           adults_count,
           children_count,
