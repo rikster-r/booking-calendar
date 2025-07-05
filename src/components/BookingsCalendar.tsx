@@ -5,17 +5,35 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import RoomStatusBadge from './RoomStatusBadge';
 import useWindowWidth from '@/hooks/useWindowWidth';
 import { addDays, startOfDay } from 'date-fns';
 import CalendarDatePicker from './CalendarDatePicker';
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { KeyedMutator } from 'swr';
+import SortableRoomItem from './SortableRoom';
+import { User } from '@supabase/supabase-js';
+import { toast } from 'react-toastify';
 
 const LOCALE = 'ru-RU';
 const PAST_DAYS = 100;
 const FUTURE_DAYS = 100;
 
 type Props = {
+  user: User;
   rooms: Room[];
+  mutateRooms: KeyedMutator<Room[]>;
   currentBookings: Booking[];
   oldBookings: Booking[];
   toggleModal: (
@@ -31,7 +49,9 @@ type Props = {
 };
 
 const BookingsCalendar = ({
+  user,
   rooms,
+  mutateRooms,
   oldBookings,
   currentBookings,
   toggleModal,
@@ -53,6 +73,60 @@ const BookingsCalendar = ({
     oldScrollWidth: number;
     oldScrollLeft: number;
   } | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // drag only activates after 8px movement
+        tolerance: 500
+      },
+    })
+  );
+
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = rooms.findIndex((r) => r.id === active.id);
+    const newIndex = rooms.findIndex((r) => r.id === over.id);
+    const newItems = arrayMove(rooms, oldIndex, newIndex);
+
+    const reorderedRooms = newItems.map((room, index) => ({
+      ...room,
+      order: index,
+    }));
+
+    // Оптимистичное обновление
+    mutateRooms(
+      async () => {
+        const res = await fetch(`/api/users/${user.id}/rooms/order`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            rooms: reorderedRooms.map(({ id, order }) => ({
+              id,
+              order,
+            })),
+          }),
+        });
+
+        if (!res.ok) {
+          toast.error('Ошибка при изменении порядка комнат');
+          throw new Error('Ошибка при изменении порядка комнат');
+        }
+
+        return reorderedRooms;
+      },
+      {
+        optimisticData: reorderedRooms,
+        rollbackOnError: true,
+        populateCache: true,
+        revalidate: false,
+      }
+    );
+  };
 
   const [daysList, setDaysList] = useState(() => {
     const past = Array.from({ length: PAST_DAYS }, (_, i) =>
@@ -198,21 +272,25 @@ const BookingsCalendar = ({
                     })
                     .slice(1)}
             </div>
-            {rooms.map((room) => (
-              <button
-                key={room.id}
-                onClick={() => toggleModal('roomInfo', room)}
-                style={{ backgroundColor: room.color }}
-                className="text-white p-2 lg:p-3 rounded-lg text-center h-[38px] lg:h-[45px] flex items-center justify-center shadow-md text-[10px] lg:text-xs gap-1 w-[120px] lg:w-[180px]"
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={rooms}
+                strategy={verticalListSortingStrategy}
               >
-                <span className="font-semibold text-nowrap">
-                  {room.name.length > maxNameLength
-                    ? `${room.name.slice(0, maxNameLength)}...`
-                    : room.name}
-                </span>
-                <RoomStatusBadge room={room} />
-              </button>
-            ))}
+                {rooms.map((room) => (
+                  <SortableRoomItem
+                    key={room.id}
+                    room={room}
+                    onClick={() => toggleModal('roomInfo', room)}
+                    maxNameLength={maxNameLength}
+                  />
+                ))}
+              </SortableContext>
+            </DndContext>
           </div>
           <div
             ref={scrollRef}

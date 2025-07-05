@@ -179,7 +179,9 @@ export default function Home({ user, tokenData }: Props) {
             <>
               {rooms.length > 0 ? (
                 <BookingsCalendar
+                  user={user}
                   rooms={rooms}
+                  mutateRooms={mutateRooms}
                   currentBookings={currentBookings}
                   oldBookings={oldBookings}
                   toggleModal={toggleModal}

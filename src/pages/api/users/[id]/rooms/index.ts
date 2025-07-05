@@ -26,9 +26,15 @@ export default async function handler(
       email
       )`
       )
-      .eq('user_id', user_id)
-      .order('created_at', { ascending: sortOrder !== 'descending' });
-    // basically only sort descending if specified
+      .eq('user_id', user_id);
+
+    if (sortOrder) {
+      query = query.order('created_at', {
+        ascending: sortOrder !== 'descending',
+      });
+    } else {
+      query = query.order('order', { ascending: true });
+    }
 
     if (onlyFromAvito === 'true') {
       query = query.not('avito_link', 'is', null).neq('avito_link', '');
