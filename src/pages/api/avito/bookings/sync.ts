@@ -112,6 +112,8 @@ export default async function handler(
             created_at: matchingDbBooking.created_at,
             avito_id: avitoBooking.avito_booking_id,
             user_id,
+            additional_client_phones:
+              matchingDbBooking.additional_client_phones,
           });
         } else {
           bookingsToCreate.push({
