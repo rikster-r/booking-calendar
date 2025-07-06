@@ -106,6 +106,7 @@ export default async function handler(
             door_code: matchingDbBooking.door_code,
             additional_info: matchingDbBooking.additional_info,
             daily_price: matchingDbBooking.daily_price,
+            prepayment: matchingDbBooking.prepayment,
             paid: matchingDbBooking.paid,
             check_in: new Date(avitoBooking.check_in),
             check_out: new Date(avitoBooking.check_out),
@@ -130,6 +131,7 @@ export default async function handler(
             check_in: new Date(avitoBooking.check_in),
             check_out: new Date(avitoBooking.check_out),
             avito_id: avitoBooking.avito_booking_id,
+            prepayment: 0,
             user_id,
           });
         }

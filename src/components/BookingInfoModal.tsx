@@ -24,27 +24,6 @@ import {
   DisclosurePanel,
 } from '@headlessui/react';
 
-type Booking = {
-  id: number;
-  room_id: number;
-  client_name: string;
-  client_phone: string;
-  additional_client_phones: string[] | null;
-  client_email: string;
-  adults_count: number;
-  children_count: number;
-  door_code: string | null;
-  additional_info: string;
-  daily_price: number;
-  paid: boolean;
-  check_in: string | Date;
-  check_out: string | Date;
-  created_at: string;
-  room?: Room;
-  avito_id: number | null;
-  user_id: string;
-};
-
 type Props = {
   isOpen: boolean;
   onClose: () => void;
@@ -296,13 +275,25 @@ const BookingInfoModal = ({
                   {booking.daily_price.toLocaleString('ru-RU', {
                     minimumFractionDigits: 2,
                   })}{' '}
-                  руб. - за сутки
+                  руб. — за сутки
                 </span>
                 <span>
                   {totalPrice.toLocaleString('ru-RU', {
                     minimumFractionDigits: 2,
                   })}{' '}
-                  руб. - всего
+                  руб. — всего
+                </span>
+                <span>
+                  {booking.prepayment.toLocaleString('ru-RU', {
+                    minimumFractionDigits: 2,
+                  })}{' '}
+                  руб. — предоплата
+                </span>
+                <span>
+                  {(totalPrice - booking.prepayment).toLocaleString('ru-RU', {
+                    minimumFractionDigits: 2,
+                  })}{' '}
+                  руб. — остаток
                 </span>
               </div>
             </div>

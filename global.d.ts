@@ -54,6 +54,7 @@ type Booking = {
   door_code: string | null;
   additional_info: string;
   daily_price: number;
+  prepayment: number;
   paid: boolean;
   check_in: string | Date;
   check_out: string | Date;
@@ -73,6 +74,7 @@ type BookingToInsert = {
   door_code: string | null;
   additional_info: string;
   daily_price: number;
+  prepayment: number;
   paid: boolean;
   check_in: string | Date;
   check_out: string | Date;
@@ -93,6 +95,7 @@ type BookingInput = {
   doorCode: number | string | null;
   additionalInfo: string;
   dailyPrice: number | string;
+  prepayment: number | string;
   paid: boolean;
   checkIn: Date;
   checkOut: Date;

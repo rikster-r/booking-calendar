@@ -34,6 +34,7 @@ export default async function handler(
       checkIn: check_in,
       checkOut: check_out,
       dailyPrice: daily_price,
+      prepayment,
       paid,
     }: BookingInput = req.body;
     const { id: user_id } = req.query;
@@ -58,7 +59,11 @@ export default async function handler(
 
     // Validate phone numbers
     if (!isValidPhoneNumber(client_phone)) {
-      return res.status(400).json({ error: 'Некорректный формат одного или более номеров телефонов.' });
+      return res
+        .status(400)
+        .json({
+          error: 'Некорректный формат одного или более номеров телефонов.',
+        });
     }
 
     if (additional_client_phones) {
@@ -153,6 +158,7 @@ export default async function handler(
           door_code,
           additional_info,
           daily_price,
+          prepayment,
           paid,
         },
       ])

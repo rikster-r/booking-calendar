@@ -63,6 +63,7 @@ const BookingModal = ({
             doorCode: bookingData.door_code,
             additionalInfo: bookingData.additional_info,
             dailyPrice: bookingData.daily_price,
+            prepayment: bookingData.prepayment,
             paid: bookingData.paid,
             checkIn: new Date(bookingData.check_in),
             checkOut: new Date(bookingData.check_out),
@@ -78,6 +79,7 @@ const BookingModal = ({
             doorCode: null,
             additionalInfo: '',
             dailyPrice: 0,
+            prepayment: 0,
             paid: false,
             checkIn: bookingData.checkIn,
             checkOut: getNextDay(bookingData.checkIn),
@@ -119,6 +121,7 @@ const BookingModal = ({
   > = (e) => {
     if (
       e.target.name === 'dailyPrice' ||
+      e.target.name === 'prepayment' ||
       e.target.name === 'adultsCount' ||
       e.target.name === 'childrenCount'
     ) {
@@ -511,6 +514,23 @@ const BookingModal = ({
                 className="w-full outline-none bg-transparent"
                 value={totalPrice}
                 onChange={changeTotalPrice}
+              />
+              <span className="ml-2 text-gray-500">RUB</span>
+            </div>
+          </div>
+
+          <div className="w-full mt-3">
+            <label htmlFor="prepayment" className="text-gray-700">
+              Предоплата
+            </label>
+            <div className="flex items-center w-full border rounded-md px-3 py-2 outline-none focus-within:ring-2 focus-within:ring-blue-500 border-gray-500 mt-1">
+              <input
+                type="number"
+                name="prepayment"
+                id="prepayment"
+                className="w-full outline-none bg-transparent"
+                value={formData.prepayment}
+                onChange={handleChange}
               />
               <span className="ml-2 text-gray-500">RUB</span>
             </div>

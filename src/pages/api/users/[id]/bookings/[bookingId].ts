@@ -43,6 +43,7 @@ export default async function handler(
       doorCode,
       additionalInfo,
       dailyPrice,
+      prepayment,
       paid,
       additionalClientPhones,
     }: Partial<BookingInput> = req.body;
@@ -119,6 +120,7 @@ export default async function handler(
       ...(doorCode !== undefined && { door_code: doorCode }),
       ...(additionalInfo !== undefined && { additional_info: additionalInfo }),
       ...(dailyPrice !== undefined && { daily_price: dailyPrice }),
+      ...(prepayment !== undefined && { prepayment }),
       ...(paid !== undefined && { paid }),
       ...(additionalClientPhones !== undefined && {
         additional_client_phones: additionalClientPhones,
