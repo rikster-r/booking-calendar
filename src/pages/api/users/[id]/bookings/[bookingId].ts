@@ -1,6 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import createClient from '@/lib/supabase/api';
-import { isValidPhoneNumber } from '@/lib/phoneNumbers';
 
 export default async function handler(
   req: NextApiRequest,
@@ -47,27 +46,6 @@ export default async function handler(
       paid,
       additionalClientPhones,
     }: Partial<BookingInput> = req.body;
-
-    // Validate phone if provided
-    if (clientPhone && !isValidPhoneNumber(clientPhone)) {
-      return res
-        .status(400)
-        .json({
-          error: 'Некорректный формат одного или более номеров телефонов.',
-        });
-    }
-
-    if (additionalClientPhones) {
-      const hasInvalidPhone = additionalClientPhones.some(
-        (phone) => !isValidPhoneNumber(phone)
-      );
-
-      if (hasInvalidPhone) {
-        return res.status(400).json({
-          error: 'Некорректный формат одного или более номеров телефонов.',
-        });
-      }
-    }
 
     // Overlap and room status checks if enough info is present
     if (roomId && checkIn && checkOut) {

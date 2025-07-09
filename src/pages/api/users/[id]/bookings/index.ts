@@ -1,7 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import createClient from '@/lib/supabase/api';
 import { get100DayRange } from '@/lib/dates';
-import { isValidPhoneNumber } from '@/lib/phoneNumbers';
 
 export default async function handler(
   req: NextApiRequest,
@@ -55,27 +54,6 @@ export default async function handler(
       paid === null
     ) {
       return res.status(400).json({ error: 'Не все поля заполнены.' });
-    }
-
-    // Validate phone numbers
-    if (!isValidPhoneNumber(client_phone)) {
-      return res
-        .status(400)
-        .json({
-          error: 'Некорректный формат одного или более номеров телефонов.',
-        });
-    }
-
-    if (additional_client_phones) {
-      const hasInvalidPhone = additional_client_phones.some(
-        (phone) => !isValidPhoneNumber(phone)
-      );
-
-      if (hasInvalidPhone) {
-        return res.status(400).json({
-          error: 'Некорректный формат одного или более номеров телефонов.',
-        });
-      }
     }
 
     // Check if the booking slot is already taken
