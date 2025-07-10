@@ -55,17 +55,20 @@ export default async function handler(
 
     const { data: accessTokenData, error } = await supabase
       .from('avito_access_tokens')
-      .insert([
-        {
-          user_id: userId,
-          avito_user_id: userData.id,
-          access_token: encrypt(data.access_token),
-          expires_in: data.expires_in,
-          scope: data.scope,
-          refresh_token: encrypt(data.refresh_token),
-          token_type: data.token_type,
-        },
-      ]);
+      .upsert(
+        [
+          {
+            user_id: userId,
+            avito_user_id: userData.id,
+            access_token: encrypt(data.access_token),
+            expires_in: data.expires_in,
+            scope: data.scope,
+            refresh_token: encrypt(data.refresh_token),
+            token_type: data.token_type,
+          },
+        ],
+        { onConflict: 'user_id' }
+      );
 
     if (error) {
       return res.status(500).json({ error: error.message });
